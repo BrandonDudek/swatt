@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+  
+<suite name="Selenium/Browser/Driver Version Compatibility Tests Suite" verbose="1" group-by-instances="true" >
+
+	<test name="Selenium/Browser/Driver Version Compatibility Tests" >
+		<classes>
+			<class name="xyz.swatt.tests.selenium.compatibility.SeleniumCompatibilityTests" />
+		</classes>
+	</test>
+	
+</suite>

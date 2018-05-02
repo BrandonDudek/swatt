@@ -1,0 +1,17 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+  
+<suite name="ECT-QED Tools Test Suite" verbose="1" >
+
+	<test name="ECT-QED Tools Tests" >
+
+		<packages>
+
+			<package name="xyz.swatt.tests.*">
+				<exclude name="xyz.swatt.tests.selenium.compatibility" />
+			</package>
+
+		</packages>
+
+	</test>
+	 
+</suite>
