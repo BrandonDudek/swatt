@@ -16,7 +16,8 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.remote.*;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Quotes;
@@ -101,7 +102,7 @@ public class WebDriverWrapper {
 	public static enum FirefoxBrowser {
 		
 		/**
-		 * Will attempt to pick Windows or Mac, based on your computer. (Preferring 64 over 32 bit for windows.) TODO
+		 * Will attempt to pick Windows or Mac, based on your computer. (Preferring 64 over 32 bit for windows.)
 		 * <p>
 		 *     (Cannot be used with {@link #firefoxOverridePath}.)
 		 * </p>

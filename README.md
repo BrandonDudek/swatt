@@ -18,7 +18,10 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
   * Contains Helper classes to preform common and/or complex XML parsing, writing, querying, and modifying.
 
 ## Homepage & Javadoc API
-[SWATT.xyz](https://swatt.xyz/)
+[SWATT.xyz](https://swatt.xyz)
+
+## Maven Repository
+[Maven Central](https://mvnrepository.com/artifact/xyz.swatt)
 
 ## Class Types
 This library contains 3 basic types of classes to assist you in your Automated Testing Efforts.
