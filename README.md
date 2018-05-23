@@ -11,6 +11,7 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
   * These tools will help with testing Web Apps.
   * It is configured to work with the latest version of Chrome and Firefox version 59.0.1.
   * Has been tested on windows 7 and MacOS 10.13, but should work on similar systems.
+  * **Sample Project** [swatt-selenium-sample-project](https://github.com/BrandonDudek/swatt-selenium-sample-project)
 * String
   * A Helper class to preform common and/or complex String manipulations.
   * Is **very** helpful for Whitespace manipulation and Character Sets.
