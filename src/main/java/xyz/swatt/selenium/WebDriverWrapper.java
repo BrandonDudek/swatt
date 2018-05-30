@@ -992,6 +992,7 @@ public class WebDriverWrapper {
 	 * @param _secondsToWait
 	 * 		How long to wait (in seconds) for the {@link WebElement} to exists.
 	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
+	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
@@ -1047,6 +1048,7 @@ public class WebDriverWrapper {
 	 * @param _secondsToWait
 	 * 		How long to wait (in seconds) for the {@link WebElement} to exists and contain the correct visibility.
 	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
+	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
@@ -1241,6 +1243,7 @@ public class WebDriverWrapper {
 	 * @param _secondsToWait
 	 * 		How long to wait (in seconds) for the {@link WebElement} to exists.
 	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
+	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
 	 *
 	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
 	 *
@@ -1263,6 +1266,7 @@ public class WebDriverWrapper {
 	 * @param _secondsToWait
 	 * 		How long to wait (in seconds) for the {@link WebElement} to exist and contain the correct visibility.
 	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
+	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
 	 * @param _visibility
 	 * 		If {@code true} only returns visible {@link WebElement}s, else if {@code false}, only returns hidden {@link WebElement}s.
 	 *
@@ -1288,6 +1292,7 @@ public class WebDriverWrapper {
 	 * @param _secondsToWait
 	 * 		How long to wait (in seconds) for the {@link WebElement} to exists, also might wait for visibility.
 	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
+	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
 	 * @param _numOfElementsToGet
 	 * 		Number of {@link WebElement} we are looking for, or {@code -1} if we are looking for "all".
 	 * @param _visibility

@@ -305,7 +305,17 @@ public class WebElementWrapper {
 		
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
-			webElement.clear();
+			while(true) {
+				try {
+					webElement.clear();
+					break;
+				}
+				catch(StaleElementReferenceException e) {
+					if(!reacquireWebElement()) {
+						throw e;
+					}
+				}
+			}
 		}
 		
 		LOGGER.debug("clearInput() [END]");
