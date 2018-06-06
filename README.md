@@ -21,6 +21,11 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
 ## Homepage & Javadoc API
 [SWATT.xyz](https://swatt.xyz)
 
+## Version Comparability
+|SWATT|Selenium|Windows|MacOS|Chrome|Chrome Driver|Firefox|Gecko (FF) Driver|IE|IE Driver|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|1.1.0|3.12.0|7|?|67.0|2.39|60.0 ESR|0.20.1|11|3.12|
+
 ## Maven Repository
 [Maven Central](https://mvnrepository.com/artifact/xyz.swatt)
 

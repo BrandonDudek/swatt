@@ -1435,16 +1435,24 @@ public class WebElementWrapper {
 				}
 			}
 
-			Object xNumber = javascriptExecutor.executeScript("return window.scrollX;");
-			Object yNumber = javascriptExecutor.executeScript("return window.scrollY;");
-
-			if(xNumber instanceof Double) {
+			Object xNumber = javascriptExecutor.executeScript("return window.scrollX;"); // IE returns null for 0.
+			//noinspection Duplicates
+			if(xNumber == null) { // IE returns null for 0.
+				startViewportX = 0;
+			}
+			else if(xNumber instanceof Double) {
 				startViewportX = (Double) xNumber;
 			}
 			else {
 				startViewportX = (Long) xNumber;
 			}
-			if(yNumber instanceof Double) {
+
+			Object yNumber = javascriptExecutor.executeScript("return window.scrollY;"); // IE returns null for 0.
+			//noinspection Duplicates
+			if(yNumber == null) { // IE returns null for 0.
+				startViewportY = 0;
+			}
+			else if(yNumber instanceof Double) {
 				startViewportY = (Double) yNumber;
 			}
 			else {
@@ -1892,7 +1900,8 @@ public class WebElementWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper sendKeys(Keys... _keys) {
+	@SuppressWarnings("ConstantConditions")
+    public WebElementWrapper sendKeys(Keys... _keys) {
 
 		LOGGER.info("sendKeys(_keys: ({})) [START]", _keys == null ? "NULL" : _keys.length);
 
@@ -1906,14 +1915,14 @@ public class WebElementWrapper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		String keysToSend = "";
+		StringBuilder keysToSend = new StringBuilder();
 
 		//------------------------ Code ----------------------------------------
 		for(Keys key : _keys) {
-			keysToSend += key.toString();
+			keysToSend.append(key.toString());
 		}
 
-		sendKeys(keysToSend);
+		sendKeys(keysToSend.toString());
 
 		LOGGER.debug("sendKeys(_keys: ({})) [END]", _keys.length);
 

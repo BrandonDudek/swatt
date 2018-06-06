@@ -1,0 +1,3 @@
+https://github.com/mozilla/geckodriver/releases
+
+https://ftp.mozilla.org/pub/firefox/releases/
