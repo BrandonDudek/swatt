@@ -4,6 +4,7 @@ import com.gargoylesoftware.htmlunit.BrowserVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.Quotes;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
@@ -140,6 +141,60 @@ public class SeleniumCompatibilityTests {
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Test(dependsOnMethods = {"loadPage"})
+    public void sendKeys() {
+
+        LOGGER.info("sendKeys() [START]");
+
+        //------------------------ Pre-Checks ----------------------------------
+
+        //------------------------ CONSTANTS -----------------------------------
+        final String keysToSend = "Walla";
+
+        //------------------------ Variables -----------------------------------
+
+        //------------------------ Code ----------------------------------------
+        WebElementWrapper input = driver.getWebElementWrapper(By.id("lst-ib"), true,
+                "Could not find Google's search input element!");
+        input.sendKeys(keysToSend + Keys.ESCAPE);
+
+        ///// Validate /////
+        String inputValue = input.getValue();
+        if(!inputValue.equals(keysToSend)) {
+            throw new RuntimeException(Quotes.escape(keysToSend) + " was sent to input, but " + Quotes.escape(inputValue) + " was found!");
+        }
+
+        LOGGER.debug("sendKeys() [END]");
+    }
+
+    /**
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Test(dependsOnMethods = {"sendKeys"})
+    public void click() {
+
+        LOGGER.info("click() [START]");
+
+        //------------------------ Pre-Checks ----------------------------------
+
+        //------------------------ CONSTANTS -----------------------------------
+
+        //------------------------ Variables -----------------------------------
+
+        //------------------------ Code ----------------------------------------
+        WebElementWrapper button = driver.getWebElementWrapper(By.cssSelector("#tsf input[aria-label='Google Search']"), true,
+                "Cannot find the \"Google Search\" button!");
+        button.click(true);
+
+        ///// Validate /////
+        // TODO.
+
+        LOGGER.debug("click() [END]");
+    }
+
+    /**
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Test(dependsOnMethods = {"click"})
     public void tileWindows() {
 
         LOGGER.info("tileWindows() [START]");
@@ -178,40 +233,11 @@ public class SeleniumCompatibilityTests {
     }
 
     /**
-     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-     */
-    @Test(dependsOnMethods = {"loadPage"})
-    public void sendKeys() {
-
-        LOGGER.info("sendKeys() [START]");
-
-        //------------------------ Pre-Checks ----------------------------------
-
-        //------------------------ CONSTANTS -----------------------------------
-        final String keysToSend = "Walla";
-
-        //------------------------ Variables -----------------------------------
-
-        //------------------------ Code ----------------------------------------
-        WebElementWrapper input = driver.getWebElementWrapper(By.id("lst-ib"), true,
-                "Could not find Google's search input element!");
-        input.sendKeys(keysToSend);
-
-        ///// Validate /////
-        String inputValue = input.getValue();
-        if(!inputValue.equals(keysToSend)) {
-            throw new RuntimeException(Quotes.escape(keysToSend) + " was sent to input, but " + Quotes.escape(inputValue) + " was found!");
-        }
-
-        LOGGER.debug("sendKeys() [END]");
-    }
-
-    /**
      * Opens a new Tab/Window and then closes it.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @Test(dependsOnMethods = {"loadPage"})
+    @Test(dependsOnMethods = {"tileWindows"})
     public void openCloseWindow() {
 
         LOGGER.info("openCloseTab() [START]");

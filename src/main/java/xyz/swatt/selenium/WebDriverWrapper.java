@@ -658,6 +658,7 @@ public class WebDriverWrapper {
 	 */
 	public final Object LOCK = new Object();
 
+	final protected String DRIVER_NAME;
 	final protected WebDriver DRIVER;
 
 	//========================= Variables ======================================
@@ -729,6 +730,7 @@ public class WebDriverWrapper {
 			//noinspection SpellCheckingInspection
 			options.addArguments("disable-infobars");
 			DRIVER = new ChromeDriver(options);
+			DRIVER_NAME = _browser.toString();
 		}
 
 		// TODO: BUG: Makes all logs visible and gives them the level of what was padded in.
@@ -905,6 +907,7 @@ public class WebDriverWrapper {
 			/////
 
 			DRIVER = new FirefoxDriver(firefoxOptions);
+			DRIVER_NAME = _browser.toString();
 		}
 
 		//( (RemoteWebDriver) DRIVER ).setLogLevel( Level.OFF ); // TODO: BUG: Makes all logs visible and gives them the level of what was padded in.
@@ -1008,6 +1011,7 @@ public class WebDriverWrapper {
 			options.enableNativeEvents();*/
 
 			DRIVER = new InternetExplorerDriver(options);
+			DRIVER_NAME = _browser.toString();
 		}
 
 		// Maximize and rest Zoom.
@@ -1040,6 +1044,7 @@ public class WebDriverWrapper {
 
 		//-------------------------Code-----------------------------------------
 		DRIVER = new HtmlUnitDriver(_browserVersion, true);
+		DRIVER_NAME = _browserVersion.toString();
 
 		LOGGER.debug("WebDriverWrapper(_browserVersion: {}) [END]", _browserVersion);
 	}
@@ -1790,7 +1795,9 @@ public class WebDriverWrapper {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		if(IS_MAC) { // Macs don't have a maximize button.
+		if(IS_MAC && DRIVER instanceof ChromeDriver) { // Chrome on Mac don't maximize, just expand as far as needed.
+
+			// TODO: Walk through.
 
 			int screenWidthAvailable = (int) (long) ((JavascriptExecutor) DRIVER).executeScript("return screen.availWidth;");
 			int screenHeightAvailable = (int) (long) ((JavascriptExecutor) DRIVER).executeScript("return screen.availHeight;");
@@ -2306,7 +2313,8 @@ public class WebDriverWrapper {
 			fluentWait = new FluentWait<>(DRIVER);
 
 			// Fluent Wait Settings..
-			fluentWait.withTimeout(Duration.ofSeconds(maxPageLoadTimeInSeconds)).pollingEvery(Duration.ofMillis(POLLING_INTERVAL_MS));
+			fluentWait.withTimeout(Duration.ofSeconds(maxPageLoadTimeInSeconds)).pollingEvery(Duration.ofMillis(POLLING_INTERVAL_MS))
+					.ignoring(JavascriptException.class) /*IE throws this if the call is made to early in the page load.*/;
 
 			try {
 				fluentWait.until(driver ->

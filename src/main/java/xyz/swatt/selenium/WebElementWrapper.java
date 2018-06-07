@@ -1974,19 +1974,25 @@ public class WebElementWrapper {
 				scrollToMiddle();
 			}
 
-			// By default Selenium puts all of the characters into the web element at once.
-			// This can cause problems, especially of there is JavaScript logic around that input.
-			for(char c : _keys.toCharArray()) {
+			if(WEB_DRIVER_WRAPPER.DRIVER_NAME.equals(WebDriverWrapper.IEBrowser.IE_WIN_64.toString())) { // IE 64 is already very slow at sending keys.
+				webElement.sendKeys(_keys); // TODO: https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/5116.
+			}
+			else {
+				// By default Selenium puts all of the characters into the web element at once.
+				// This can cause problems, especially of there is JavaScript logic around that input.
+				for(char c : _keys.toCharArray()) {
 
-				// Using Action, because WebElement.sendKeys() attempts to refocus. (TODO: Verify.)
-				new Actions(WEB_DRIVER_WRAPPER.DRIVER).sendKeys(String.valueOf(c)).perform();
+					webElement.sendKeys(String.valueOf(c));
+					// Not using Action, because in IE it will sometimes not trigger javascript listeners.
+					//new Actions(WEB_DRIVER_WRAPPER.DRIVER).sendKeys(String.valueOf(c)).perform();
 
-				// Adding delay to simulate typing.
-				// (100ms [professional typing speed] - 300ms [average typing speed].)
-				try {
-					Thread.sleep(100);
+					// Adding delay to simulate typing.
+					// (100ms [professional typing speed] - 300ms [average typing speed].)
+					try {
+						Thread.sleep(100);
+					}
+					catch(InterruptedException e) {/*Ignore*/}
 				}
-				catch(InterruptedException e) {/*Ignore*/}
 			}
 		}
 

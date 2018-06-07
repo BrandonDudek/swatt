@@ -15,6 +15,9 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
 * String
   * A Helper class to preform common and/or complex String manipulations.
   * Is **very** helpful for Whitespace manipulation and Character Sets.
+* TestGN / Reporters
+  * Contains a Matrix style report that you can copy to an Excel sheet, for reporting purposes
+  * Also allows you to report know bugs that you have put workarounds in place for.
 * XML
   * Contains Helper classes to preform common and/or complex XML parsing, writing, querying, and modifying.
 

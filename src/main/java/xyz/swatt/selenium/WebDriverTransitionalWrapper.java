@@ -13,6 +13,8 @@ import org.openqa.selenium.WebDriver;
  * <p>
  *     The purpose of this class is to be used <b><i>temporarily</i></b>, while transitioning an existing project to SWATT.
  * </p>
+ *
+ * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 public class WebDriverTransitionalWrapper extends WebDriverWrapper {
 
@@ -52,7 +54,7 @@ public class WebDriverTransitionalWrapper extends WebDriverWrapper {
 
     //========================= Methods ========================================
     /**
-     * Will return a reference to the {@link WebDriver} that this wrapper is based on.
+     * @return A reference to the {@link WebDriver} that this wrapper is based on.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
