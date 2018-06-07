@@ -331,6 +331,11 @@ public class WebDriverWrapper {
 	 * <p>
 	 *     (If only 1 {@link WebDriver} is given, it will be maximized.)
 	 * </p>
+	 * <p>
+	 *     <b>Note:</b> For Chrome on a Mac, "maximise" may not fill the entire screen.
+	 *     It just expand the window to as large as it needs to be, to not have scroll bars
+	 *     (up to the size of the available screen space).
+	 * </p>
 	 *
 	 * @param _driverWrappers
 	 * 		The windows to tile (in a thread safe collection). [see: {@link CopyOnWriteArrayList}]

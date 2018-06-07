@@ -11,14 +11,23 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
   * These tools will help with testing Web Apps.
   * It is configured to work with the latest version of Chrome and Firefox version 59.0.1.
   * Has been tested on windows 7 and MacOS 10.13, but should work on similar systems.
+  * **Sample Project** [swatt-selenium-sample-project](https://github.com/BrandonDudek/swatt-selenium-sample-project)
 * String
   * A Helper class to preform common and/or complex String manipulations.
   * Is **very** helpful for Whitespace manipulation and Character Sets.
 * XML
   * Contains Helper classes to preform common and/or complex XML parsing, writing, querying, and modifying.
 
-## Javadoc API
-[SWATT.xyz](https://swatt.xyz/)
+## Homepage & Javadoc API
+[SWATT.xyz](https://swatt.xyz)
+
+## Version Comparability
+|SWATT|Selenium|Windows|MacOS|Chrome|Chrome Driver|Firefox|Gecko (FF) Driver|IE|IE Driver|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|1.1.0|3.12.0|7|10.13 (High Sierra)|67.0|2.39|60.0 ESR|0.20.1|11|3.12|
+
+## Maven Repository
+[Maven Central](https://mvnrepository.com/artifact/xyz.swatt)
 
 ## Class Types
 This library contains 3 basic types of classes to assist you in your Automated Testing Efforts.
@@ -61,4 +70,24 @@ And all of them follow this standard:
   * Has a DEBUG level "[START]" log
   * Has a TRACE level "[END]" log
   * Any other logs in the method are at the TRACE level
-  * _Note:_ WARNING logs may also be present, but **Exceptions** will be thrown instead of logging ERRORs 
+  * _Note:_ WARNING logs may also be present, but **Exceptions** will be thrown instead of logging ERRORs
+
+## Contributing
+* Feel free to report any bugs you may find or any improvement that you may want.
+  * (The whole point of this Library is collaboration.)
+* If you would like to write code to fix bugs or add functionality, we also encourage that! 😊
+  * We only ask that you adhere to the following Rules.
+
+## Coding Contribution Rules
+* Set your git project user to your GitHub Username and Email address
+  * At your root project directory, in Command Prompt / Terminal enter:
+    * `git config user.name "YOUR_GITHUB_USER_NAME"`
+    * `git config user.email "YOUR_GITHUB_EMAIL_ADDRESS"`
+  * To validate you changes, enter: `git config --list`
+* Do all of your changes in a new branch
+* Use Merge Requests to push your changes to the **master** branch
+* Follow the [Logging](#logging) standards.
+* Add **full** Javadocs to all Public Classes, Methods, Enums, etc.
+* Add your `@author` tag to any code section that you edited.
+  * In the format: `@author Name Here (<a href="github.com/GITHUB_USERNAME">GITHUB_USERNAME</a>)`
+    * i.e. `@author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)`
