@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration status="warn" strict="true" >
+	
+	<Appenders>
+	
+		<Appender type="Console" name="STDOUT">
+			<Layout type="PatternLayout" pattern="%d %-5p %c:%L - %m%n"/>
+		</Appender>
+		
+	</Appenders>
+	
+	<Loggers>
+	
+		<Logger name="xyz.swatt" level="warn" />
+		
+		<Logger name="xyz.swatt.tests" level="info" />
+
+		<Root level="error" >
+			<AppenderRef ref="STDOUT" />
+		</Root>
+	
+	</Loggers>
+
+</Configuration>

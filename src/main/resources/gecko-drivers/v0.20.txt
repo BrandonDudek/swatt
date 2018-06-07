@@ -1,1 +1,0 @@
-https://github.com/mozilla/geckodriver/releases/tag/v0.20.0

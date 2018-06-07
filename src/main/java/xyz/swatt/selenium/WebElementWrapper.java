@@ -305,7 +305,17 @@ public class WebElementWrapper {
 		
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
-			webElement.clear();
+			while(true) {
+				try {
+					webElement.clear();
+					break;
+				}
+				catch(StaleElementReferenceException e) {
+					if(!reacquireWebElement()) {
+						throw e;
+					}
+				}
+			}
 		}
 		
 		LOGGER.debug("clearInput() [END]");
@@ -1320,6 +1330,7 @@ public class WebElementWrapper {
 	 *
 	 * @see WebElement#isDisplayed()
 	 */
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	public boolean isDisplayed() {
 
 		LOGGER.info("isDisplayed() [START]");
@@ -1424,16 +1435,24 @@ public class WebElementWrapper {
 				}
 			}
 
-			Object xNumber = javascriptExecutor.executeScript("return window.scrollX;");
-			Object yNumber = javascriptExecutor.executeScript("return window.scrollY;");
-
-			if(xNumber instanceof Double) {
+			Object xNumber = javascriptExecutor.executeScript("return window.scrollX;"); // IE returns null for 0.
+			//noinspection Duplicates
+			if(xNumber == null) { // IE returns null for 0.
+				startViewportX = 0;
+			}
+			else if(xNumber instanceof Double) {
 				startViewportX = (Double) xNumber;
 			}
 			else {
 				startViewportX = (Long) xNumber;
 			}
-			if(yNumber instanceof Double) {
+
+			Object yNumber = javascriptExecutor.executeScript("return window.scrollY;"); // IE returns null for 0.
+			//noinspection Duplicates
+			if(yNumber == null) { // IE returns null for 0.
+				startViewportY = 0;
+			}
+			else if(yNumber instanceof Double) {
 				startViewportY = (Double) yNumber;
 			}
 			else {
@@ -1461,6 +1480,7 @@ public class WebElementWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	public boolean isInFocus() {
 
 		LOGGER.info("isInFocus() [START]");
@@ -1880,37 +1900,31 @@ public class WebElementWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper sendKeys(Keys... _keys) {
+	@SuppressWarnings("ConstantConditions")
+    public WebElementWrapper sendKeys(Keys... _keys) {
 
-		LOGGER.info("sendKeys(_keys: ({}) ) [START]", _keys == null ? "NULL" : _keys.length);
+		LOGGER.info("sendKeys(_keys: ({})) [START]", _keys == null ? "NULL" : _keys.length);
 
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_keys, "Keys");
 
+		if( _keys.length < 1 ) {
+			throw new RuntimeException( "Keys to send cannot be Empty!" );
+		}
+
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		
+		StringBuilder keysToSend = new StringBuilder();
+
 		//------------------------ Code ----------------------------------------
-		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
-
-			if(!isInFocus()) {
-
-				// A real user would have to select an input element before typing.
-				// Not doing this may cause the first character to be missed.
-				click();
-			}
-			else if(!isFullyInViewport()) { // Click performed above will scroll into view.
-				scrollToMiddle();
-			}
-
-			//noinspection ConstantConditions
-			for(Keys key : _keys) {
-				webElement.sendKeys(key);
-			}
+		for(Keys key : _keys) {
+			keysToSend.append(key.toString());
 		}
 
-		LOGGER.debug("sendKeys(_keys: ({}) ) [END]", _keys.length);
+		sendKeys(keysToSend.toString());
+
+		LOGGER.debug("sendKeys(_keys: ({})) [END]", _keys.length);
 
 		return this;
 	}
@@ -1918,7 +1932,7 @@ public class WebElementWrapper {
 	/**
 	 * Sends a sequence of keys to the {@link WebElement}. (Keys are sent one at a time.)
 	 * <p>
-	 *     <b>Note:</b> To send multiple keys at once, use {@link #sendKeys(String)} and send {@link Keys#chord(CharSequence...)}.
+	 *     <b>Note:</b> To send multiple keys at once, send {@link Keys#chord(CharSequence...)} for {@code _keys}.
 	 * </p>
 	 * <p>
 	 *     <b>Note:</b> If the {@link WebElement} is not visible in the viewport, it will be scrolled to the top, left of the viewport.
@@ -1966,8 +1980,13 @@ public class WebElementWrapper {
 
 				// Using Action, because WebElement.sendKeys() attempts to refocus. (TODO: Verify.)
 				new Actions(WEB_DRIVER_WRAPPER.DRIVER).sendKeys(String.valueOf(c)).perform();
-				// May need to add a slight delay.
-				// (Start at 100ms [professional typing speed] and do not go higher than 300ms [average typing speed].)
+
+				// Adding delay to simulate typing.
+				// (100ms [professional typing speed] - 300ms [average typing speed].)
+				try {
+					Thread.sleep(100);
+				}
+				catch(InterruptedException e) {/*Ignore*/}
 			}
 		}
 
@@ -2933,19 +2952,7 @@ public class WebElementWrapper {
 				fluentWait.ignoring(ElementNotVisibleException.class).until(ExpectedConditions.visibilityOf(webElement));
 			}
 			else {
-				fluentWait.until((Function<WebDriver, Boolean>) driver -> {
-
-					try {
-						if(!isDisplayed()) {
-							return true;
-						}
-					}
-					catch(StaleElementReferenceException e) {
-						return true;
-					}
-
-					return false;
-				});
+				fluentWait.until( (Function<WebDriver, Boolean>) driver -> !isDisplayed());
 			}
 		}
 
@@ -2983,31 +2990,40 @@ public class WebElementWrapper {
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			if(originalBy != null) {
-				reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, originalBy,
-						WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
-			}
+			try {
 
-			if(reacquiredWebElementWrappers.size() != 1) {
-
-				if(webElementToStringSelectorXpath == null) { // Calculate it.
-					webElementToStringSelectorXpath = webElementToStringToXpath(webElement.toString());
-				}
-				if(!webElementToStringSelectorXpath.isEmpty()) { // We were able to figure something out.
-					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(webElementToStringSelectorXpath),
+				if(originalBy != null) {
+					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, originalBy,
 							WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
 				}
+
+				if(reacquiredWebElementWrappers.size() != 1) {
+
+					if(webElementToStringSelectorXpath == null) { // Calculate it.
+						webElementToStringSelectorXpath = webElementToStringToXpath(webElement.toString());
+					}
+					if(!webElementToStringSelectorXpath.isEmpty()) { // We were able to figure something out.
+						reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(webElementToStringSelectorXpath),
+								WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
+					}
+				}
+
+				if(reacquiredWebElementWrappers.size() != 1 && XPATH_IDS_SELECTOR != null) {
+					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(XPATH_IDS_SELECTOR),
+							WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
+				}
+
+				if(reacquiredWebElementWrappers.size() == 1) {
+
+					webElement = reacquiredWebElementWrappers.get(0).webElement;
+					success = true;
+				}
 			}
+			catch(Exception e) {
 
-			if(reacquiredWebElementWrappers.size() != 1 && XPATH_IDS_SELECTOR != null) {
-				reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(XPATH_IDS_SELECTOR),
-						WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
-			}
-
-			if(reacquiredWebElementWrappers.size() == 1) {
-
-				webElement = reacquiredWebElementWrappers.get(0).webElement;
-				success = true;
+				// Could not re-acquire.
+				LOGGER.warn(e);
+				success = false;
 			}
 		}
 

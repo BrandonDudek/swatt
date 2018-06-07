@@ -5,9 +5,14 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>swatt</groupId>
+    <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0-SNAPSHOT</version>
+
+    <packaging>jar</packaging>
+    <name>SWATT</name>
+    <description>Software Automated Testing Tools</description>
+    <url>https://swatt.xyz</url>
 
     <properties>
 
@@ -16,6 +21,7 @@
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
         <maven-javadoc-plugin.version>3.0.0</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <maven-surefire-plugin.version>2.20.1</maven-surefire-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -30,8 +36,8 @@
         <saxon.version>9.7.0-18</saxon.version>
 
         <!-- Selenium -->
-        <selenium.version>3.11.0</selenium.version>
-        <htmlunit.version>2.29.3</htmlunit.version>
+        <selenium.version>3.12.0</selenium.version>
+        <htmlunit.version>2.31.0</htmlunit.version>
 
         <!-- TestNG -->
         <testng.version>6.11</testng.version>
@@ -152,7 +158,23 @@
                     <execution>
                         <id>attach-sources</id>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- GPG Signature of Released Files -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${maven-gpg-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -161,5 +183,39 @@
         </plugins>
 
     </build>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Brandon Dudek</name>
+            <email>19555354+BrandonDudek@users.noreply.github.com</email>
+            <organization>SWATT</organization>
+            <organizationUrl>https://swatt.xyz</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/BrandonDudek/swatt.git</connection>
+        <developerConnection>scm:git:ssh://github.com:BrandonDudek/swatt.git</developerConnection>
+        <url>http://github.com/BrandonDudek/swatt/tree/master</url>
+    </scm>
 
 </project>
