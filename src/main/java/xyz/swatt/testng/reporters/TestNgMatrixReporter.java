@@ -164,7 +164,7 @@ public class TestNgMatrixReporter implements IReporter {
      *         The TestNG XML Test Suites.
      * @param suites
      *         The TestNG XML Test Suites' results.
-     * @param outputDirectory
+     * @param outputDirectoryPath
      *         Where to write the output file(s).
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
@@ -172,7 +172,7 @@ public class TestNgMatrixReporter implements IReporter {
      * @see IReporter#generateReport(List, List, String)
      */
     @Override
-    public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectory) {
+    public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectoryPath) {
 
         LOGGER.info("generateReport() [START]");
 
@@ -185,12 +185,13 @@ public class TestNgMatrixReporter implements IReporter {
         PrintWriter pw;
 
         //------------------------ Code ----------------------------------------
-        if(!new File(outputDirectory).mkdirs()) {
-            throw new RuntimeException("Could not create Output Directory: " + outputDirectory + "!");
+        File outputDirectory = new File(outputDirectoryPath);
+        if(!outputDirectory.exists() && !outputDirectory.mkdirs()) {
+            throw new RuntimeException("Could not create Output Directory: " + outputDirectoryPath + "!");
         }
 
         try {
-            pw = new PrintWriter(new BufferedWriter(new FileWriter(new File(outputDirectory, reportFileName + ".html"))));
+            pw = new PrintWriter(new BufferedWriter(new FileWriter(new File(outputDirectoryPath, reportFileName + ".html"))));
         }
         catch(IOException e) {
             LOGGER.error("Unable to create Testing Matrix Report File!", e);

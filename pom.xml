@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.1</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -33,7 +33,7 @@
         <jackson.version>2.6.7</jackson.version>
 
         <!-- Log4j -->
-        <log4j2.version>2.9.1</log4j2.version> <!-- There is a bug in 2.10.0. -->
+        <log4j2.version>2.11.0</log4j2.version> <!-- There is a bug in 2.10.0. -->
 
         <!-- Saxon -->
         <saxon.version>9.7.0-18</saxon.version>
