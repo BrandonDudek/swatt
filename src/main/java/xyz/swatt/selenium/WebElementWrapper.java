@@ -12,10 +12,10 @@ import org.w3c.dom.Document;
 import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.exceptions.InvalidTypeException;
 import xyz.swatt.exceptions.TooManyResultsException;
+import xyz.swatt.exceptions.XmlException;
 import xyz.swatt.string.StringHelper;
 import xyz.swatt.xml.XmlDocumentHelper;
 
-import javax.xml.transform.TransformerException;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
@@ -165,7 +165,7 @@ public class WebElementWrapper {
 	//========================= Variables ======================================
 	private By originalBy;
 	private String name, webElementToStringSelectorXpath;
-	private WebElement webElement;
+	WebElement webElement;
 
 	//========================= Constructors ===================================
 	/**
@@ -936,7 +936,15 @@ public class WebElementWrapper {
 	 * Gets all the descendants of this {@link WebElement} that match the given search query.
 	 *
 	 * @param _by
-	 * 		How to search for the descendants. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 * 		How to search for the descendants.
+	 * 		<p>
+	 * 		    If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 * 		    This CSS selector MUST be preceded by a parent query.
+	 * 		    Instead use an XPath starting with "./".
+	 * 		</p>
+	 * 		<p>
+	 * 		    <b>Note:</b> XPaths starting with "//" will be updated to start with ".//".
+	 * 		</p>
 	 * @param _isVisible
 	 * 		If {@code true}, grabs only visible {@link WebElement}s.
 	 * 		<p>If {@code false}, grabs only hidden {@link WebElement}s.</p>
@@ -949,8 +957,11 @@ public class WebElementWrapper {
 	 * @return a List of {@link WebElementWrapper}s that are descendants of this {@link WebElement} and match the given search query;
 	 * 		or an empty List, if no descendants were found.
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@code _by} argument is {@code NULL}.
+	 * @throws IllegalArgumentException If the given {@link By} object is {@code NULL}.
+	 *             <p>
+	 *                 Or if the given {@link By} object is a CSS Selector starts with "&gt;".
+	 *             </p>
+
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
@@ -960,6 +971,14 @@ public class WebElementWrapper {
 
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_by, "By");
+
+		if( _by instanceof By.ByCssSelector) { // See: https://github.com/SeleniumHQ/selenium/issues/2091
+
+			String selector = _by.toString();
+			if(selector.trim().startsWith( ">" )) {
+				throw new IllegalArgumentException("Given CSS Selector cannot start with \">\"!");
+			}
+		}
 
 		//------------------------ CONSTANTS -----------------------------------
 
@@ -1381,7 +1400,7 @@ public class WebElementWrapper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		Boolean isEnabled;
+		boolean isEnabled;
 
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
@@ -1408,7 +1427,7 @@ public class WebElementWrapper {
 		//------------------------ Pre-Checks ----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		Boolean isInViewport = false;
+		boolean isInViewport = false;
 		int endElementX, endElementY, startElementX, startElementY;
 		long endViewportX, endViewportY;
 		double startViewportX, startViewportY;
@@ -1514,7 +1533,7 @@ public class WebElementWrapper {
 		//------------------------ Pre-Checks ----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		Boolean isInViewport = false;
+		boolean isInViewport = false;
 		int endElementX, endElementY, startElementX, startElementY;
 		long endViewportX, endViewportY, startViewportX, startViewportY;
 		JavascriptExecutor javascriptExecutor;
@@ -1567,7 +1586,7 @@ public class WebElementWrapper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		Boolean isSelected;
+		boolean isSelected;
 
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
@@ -2045,7 +2064,7 @@ public class WebElementWrapper {
 				try {
 					toString = XmlDocumentHelper.prettyPrint(XmlDocumentHelper.getDocumentFrom(toString));
 				}
-				catch(TransformerException e) { /*Will not "pretty print"*/ }
+				catch(XmlException e) { /*Will not "pretty print"*/ }
 			}
 		}
 
@@ -2059,12 +2078,11 @@ public class WebElementWrapper {
 	 *
 	 * @return The XML representation of this {@link WebElement}.
 	 *
-	 * @throws TransformerException
-	 * 		If the HTML could not be converted to an XML.
+	 * @throws XmlException If the HTML could not be converted to an XML.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public Document toXml() throws TransformerException {
+	public Document toXml() {
 
 		LOGGER.info("toXml() [START]");
 
@@ -2955,7 +2973,47 @@ public class WebElementWrapper {
 			fluentWait = initializeFluentWait(_waitTime);
 
 			if(_visible) {
-				fluentWait.ignoring(ElementNotVisibleException.class).until(ExpectedConditions.visibilityOf(webElement));
+
+				fluentWait.ignoring( ElementNotVisibleException.class );
+
+				long startTime = System.currentTimeMillis();
+				long maxEndWaitTime = startTime + (((long) _waitTime) * 1000);
+
+				while(true) { // START "Try again for Visible on StaleElementReferenceException" loop.
+					try {
+						fluentWait.until(ExpectedConditions.visibilityOf(webElement));
+						break; // Element is visible.
+					}
+					catch(StaleElementReferenceException e) {
+
+						while(true) { // START "Require if not past the wait time" loop.
+
+							long currentTime = System.currentTimeMillis();
+							if(currentTime >= maxEndWaitTime) {
+								throw new TimeoutException("Web Element failed to appear after waiting " + _waitTime + " seconds!");
+							}
+							else if(reacquireWebElement()) {
+								break; // Successfully re-acquired.
+							}
+							else {
+								try { // Attempt to wait for element to appear.
+									Thread.sleep(WebDriverWrapper.POLLING_INTERVAL_MS);
+								}
+								catch(InterruptedException e1) { /*Ignore*/ }
+
+								//noinspection UnnecessaryContinue
+								continue; // Try to re-acquire again, if not past the wait time.
+							}
+						} // END "Require if not past the wait time" loop.
+
+						// Try to wait for visibility again, with time left.
+						long newWaitTime = maxEndWaitTime - System.currentTimeMillis();
+						fluentWait.withTimeout(Duration.ofMillis(newWaitTime));
+
+						//noinspection UnnecessaryContinue
+						continue;
+					} // END Catch StaleElementReferenceException
+				} // END "Try again for Visible on StaleElementReferenceException" loop.
 			}
 			else {
 				fluentWait.until( (Function<WebDriver, Boolean>) driver -> !isDisplayed());

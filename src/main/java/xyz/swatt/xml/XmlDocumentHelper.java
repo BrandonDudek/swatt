@@ -14,10 +14,15 @@ import org.apache.xerces.dom.AttrImpl;
 import org.apache.xerces.dom.CommentImpl;
 import org.apache.xerces.dom.ElementNSImpl;
 import org.apache.xerces.dom.TextImpl;
+import org.jsoup.Jsoup;
+import org.jsoup.helper.W3CDom;
+import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.exceptions.TooManyResultsException;
+import xyz.swatt.exceptions.XmlException;
 import xyz.swatt.string.StringHelper;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,6 +38,7 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,52 +63,6 @@ public final class XmlDocumentHelper {
 	//========================= STATIC CONSTANTS ===============================
 	private static final Logger LOGGER = LogManager.getLogger(XmlDocumentHelper.class);
 
-	/**
-	 * Special Names:
-	 * &emsp;	= EM Space (one Monospaced Character width)
-	 * &ensp;	= EN Space (half a Monospaced Character width)
-	 * &lrm;	= Left-To-Right Mark
-	 * &nbsp;	= Non-Breaking Space
-	 * &rlm;	= Right-To-Left Mark
-	 * &shy;	= Soft Hyphen
-	 * &thinsp;	= Thin Space
-	 * &zwj;	= Zero-Width Joiner
-	 * &zwnj;	= Zero-Width Non-Joiner
-	 *
-	 * Hex:
-	 * &#x20;	= Space
-	 * &#x7f;	= Delete
-	 * &#xa0;	= Non-Breaking Space
-	 * &#xad;	= Soft Hyphen
-	 * &#xff;	= Non-Breaking Space
-	 * &#x034F;	= Combining Grapheme Joiner
-	 * #x2002;	= EN Space (half a Monospaced Character width)
-	 * #x2003;	= EM Space (one Monospaced Character width)
-	 * #x2009;	= Thin Space
-	 * #x200C;	= Zero-Width Non-Joiner
-	 * #x200D;	= Zero-Width Joiner
-	 * #x200E;	= Left-To-Right Mark
-	 * #x200F;	= Right-To-Left Mark
-	 *
-	 * Decimal:
-	 * &#32;	= Space
-	 * &#127;	= Delete
-	 * &#160;	= Non-Breaking Space
-	 * &#173;	= Soft Hyphen
-	 * &#255;	= Non-Breaking Space
-	 * &#847;	= Combining Grapheme Joiner
-	 * &#8194;	= EN Space (half a Monospaced Character width)
-	 * &#8195;	= EM Space (one Monospaced Character width)
-	 * &#8201;	= Thin Space
-	 * &#8204;	= Zero-Width Non-Joiner
-	 * &#8205;	= Zero-Width Joiner
-	 * &#8206;	= Left-To-Right Mark
-	 * &#8207;	= Right-To-Left Mark
-	 */
-	public static final String HTML_WHITESPACE_ENTITIES = "&emsp;|&ensp;|&lrm;|&nbsp;|&rlm;|&shy;|&thinsp;|&zwj;|&zwnj;"
-			+ "|&#x20;|&#x7F;|&#xA0;|&#xAD;|&#xFF;|&&#x034F;|#x2002;|#x2003;|#x2009;|#x200C;|#x200D;|#x200E;|#x200F;"
-			+ "|&#32;|&#127;|&#160;|&#173;|&#255;|&#847;|&#8194;|&#8195;|&#8201;|&#8204;|&#8205;|&#8206;|&#8207;";
-
 	//========================= Static Variables ===============================
 
 	//========================= Static Constructor =============================
@@ -112,16 +72,54 @@ public final class XmlDocumentHelper {
 
 	//========================= Static Methods =================================
 	/**
+	 * Creates an Element {@link Node}, that belongs to the given XML {@link Document}, with the given name and value.
+	 *
+	 * @param _xmlDocument The XML Document to be the owner of this new {@link Node}.
+	 * @param _name The name to call the new Node.
+	 * @param _value The value to give the new Node.
+	 *
+	 * @return The Node that was just created.
+	 *
+	 * @throws IllegalArgumentException If the given XML Document is {@code null}, or if the given Name or Value is blank.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static Node createElementNode( Document _xmlDocument, String _name, String _value ) {
+
+		LOGGER.info( "createElementNode( Document, name: {}, value: {} ) [START]", _name, _value );
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_xmlDocument, "XML Document");
+
+		ArgumentChecks.stringNotWhitespaceOnly(_name, "Node Name");
+		ArgumentChecks.stringNotWhitespaceOnly(_value, "Node Value");
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Node newNode;
+
+		//------------------------ Initialize ----------------------------------
+		newNode = _xmlDocument.createElement( _name );
+
+		//------------------------ Code ----------------------------------------
+		newNode.appendChild( _xmlDocument.createTextNode( _value ) );
+
+		LOGGER.debug( "createElementNode( Document, name: {}, value: {} ) [END]", _name, _value );
+
+		return newNode;
+	}
+
+	/**
 	 * Will create a new XML {@link Document}.
 	 *
 	 * @return A brand new, empty XML {@link Document}, with no root.
 	 *
-	 * @throws ParserConfigurationException
-	 *             If the {@link Document} cannot be created.
+	 * @throws XmlException If the {@link Document} cannot be created.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static Document createNewDocument() throws ParserConfigurationException {
+	public static Document createNewDocument() {
 
 		LOGGER.info("createNewDocument() [START]");
 
@@ -133,11 +131,74 @@ public final class XmlDocumentHelper {
 		Document doc;
 
 		//------------------------ Code ----------------------------------------
-		doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		try {
+			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch(ParserConfigurationException e) {
+			throw new XmlException("Error creating XML Document!", e);
+		}
 
 		LOGGER.info("createNewDocument() [END]");
 
 		return doc;
+	}
+
+	/**
+	 * Will XML Escape any character outside of the range of Basic Latin printable characters: \x09 - \x0D and \x21 - \x7E.
+	 * (Note: Same a ASCII printable characters.)
+	 *
+	 * @param _inputString The {@link String} to parse for escaping.
+	 * @param _format  Whether the XML Entities should be in Decimal or HEX format.
+	 *
+	 * @return The escaped {@link String}; or {@code null}, if {@code null} is given.
+	 *
+	 * @throws IllegalArgumentException If the given {@link XmlEntityFormat} is {@code null} or an unknown format.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static String escapeExtendedCharacters(String _inputString, XmlEntityFormat _format) {
+
+		LOGGER.info( "escapeExtendedCharacters(_inputString: {}, _format: {}) [START]", _inputString, _format );
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_format, "XML Entity Format");
+
+		if( _inputString == null ) {
+			return null;
+		}
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		StringBuilder stringBuilder = new StringBuilder();
+
+		//------------------------ Code ----------------------------------------
+		for( char c : _inputString.toCharArray() ) {
+
+			if( ( (int) c >= 9 && (int) c <= 13 ) || ( (int) c >= 21 && (int) c <= 126 ) ) {
+				stringBuilder.append( c );
+			}
+			else {
+
+				switch( _format ) {
+
+					case DECIMAL:
+						stringBuilder.append( "&#" ).append((int) c).append( ";" );
+						break;
+
+					case HEX:
+						stringBuilder.append( "&#x" ).append( Integer.toHexString((int) c) ).append( ";" );
+						break;
+
+					default:
+						throw new IllegalArgumentException( "Unknown XmlEntityFormat: " + _format + "!" );
+				}
+			}
+		}
+
+		LOGGER.debug( "escapeExtendedCharacters(_inputString: {}, _format: {}) [END]", _inputString, _format );
+
+		return stringBuilder.toString();
 	}
 
 	/**
@@ -156,12 +217,11 @@ public final class XmlDocumentHelper {
 	 *                 <li>Or the given {@link File} is unreadable.</li>
 	 *             </ul>
 	 *
-	 * @throws TransformerException
-	 *             If there was a problem with conversion.
+	 * @throws XmlException If there was a problem with conversion.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static Document getDocumentFrom(File _xmlFile) throws TransformerException {
+	public static Document getDocumentFrom(File _xmlFile) {
 
 		LOGGER.debug( "getDocumentFrom(_xmlFile: {}) [START]", _xmlFile == null ? "(NULL)" : _xmlFile.getPath() );
 
@@ -202,12 +262,11 @@ public final class XmlDocumentHelper {
 	 * 		    <li>If the given String is {@code null}.</li>
 	 * 		    <li>Or if the given String is Empty or just Whitespace.</li>
 	 * 		</ul>
-	 * @throws TransformerException
-	 * 		If there was a problem with conversion.
+	 * @throws XmlException If there was a problem with conversion.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static Document getDocumentFrom(String _xmlString) throws TransformerException {
+	public static Document getDocumentFrom(String _xmlString) {
 
 		LOGGER.info("getDocumentFrom(_xmlString: {}) [START]", _xmlString);
 
@@ -230,10 +289,16 @@ public final class XmlDocumentHelper {
 		// So we are doubly escaping them as to not lose them.
 		_xmlString = _xmlString.replaceAll("&", "&amp;");
 
-		// Saxon TransformerFactory is Namespace Aware by default.
-		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		transformer.setOutputProperty(SaxonOutputKeys.REQUIRE_WELL_FORMED, "yes");
-		transformer.transform(new StreamSource(new StringReader(_xmlString)), domResult);
+		Transformer transformer;
+		try {
+			transformer = TransformerFactory.newInstance().newTransformer(); // Saxon TransformerFactory is Namespace Aware by default.
+			transformer.setOutputProperty(SaxonOutputKeys.REQUIRE_WELL_FORMED, "yes");
+			transformer.transform(new StreamSource(new StringReader(_xmlString)), domResult);
+		}
+		catch(TransformerException e) {
+			throw new XmlException("Error creating XML Document!", e);
+		}
+
 		xmlDocument = (Document) domResult.getNode();
 
 		// DocumentBuilderFactory is not used because it does not load the docElement and firstChild at initialization for all Nodes in the document.
@@ -266,17 +331,13 @@ public final class XmlDocumentHelper {
 	 *
 	 * @return A {@link Node} that was the result of this XPath lookup, or {@code null}, if no {@link Node} matches the XPath expression.
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@code _xmlNode} is {@code null}.
-	 * 		<p>Or if the given {@code _xPath} is {@code null}, an Empty String, or Whitespace only.</p>
-	 * @throws SaxonApiException
-	 * 		If there is an error with the XPath lookup.
-	 * @throws TooManyResultsException
-	 * 		If more than 1 Node was found by the given XPath
+	 * @throws IllegalArgumentException If the given Node is {@code null} or the given XPath is blank.
+	 * @throws XmlException If there is an error with the XPath lookup.
+	 * @throws TooManyResultsException If more than 1 Node was found by the given XPath
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static Node getNodeForXPath(Node _xmlNode, String _xPath) throws SaxonApiException {
+	public static Node getNodeForXPath(Node _xmlNode, String _xPath) {
 
 		LOGGER.debug("getNodesForXPath(xmlDocument, xPath: {}) [START]", _xPath);
 
@@ -285,7 +346,7 @@ public final class XmlDocumentHelper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		List<Node> nodes = getNodesForXPath(_xmlNode, _xPath);
+		List<Node> nodes = getNodesForXPath(_xmlNode, _xPath); // Argument Checks done here.
 
 		//------------------------ Code ----------------------------------------
 		if(nodes.size() > 1) {
@@ -314,19 +375,18 @@ public final class XmlDocumentHelper {
 	 *
 	 * @return A collection of {@link Node}s that was the result of this XPath lookup, or an empty collection, if no {@link Node}s matched the XPath expression.
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@code _xmlNode} is {@code null}.
-	 * 		<p>Or if the given {@code _xPath} is {@code null}, an Empty String, or Whitespace only.</p>
-	 * @throws SaxonApiException
-	 * 		If there is an error with the XPath lookup.
+	 * @throws IllegalArgumentException If the given Node is {@code null} or the given XPath is blank.
+	 * @throws XmlException If there is an error with the XPath lookup.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static List<Node> getNodesForXPath(Node _xmlNode, String _xPath) throws SaxonApiException {
+	public static List<Node> getNodesForXPath(Node _xmlNode, String _xPath) {
 
 		LOGGER.debug("getNodesForXPath(_xmlDocument, _xPath: {}) [START]", _xPath);
 
 		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_xmlNode, "XML Node");
+		ArgumentChecks.stringNotWhitespaceOnly(_xPath, "XPath");
 
 		//------------------------ CONSTANTS -----------------------------------
 		// Creating a new processor each time to better support multi-threading.
@@ -352,12 +412,19 @@ public final class XmlDocumentHelper {
 			xPathselector = xPathCompiler.compile(_xPath).load();
 		}
 		catch(Exception e) {
-			throw new RuntimeException("Invalid XPath: " + _xPath, e);
+			throw new XmlException("Invalid XPath: " + _xPath, e);
 		}
 
-		xPathselector.setContextItem(PROCESSOR.newDocumentBuilder().wrap(_xmlNode));
+		XdmValue xdmItems;
+		try {
+			xPathselector.setContextItem(PROCESSOR.newDocumentBuilder().wrap(_xmlNode));
+			xdmItems = xPathselector.evaluate();
+		}
+		catch(SaxonApiException e) {
+			throw new XmlException("Error executing XPath: " + _xPath, e);
+		}
 
-		for(XdmItem xdmItem : xPathselector.evaluate()) {
+		for(XdmItem xdmItem : xdmItems) {
 
 			Sequence value = xdmItem.getUnderlyingValue();
 
@@ -392,12 +459,12 @@ public final class XmlDocumentHelper {
 				}
 				else {
 					String className = realNode.getClass().toString();
-					throw new RuntimeException("The given XPath returned a DOMNodeWrapper of an Unknown Type! (" + className + ")");
+					throw new XmlException("The given XPath returned a DOMNodeWrapper of an Unknown Type! (" + className + ")");
 				}
 			}
 			else {
 				String className = value.getClass().toString();
-				throw new RuntimeException("The given XPath returned a Node of an Unknown Type! (" + className + ")");
+				throw new XmlException("The given XPath returned a Node of an Unknown Type! (" + className + ")");
 			}
 
 			nodes.add(node);
@@ -409,6 +476,158 @@ public final class XmlDocumentHelper {
 	}
 
 	/**
+	 * Gets a String result for the given xPath, by calling getTextContent() on the returned element.
+	 *
+	 * @param _xmlNode
+	 *            The Document or Element to do the XPath search on.
+	 *            <ul>
+	 *            <li>Even if an Element is passed, the search
+	 *            could still be at the Document level depending on the
+	 *            {@code _xPath} value.
+	 *            </ul>
+	 * @param _xPath
+	 *            The XPath to search for.
+	 *            <ul>
+	 *            <li>If the XPath Starts with "/" or "//" the search will be
+	 *            done at the Document level.
+	 *            <li>If the XPath Starts with "./" or no backslash the search
+	 *            will be done at the Element level.
+	 *            <ul>
+	 *            <li>When Searching from the Element Level, do <b>not</b>
+	 *            include the given element's name in the XPath.
+	 *            </ul>
+	 *            </ul>
+	 *
+	 * @return A String with the result or NULL, if there is no result.
+	 *
+	 * @throws XmlException If there is an error with the XPath lookup.
+	 * @throws TooManyResultsException If more than 1 Node was found by the given XPath
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static String getStringForXPath(Node _xmlNode, String _xPath) {
+
+		LOGGER.debug( "getStringForXPath(Node, _xPath: {}) [START]", _xPath );
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Node node;
+		String result = null;
+
+		//------------------------ Code ----------------------------------------
+		node = getNodeForXPath(_xmlNode, _xPath);
+		if(node != null) {
+			result = node.getTextContent();
+		}
+
+		LOGGER.debug( "getStringForXPath(Node, _xPath: {}) [END]", _xPath );
+
+		return result;
+	}
+
+	/**
+	 * Gets a List of String results for the given xPath, by calling getTextContent() on all of the returned Elements.
+	 *
+	 * @param _xmlNode The Document or Element to do the XPath search on.
+	 *            <ul>
+	 *            <li>Even if an Element is passed, the search
+	 *            could still be at the Document level depending on the
+	 *            {@code _xPath} value.
+	 *            </ul>
+	 * @param _xPath The XPath to search for.
+	 *            <ul>
+	 *            <li>If the XPath Starts with "/" or "//" the search will be
+	 *            done at the Document level.
+	 *            <li>If the XPath Starts with "./" or no backslash the search
+	 *            will be done at the Element level.
+	 *            <ul>
+	 *            <li>When Searching from the Element Level, do <b>not</b>
+	 *            include the given element's name in the XPath.
+	 *            </ul>
+	 *            </ul>
+	 *
+	 * @return A List of Strings with the result or an Empty List, if there is no result.
+	 *
+	 * @throws IllegalArgumentException If the given Node is {@code null} or the given XPath is blank.
+	 * @throws XmlException If there is an error with the XPath lookup.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static List< String > getStringsForXPath(Node _xmlNode, String _xPath) {
+
+		LOGGER.debug( "getStringsForXPath( Node, _xPath: {} ) [START]", _xPath );
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		List< Node > nodes = getNodesForXPath( _xmlNode, _xPath ); // Argument Checks done here.
+		List< String > results = new ArrayList<>( nodes.size() );
+
+		//------------------------ Initialize ----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		for( Node node : nodes ) {
+			results.add( node.getTextContent() );
+		}
+
+		LOGGER.debug( "getStringsForXPath(Node, _xPath: {}) [END]", _xPath );
+
+		return results;
+	}
+
+	/**
+	 * Will take in an HTML {@link String} and try to parse it to an XML {@link Document}, with UTF-8 encoding.
+	 * <p>(The parsing will try to resolve the differences between HTML and XML.)</p>
+	 * <p><b>Note:</b> All tags and attributes are converted to lower case, for consistency.</p>
+	 * <p><b>Warning:</b> If the given text does not have a root element, then only the first element is parsed..</p>
+	 *
+	 * @param _html The HTML {@link String} to convert to an XML {@link Document}.
+	 *
+	 * @throws IllegalArgumentException If the given HTML {@link String} is blank.
+	 * @throws XmlException If the given HTML {@link String} cannot be parsed or has multiple root elements.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static Document htmlToXml(String _html) {
+
+		LOGGER.info("htmlToXml(_html: {}) [START]", _html);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.stringNotWhitespaceOnly(_html, "HTML String");
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		org.jsoup.nodes.Document jsoupDocument;
+		Document w3cDocument;
+
+		//------------------------ Code ----------------------------------------
+		jsoupDocument = Jsoup.parse(_html);
+		if(jsoupDocument.body().childNodeSize() < 1) {
+			throw new XmlException("The given HTML String could not be parsed!\n\tHTML String: " + _html);
+		}
+		else if(jsoupDocument.body().childNodeSize() > 1) {
+			throw new XmlException("The given HTML String has multiple root elements! (It is required to have only 1.)!\n\tHTML String: " + _html);
+		}
+
+		try {
+			jsoupDocument = Jsoup.parse(_html, "", Parser.xmlParser().settings(new ParseSettings(false, false)));
+		}
+		catch(Exception e) {
+			throw new XmlException("The given HTML String could not be parsed!", e);
+		}
+
+		w3cDocument = new W3CDom().fromJsoup(jsoupDocument);
+
+		LOGGER.debug("htmlToXml(_html: {}) [END]", _html);
+
+		return w3cDocument;
+	}
+
+	/**
 	 * Takes in an XML {@link Node} and returns a String XML representation of it, with no formatting.
 	 *
 	 * @param _node
@@ -416,14 +635,12 @@ public final class XmlDocumentHelper {
 	 *
 	 * @return The XML {@link Node}/{@link Document} in String format
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@code _node} is {@code null}.
-	 * @throws TransformerException
-	 * 		If {@link Node}/{@link Document} cannot be converted into a String.
+	 * @throws IllegalArgumentException If the given {@code _node} is {@code null}.
+	 * @throws XmlException If the {@link Node}/{@link Document} cannot be converted into a String.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static String prettyPrint(Node _node) throws TransformerException {
+	public static String prettyPrint(Node _node) {
 		return toString( _node, true );
 	}
 
@@ -435,14 +652,12 @@ public final class XmlDocumentHelper {
 	 *
 	 * @return The XML {@link Node}/{@link Document} in String format
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@code _node} is {@code null}.
-	 * @throws TransformerException
-	 * 		If {@link Node}/{@link Document} cannot be converted into a String.
+	 * @throws IllegalArgumentException If the given {@code _node} is {@code null}.
+	 * @throws XmlException If the {@link Node}/{@link Document} cannot be converted into a String.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static String toString(Node _node) throws TransformerException {
+	public static String toString(Node _node) {
 		return toString( _node, false );
 	}
 
@@ -457,14 +672,12 @@ public final class XmlDocumentHelper {
 	 *
 	 * @return The XML {@link Node}/{@link Document} in String format.
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@code _node} is {@code null}.
-	 * @throws TransformerException
-	 * 		If {@link Node}/{@link Document} cannot be converted into a String.
+	 * @throws IllegalArgumentException If the given {@code _node} is {@code null}.
+	 * @throws XmlException If the {@link Node}/{@link Document} cannot be converted into a String.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static String toString(Node _node, boolean _prettyPrint) throws TransformerException {
+	public static String toString(Node _node, boolean _prettyPrint) {
 
 		LOGGER.info("toString(_node, _prettyPrint: {}) [START]", _prettyPrint);
 
@@ -479,25 +692,30 @@ public final class XmlDocumentHelper {
 		Transformer transformer;
 
 		//------------------------ Code ----------------------------------------
-		transformer = TransformerFactory.newInstance().newTransformer();
+		try {
+			transformer = TransformerFactory.newInstance().newTransformer();
 
-		//transformer.setOutputProperty( OutputKeys.METHOD, "xml" ); // Automatically inferred by TransformerFactory.
+			//transformer.setOutputProperty( OutputKeys.METHOD, "xml" ); // Automatically inferred by TransformerFactory.
 
-		if(_node.getOwnerDocument() != null) {
+			if(_node.getOwnerDocument() != null) {
 
-			// Omit XML Declaration, because the given node is not a Document.
-			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+				// Omit XML Declaration, because the given node is not a Document.
+				transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			}
+
+			if(_prettyPrint) {
+
+				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+				transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+				//transformer.setOutputProperty( SaxonOutputKeys.INDENT_SPACES, "2" ); // Cannot be used as it requires a Saxon License.
+			}
+
+			transformer.transform(new DOMSource(_node), result);
 		}
-
-		if(_prettyPrint) {
-
-			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-
-			//transformer.setOutputProperty( SaxonOutputKeys.INDENT_SPACES, "2" ); // Cannot be used as it requires a Saxon License.
+		catch(TransformerException e) {
+			throw new XmlException("Error parsing XML Document to String!", e);
 		}
-
-		transformer.transform(new DOMSource(_node), result);
 
 		toString = result.getWriter().toString();
 

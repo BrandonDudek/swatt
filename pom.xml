@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -32,18 +32,21 @@
         <!-- Jackson -->
         <jackson.version>2.6.7</jackson.version>
 
-        <!-- Log4j -->
-        <log4j2.version>2.11.0</log4j2.version> <!-- There is a bug in 2.10.0. -->
+        <!-- JSoup -->
+        <jsoup.version>1.11.3</jsoup.version>
+
+        <!-- Log4j2 -->
+        <log4j2.version>2.11.0</log4j2.version>
 
         <!-- Saxon -->
         <saxon.version>9.7.0-18</saxon.version>
 
         <!-- Selenium -->
-        <selenium.version>3.12.0</selenium.version>
+        <selenium.version>3.14.0</selenium.version>
         <htmlunit.version>2.31.0</htmlunit.version>
 
         <!-- TestNG -->
-        <testng.version>6.11</testng.version>
+        <testng.version>6.14.2</testng.version>
 
     </properties>
 
@@ -55,7 +58,6 @@
             <artifactId>commons-collections4</artifactId>
             <version>${apache.commons.collections.version}</version>
         </dependency>
-
 
         <!-- Jackson XML / JSON Mapper (Used by Spring's RestTemplate.) -->
         <dependency>
@@ -72,6 +74,13 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- JSoup -->
+        <dependency> <!-- For Parsing HTML -->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
         </dependency>
 
         <!-- Log4j2 -->

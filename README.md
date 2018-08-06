@@ -28,6 +28,7 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
 |SWATT|Selenium|Windows|MacOS|Chrome|Chrome Driver|Firefox|Gecko (FF) Driver|IE|IE Driver|
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 |1.1.0|3.12.0|7|10.13 (High Sierra)|67.0|2.39|60.0 ESR|0.20.1|11|3.12|
+
 For more details and known bugs, see: https://swatt.xyz/selenium-driver-browser-version-compatibility/
 
 ## Maven Repository

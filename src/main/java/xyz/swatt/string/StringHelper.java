@@ -3,6 +3,7 @@ package xyz.swatt.string;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.swatt.asserts.ArgumentChecks;
+import xyz.swatt.xml.XmlDocumentHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -144,60 +145,42 @@ public class StringHelper {
 
 	//========================= Static Methods =================================
 	/**
-	 * Will Replace all Non-ASCII (table 1) characters with their HTML Escaped equivalent.
+	 * Will Replace all Non-ASCII (table 1) characters (and non-print ASCII [table 1] characters) with their XML Escaped equivalent.
+	 * <p><b>Note:</b> Same as calling {@link #xmlEscapeNonAsciiPrintCharacters(String, NumberBase)}.</p>
 	 *
-	 * @param _string
-	 * 		The String to Escape.
-	 * @param _numberBase
-	 * 		The Number System to Escape to.
+	 * @param _string The String to Escape.
+	 * @param _numberBase The Number System to Escape to.
 	 *
-	 * @return The given String with all the appropriate characters replaced.
+	 * @return The given String with all the appropriate characters replaced; or {@code null}, if {@code null} is given.
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@link NumberBase} is unknown.
+	 * @throws IllegalArgumentException If the given {@link NumberBase} is {@code null} or unknown.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 *
+	 * @see #xmlEscapeNonAsciiPrintCharacters(String, NumberBase)
+	 */
+	public static String htmlEscapeNonAsciiPrintCharacters(String _string, NumberBase _numberBase) {
+		return xmlEscapeNonAsciiPrintCharacters(_string, _numberBase);
+	}
+
+	/**
+	 * Will Replace all Non-ASCII (table 1) characters (and non-print ASCII [table 1] characters) with their XML Escaped equivalent.
+	 * <p><b>Note:</b> Same as calling {@link XmlDocumentHelper#escapeExtendedCharacters(String, XmlDocumentHelper.XmlEntityFormat)}.</p>
+	 *
+	 * @param _string The String to Escape.
+	 * @param _numberBase The Number System to Escape to.
+	 *
+	 * @return The given String with all the appropriate characters replaced; or {@code null}, if {@code null} is given.
+	 *
+	 * @throws IllegalArgumentException If the given {@link NumberBase} is {@code null} or unknown.
 	 * 		
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 *
+	 * @see XmlDocumentHelper#escapeExtendedCharacters(String, XmlDocumentHelper.XmlEntityFormat)
 	 */
-	public static String htmlEscapeNonAsciiCharacters(String _string, NumberBase _numberBase) {
-
-		LOGGER.info("htmlEscapeNonAsciiCharacters(_input: {}, _numberBase: {}) [START]", _string, _numberBase);
-
-		//------------------------ Pre-Checks ----------------------------------
-
-		//------------------------ CONSTANTS -----------------------------------
-
-		//------------------------ Variables -----------------------------------
-
-		//------------------------ Code ----------------------------------------
-		if(_string != null) {
-
-			for(int i = 0; i < _string.length(); i++) {
-
-				char character = _string.charAt(i);
-
-				if(character > 127) {
-
-					String replacement;
-					switch(_numberBase) {
-						case DECIMAL:
-							replacement = "&#" + ((int) character) + ";";
-							break;
-						case HEXADECIMAL:
-							replacement = "&#x" + Integer.toHexString(character) + ";";
-							break;
-						default:
-							throw new IllegalArgumentException("Unknown given numberBase: " + _numberBase);
-					}
-
-					_string = _string.substring(0, i) + replacement + _string.substring(i + 1);
-					i += replacement.length() - 1;
-				}
-			}
-		}
-
-		LOGGER.debug("htmlEscapeNonAsciiCharacters(_input: {}, _numberBase: {}) [END]", _string, _numberBase);
-
-		return _string;
+	public static String xmlEscapeNonAsciiPrintCharacters(String _string, NumberBase _numberBase) {
+		return XmlDocumentHelper.escapeExtendedCharacters(_string,
+				_numberBase == NumberBase.DECIMAL ? XmlDocumentHelper.XmlEntityFormat.DECIMAL : XmlDocumentHelper.XmlEntityFormat.HEX);
 	}
 
 	/**

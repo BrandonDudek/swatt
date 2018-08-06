@@ -143,7 +143,7 @@ public class SeleniumCompatibilityTests {
     @Test(dependsOnMethods = {"loadPage"})
     public void sendKeys() {
 
-        LOGGER.info("sendKeys() [START]");
+        LOGGER.info("sendKeys() [START] - {}", BROWSER_TYPE);
 
         //------------------------ Pre-Checks ----------------------------------
 
@@ -172,7 +172,7 @@ public class SeleniumCompatibilityTests {
     @Test(dependsOnMethods = {"sendKeys"})
     public void click() {
 
-        LOGGER.info("click() [START]");
+        LOGGER.info("click() [START] - {}", BROWSER_TYPE);
 
         //------------------------ Pre-Checks ----------------------------------
 
@@ -290,6 +290,8 @@ public class SeleniumCompatibilityTests {
 
         //------------------------ Code ----------------------------------------
         driver.quit();
+
+        WebDriverWrapper.killUsedBrowserDriverProcesses();
 
         LOGGER.debug("afterClass() [END]");
     }

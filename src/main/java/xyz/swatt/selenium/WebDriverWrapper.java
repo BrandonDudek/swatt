@@ -2,6 +2,7 @@ package xyz.swatt.selenium;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.*;
@@ -25,6 +26,7 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Quotes;
 import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.exceptions.TooManyResultsException;
+import xyz.swatt.exceptions.WebPageException;
 import xyz.swatt.string.StringHelper;
 
 import java.awt.*;
@@ -296,7 +298,7 @@ public class WebDriverWrapper {
 	 * The smallest recommended time to wait for any {@link WebElement} to appear, disappear, or change.
 	 * (Twice the {@link #POLLING_INTERVAL_MS}. [This will cause the wait to check 2 times for the requirement.])
 	 */
-	public static final double RECOMMENDED_MIN_POLLING_TIME_S = POLLING_INTERVAL_MS * 2 / 1000;
+	public static final double RECOMMENDED_MIN_POLLING_TIME_S = POLLING_INTERVAL_MS * 2.0 / 1000;
 
 	/**
 	 * Used to make sure that we only create/launch one browser at a time,
@@ -427,6 +429,102 @@ public class WebDriverWrapper {
 		LOGGER.debug("getBodyElement(WebDriverWrapper _driver) [END]");
 		
 		return body;
+	}
+
+	/**
+	 * This method will kill any Browser Driver processes that were started in previous runs.
+	 * <p>
+	 *     Should only be used at the beginning off execution (like in an {@code @BeforeSuite} method).
+	 * </p>
+	 * <p>
+	 *     <b>Note:</b> Will only execute on windows machine.
+	 * </p>
+	 * <p>
+	 *     <b>Warning:</b> This will kill any ECT-QED Tools' Selenium Drivers from other executions!
+	 * </p>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static void killPreviousBrowserDriverProcesses() {
+
+		LOGGER.info("killPreviousBrowserDriverProcesses() [START]");
+
+		//------------------------ Pre-Checks ----------------------------------
+		if(IS_MAC) {
+			LOGGER.debug("killPreviousBrowserDriverProcesses() - IS_MACK - [END]");
+			return;
+		}
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		List<String> allBrowserNames = new LinkedList<>();
+
+		//------------------------ Code ----------------------------------------
+		allBrowserNames.add(ChromeBrowser.CHROME_WIN_32.DRIVER_NAME);
+		allBrowserNames.add(FirefoxBrowser.FIREFOX_WIN_32.DRIVER_NAME);
+		allBrowserNames.add(FirefoxBrowser.FIREFOX_WIN_64.DRIVER_NAME);
+		allBrowserNames.add(IEBrowser.IE_WIN_32.DRIVER_NAME);
+		allBrowserNames.add(IEBrowser.IE_WIN_64.DRIVER_NAME);
+
+		for(String driverName :allBrowserNames) {
+
+			String baseName = FilenameUtils.getBaseName(driverName);
+			try {
+				// * is for the random number that is added when copying to the temp directory.
+				String command = "taskkill /T /F /IM " + baseName + "-*";
+				Runtime.getRuntime().exec(command);
+			} catch (IOException e) {
+				LOGGER.warn("Driver " + Quotes.escape(driverName) + " could not be killed!", e);
+			}
+		}
+
+		DRIVER_FILES.clear();
+
+		LOGGER.debug("killPreviousBrowserDriverProcesses() [END]");
+	}
+
+	/**
+	 * This method will kill all of the Browser Driver processes that were created during this run.
+	 * <p>
+	 *     Should only be used at the end off all execution (like in an {@code @AfterSuite} method).
+	 * </p>
+	 * <p>
+	 *     <b>Note:</b> Will only execute on windows machine.
+	 * </p>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static void killUsedBrowserDriverProcesses() {
+
+		LOGGER.info("killUsedBrowserDriverProcesses() [START]");
+
+		//------------------------ Pre-Checks ----------------------------------
+		if(IS_MAC) {
+			LOGGER.debug("killUsedBrowserDriverProcesses() - IS_MACK - [END]");
+			return;
+		}
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		for(String driverFileName : DRIVER_FILES.keySet()) {
+
+			String baseName = FilenameUtils.getBaseName(driverFileName);
+			try {
+				// * is for the random number that is added when copying to the temp directory.
+				String command = "taskkill /T /F /IM " + baseName + "-*";
+				Runtime.getRuntime().exec(command);
+			} catch (IOException e) {
+				LOGGER.warn("Driver " + Quotes.escape(driverFileName) + " could not be killed!", e);
+			}
+		}
+
+		DRIVER_FILES.clear();
+
+		LOGGER.debug("killUsedBrowserDriverProcesses() [END]");
 	}
 
 	/**
@@ -926,7 +1024,11 @@ public class WebDriverWrapper {
 	/**
 	 * Instantiates this WebDriverWrapper to use the given {@link IEBrowser}.
 	 * <p>
-	 *     <b>Note:</b> The Window will be maximized.
+	 *     <b>Note:</b> IE requires that the "Enable Protected Mode" Security Settings be set to the same value for all Security Zones.
+	 *     (see: <a href='http://automate-apps.com/unexpected-error-launching-internet-explorer-protected-mode-settings-are-not-the-same-for-all-zones/'>http://automate-apps.com/unexpected-error-launching-internet-explorer-protected-mode-settings-are-not-the-same-for-all-zones/</a>)
+	 * </p>
+	 * <p>
+	 *     <b>Note:</b> The window will be maximized.
 	 * </p>
 	 *
 	 * @param _browser
@@ -992,13 +1094,28 @@ public class WebDriverWrapper {
 			InternetExplorerOptions options = new InternetExplorerOptions();
 
 			// So that IE's Security "Enable Protected Mode" settings do not have to all be the same.
-			options.introduceFlakinessByIgnoringSecurityDomains();
+			//InternetExplorerOptions.introduceFlakinessByIgnoringSecurityDomains(); // Cannot use.
+			// See: https://stackoverflow.com/questions/51106754/selenium-ie-upload-file-not-working/51106755#51106755.
+			// IE's Security "Enable Protected Mode" settings will have to all be set to the same value.
 
-			// Clears Browser's Cache..
+			// Clears Browser's Cache.
 			options.destructivelyEnsureCleanSession();
+			// TODO: Stop using because it will clear the cache of browsers already running.
+			// Use "Private" browsing instead.
+			// TODO: https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/6544
+			/*options.useCreateProcessApiToLaunchIe();
+			options.addCommandSwitches("-private");*/
+			// OR.
+			/*options.setCapability(InternetExplorerDriver.FORCE_CREATE_PROCESS, true);
+			options.setCapability(InternetExplorerDriver.IE_SWITCHES, "-private");*/
+
+			// Use a private session to ensure a clean cache.
+			// TODO: Blocked by Bug: https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/7572.
+			//options.useCreateProcessApiToLaunchIe();
+			//options.addCommandSwitches("-private");
 
 			// Fixes bug where a hover command only holds for an instant.
-			options.enablePersistentHovering();
+			//options.enablePersistentHovering();
 
 			// If the Zoom was last set to something other that 100%, IE Driver will throw an error.
 			// This ignores that error.
@@ -1007,11 +1124,15 @@ public class WebDriverWrapper {
 			// IE uses "simulated" (javascript) events by default. (Because IE requires focus to use "native" events.)
 			// To force "native" events, uncomment these two calls, and remove the "enablePersistentHovering()" call.
 			// (see: http://jimevansmusic.blogspot.com/2013/01/revisiting-native-events-in-ie-driver.html)
-			/*options.requireWindowFocus();
-			options.enableNativeEvents();*/
+			//options.requireWindowFocus();
+			options.enableNativeEvents();
+
+			options.setCapability("logLevel", "ERROR"); // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#ie-specific
 
 			DRIVER = new InternetExplorerDriver(options);
 			DRIVER_NAME = _browser.toString();
+
+			//((RemoteWebDriver) WEB_DRIVER).setLogLevel(Level.ALL); // Does not work.
 		}
 
 		// Maximize and rest Zoom.
@@ -1971,6 +2092,57 @@ public class WebDriverWrapper {
 		LOGGER.debug("refresh() - {} - [END]", (alert == null ? "NULL" : "Alert") );
 
 		return alert;
+	}
+
+	/**
+	 * Will send keys to the &lt;body&gt; element, if it exists.
+	 * <p>
+	 *     <b>Note:</b> is the &lt;body&gt; element does not exist, then the keys will be sent to the root element.
+	 * </p>
+     *
+     * @param _keys
+     *            What characters to send to the &lt;body&gt; element / root.
+	 *
+	 * @return A reference to {@code this} {@link WebElementWrapper}, for method call chaining purposes.
+	 *
+	 * @throws IllegalArgumentException If the given Keys are {@code null} or an Empty String.
+	 * @throws WebPageException If there is no root element.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper sendKeys(String _keys) {
+
+		LOGGER.info("sendKeys(_keys: {}) [START]", _keys);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_keys, "Keys");
+		if(_keys.isEmpty()) {
+			throw new IllegalArgumentException("Given Keys cannot be an Empty String!");
+		}
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		WebElementWrapper element;
+
+		//------------------------ Code ----------------------------------------
+		List<WebElementWrapper> bodyElements = getWebElementWrappers(By.tagName("body"));
+		if(bodyElements.size() == 1) {
+			element = bodyElements.get(0);
+		}
+		else {
+			element = getWebElementWrapper(By.xpath("/*"));
+		}
+
+		if(element == null) {
+			throw new WebPageException("There is no page loaded in the browser!");
+		}
+
+		element.sendKeys(_keys);
+
+		LOGGER.debug("sendKeys(_keys: {}) [END]", _keys);
+
+		return this;
 	}
 
 	/**

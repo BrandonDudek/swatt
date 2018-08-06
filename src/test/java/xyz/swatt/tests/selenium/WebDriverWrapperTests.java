@@ -1,9 +1,6 @@
 package xyz.swatt.tests.selenium;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
-import xyz.swatt.selenium.WebDriverWrapper;
-import xyz.swatt.selenium.WebElementWrapper;
-import xyz.swatt.xml.XmlDocumentHelper;
 import net.sf.saxon.s9api.SaxonApiException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,8 +9,10 @@ import org.openqa.selenium.support.ui.Quotes;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
+import xyz.swatt.selenium.WebDriverWrapper;
+import xyz.swatt.selenium.WebElementWrapper;
+import xyz.swatt.xml.XmlDocumentHelper;
 
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.util.List;
 
@@ -40,12 +39,7 @@ public class WebDriverWrapperTests {
     static {
         File htmlFile = new File("src/test/resources/Selenium Test Files/Test Web Page.html");
 
-        try {
-            HTML_AS_XML = XmlDocumentHelper.getDocumentFrom(htmlFile);
-        }
-        catch(TransformerException e) {
-            throw new RuntimeException(e);
-        }
+        HTML_AS_XML = XmlDocumentHelper.getDocumentFrom(htmlFile);
 
         DRIVER.goToUrl("file:" + htmlFile.getAbsolutePath());
     }
