@@ -683,7 +683,7 @@ public class WebElementWrapper {
 			}
 		}
 
-		LOGGER.debug("getAttribute(_attributeName: {}) - {} - [END]", _attributeName, Quotes.escape(value));
+		LOGGER.debug("getAttribute(_attributeName: {}) - {} - [END]", _attributeName, value == null ? "(NULL)" : Quotes.escape(value));
 
 		return value;
 	}
@@ -708,7 +708,7 @@ public class WebElementWrapper {
 	 */
 	public String getCssValue(String _propertyName) {
 
-		LOGGER.info("getAttribute(_propertyName: {}) [START]", _propertyName);
+		LOGGER.info("getCssValue(_propertyName: {}) [START]", _propertyName);
 
 		//------------------------ Pre-Checks ----------------------------------
 		if(_propertyName == null) {
@@ -739,7 +739,7 @@ public class WebElementWrapper {
 			}
 		}
 
-		LOGGER.debug("getAttribute( _propertyName: {}) - {} - [END]", _propertyName, Quotes.escape(value));
+		LOGGER.debug("getCssValue( _propertyName: {}) - {} - [END]", _propertyName, value == null ? "(NULL)" : Quotes.escape(value));
 
 		return value;
 	}
