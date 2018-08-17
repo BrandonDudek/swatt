@@ -160,10 +160,10 @@ public class WebElementWrapper {
 	
 	//========================= CONSTANTS ======================================
 	private final String XPATH_IDS_SELECTOR;
-	private final WebDriverWrapper WEB_DRIVER_WRAPPER;
+	final WebDriverWrapper WEB_DRIVER_WRAPPER;
 
 	//========================= Variables ======================================
-	private By originalBy;
+	By originalBy;
 	private String name, webElementToStringSelectorXpath;
 	WebElement webElement;
 
@@ -382,7 +382,7 @@ public class WebElementWrapper {
 	 * @see WebDriverWrapper#waitForPageLoad()
 	 */
 	public WebElementWrapper click(boolean _waitForRefresh) {
-		return click(_waitForRefresh, true, false);
+		return click(_waitForRefresh, true, false, null);
 	}
 
 	/**
@@ -469,6 +469,54 @@ public class WebElementWrapper {
 		
 		return this;
 	}
+
+	/**
+	 * Will hold down the {@link Keys#CONTROL} or {@link Keys#COMMAND} Key, while performing a click.
+	 * <p>
+	 *     Note: {@link Keys#COMMAND} for Mac and {@link Keys#CONTROL} for everything else.
+	 * </p>
+	 *
+	 * @return This {@link WebElementWrapper} for function call chain-ability.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 *
+	 * @see #keyClick(CharSequence)
+	 */
+	public WebElementWrapper controlCommandClick() {
+		return keyClick(WEB_DRIVER_WRAPPER.CTRL_CMD_KEY);
+	}
+
+	/**
+	 * Will hold down Key(s) while performing a click.
+	 *
+	 * @param _keys The {@link Keys} or {@link Keys#chord(CharSequence...)} to hold down, while performing the click.
+	 *
+	 * @return This {@link WebElementWrapper} for function call chain-ability.
+	 *
+	 * @throws IllegalArgumentException If the given Keys are {@code null}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 *
+	 * @see #click()
+	 */
+	public WebElementWrapper keyClick(CharSequence _keys) {
+
+		LOGGER.info("keyClick(_keys: {}) [START]", _keys);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_keys, "Keys");
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		click(false, true, false, _keys);
+
+		LOGGER.debug("keyClick(_keys: {}) [END]", _keys);
+
+		return this;
+	}
 	//////////////////// Click Functions [END] ////////////////////
 
 	/**
@@ -506,6 +554,36 @@ public class WebElementWrapper {
 	}
 
 	/**
+	 * Will perform a "double click" on this Element.
+	 *
+	 * @return This {@link WebElementWrapper}, for method call chaining purposes.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebElementWrapper doubleClick() {
+
+		LOGGER.info("doubleClick() [START]");
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Actions actions;
+
+		//------------------------ Code ----------------------------------------
+		actions = new Actions(WEB_DRIVER_WRAPPER.DRIVER);
+
+		actions.doubleClick(webElement);
+
+		performAction(actions);
+
+		LOGGER.debug("doubleClick() [END]");
+
+		return this;
+	}
+
+	/**
 	 * Drags this {@link WebElement} to the middle of the given {@link WebElement}.
 	 *
 	 * @param _destinationElement
@@ -524,14 +602,16 @@ public class WebElementWrapper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
+		Actions clickAndHoldActions = new Actions(WEB_DRIVER_WRAPPER.DRIVER).clickAndHold(webElement);
+		Actions releasedActions = new Actions(WEB_DRIVER_WRAPPER.DRIVER).release(webElement);
 		
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 			
 			hoverOver();
-			
-			new Actions(WEB_DRIVER_WRAPPER.DRIVER).clickAndHold(webElement).perform();
-			
+
+			performAction(clickAndHoldActions);
+
 			try {
 				Thread.sleep(300);// Can update, up to 0.5s.
 			}
@@ -542,9 +622,9 @@ public class WebElementWrapper {
 			try {
 				Thread.sleep(300); // Can update, up to 0.5s.
 			}
-			catch(InterruptedException e) { /*Do Nothing*/ } 
-			
-			new Actions(WEB_DRIVER_WRAPPER.DRIVER).release(webElement).perform();
+			catch(InterruptedException e) { /*Do Nothing*/ }
+
+			performAction(releasedActions);
 		}
 		
 		LOGGER.debug("dragTo(WebElementWrapper _destinationElement) [END]");
@@ -553,56 +633,117 @@ public class WebElementWrapper {
 	}
 
 	/**
-	 * The name of the attribute, to get the value of
+	 * Will get the value of one of this Element's XML Attributes.
+	 * <p>
+	 *     <b>Note:</b> For CSS Properties use {@link #getCssValue(String)}.
+	 * </p>
 	 *
 	 * @param _attributeName
-	 * 		The name of the attribute value to return.
+	 *         The name of the Attribute value to return.
 	 *
-	 * @return The attribute/property's current value or {@code null} if the value is not set.
+	 * @return The Attribute's current value or {@code null}, if the Attribute does not exist.
 	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given {@code _attributeName} is {@code null}.
-	 * 		<p>The given {@code _attributeName} is an Empty String or just Whitespace.</p>
-	 * 		
+	 * @throws IllegalArgumentException If the given Attribute Name is blank.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 * 
+	 *
 	 * @see WebElement#getAttribute(String)
+	 * @see #getCssValue(String)
 	 */
 	public String getAttribute(String _attributeName) {
 
 		LOGGER.info("getAttribute(_attributeName: {}) [START]", _attributeName);
 
 		//------------------------ Pre-Checks ----------------------------------
-		ArgumentChecks.stringNotWhitespaceOnly(_attributeName, "Attribute Name");
+		if(_attributeName == null) {
+			throw new IllegalArgumentException("Given Attribute Name cannot be NULL!");
+		}
+		if(_attributeName.trim().isEmpty()) {
+			throw new IllegalArgumentException("Given Attribute Name cannot be an Empty String or just Whitespace!");
+		}
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		String attributeValue;
+		String value;
 
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
-			
+
 			while(true) {
-				
 				try {
-					attributeValue = webElement.getAttribute(_attributeName);
+					value = webElement.getAttribute(_attributeName);
 					break;
 				}
 				catch(StaleElementReferenceException e) {
-					
 					if(!reacquireWebElement()) {
 						throw e;
 					}
 				}
 			}
 		}
-		
-		LOGGER.debug("getAttribute(_attributeName: {}) - {} - [END]", _attributeName, attributeValue == null ? "(NULL)" : Quotes.escape(attributeValue));
-		
-		return attributeValue;
+
+		LOGGER.debug("getAttribute(_attributeName: {}) - {} - [END]", _attributeName, Quotes.escape(value));
+
+		return value;
 	}
-	
+
+	/**
+	 * Will get the value of one of this Element's CSS Properties.
+	 * <p>
+	 *     <b>Note:</b> For XML Attributes use {@link #getAttribute(String)}.
+	 * </p>
+	 *
+	 * @param _propertyName
+	 *         The name of the Properties value to return.
+	 *
+	 * @return The Properties's current value or {@code null}, if the Properties is not set.
+	 *
+	 * @throws IllegalArgumentException If the given Properties Name is blank.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 *
+	 * @see WebElement#getCssValue(String)
+	 * @see #getAttribute(String)
+	 */
+	public String getCssValue(String _propertyName) {
+
+		LOGGER.info("getAttribute(_propertyName: {}) [START]", _propertyName);
+
+		//------------------------ Pre-Checks ----------------------------------
+		if(_propertyName == null) {
+			throw new IllegalArgumentException("Given Attribute Name cannot be NULL!");
+		}
+		if(_propertyName.trim().isEmpty()) {
+			throw new IllegalArgumentException("Given Attribute Name cannot be an Empty String or just Whitespace!");
+		}
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		String value;
+
+		//------------------------ Code ----------------------------------------
+		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
+
+			while(true) {
+				try {
+					value = webElement.getCssValue(_propertyName);
+					break;
+				}
+				catch(StaleElementReferenceException e) {
+					if(!reacquireWebElement()) {
+						throw e;
+					}
+				}
+			}
+		}
+
+		LOGGER.debug("getAttribute( _propertyName: {}) - {} - [END]", _propertyName, Quotes.escape(value));
+
+		return value;
+	}
+
 	//////////////////// Get Descendant(s) Functions [START] ////////////////////
 	/**
 	 * Gets the descendant of this {@link WebElement} that matches the given search query.
@@ -1320,19 +1461,9 @@ public class WebElementWrapper {
 				scrollToMiddle();
 			}
 
-			while(true) {
+			actions.moveToElement(webElementToScrollTo.webElement);
 
-				try {
-					actions.moveToElement(webElementToScrollTo.webElement).perform();
-					break;
-				}
-				catch(StaleElementReferenceException e) {
-
-					if(!reacquireWebElement()) {
-						throw e;
-					}
-				}
-			}
+			performAction(actions);
 		}
 
 		LOGGER.debug("hoverOver() [END]");
@@ -1721,7 +1852,84 @@ public class WebElementWrapper {
 	 * @see WebDriverWrapper#waitForPageLoad()
 	 */
 	public WebElementWrapper javascriptClick(boolean _waitForRefresh) {
-		return click(_waitForRefresh, true, true);
+		return click(_waitForRefresh, true, true, null);
+	}
+
+	/**
+	 * Will perform a right click on this element.
+	 * <ul>
+	 *     <li>To navigate through the Context Menu items, send {@link Keys#UP} and {@link Keys#DOWN} to this element.</li>
+	 *     <li>To select/execute/perform a highlighted Context Menu item, send {@link Keys#ENTER} to this element.</li>
+	 *     <li>And to close the Context Menu, send {@link Keys#ESCAPE} to this element.</li>
+	 * </ul>
+	 * <p>
+	 *     <b>Note:</b> <b>Chrome</b> and <b>Firefox</b> can only work with custom Context Menus. (<b>Not</b> the browser's Context Menu.)
+	 * </p>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void rightClick() {
+
+		LOGGER.info("rightClick() [START]");
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Actions actions;
+
+		//------------------------ Code ----------------------------------------
+		actions = new Actions(WEB_DRIVER_WRAPPER.DRIVER).contextClick(webElement);
+
+		performAction(actions);
+
+		LOGGER.debug("rightClick() [END]");
+	}
+
+	/**
+	 * Will perform a right click on this element send {@link Keys#DOWN} a given number of times, and then send {@link Keys#ENTER}.
+	 * <p>
+	 *     <b>Note:</b> <b>Chrome</b> and <b>Firefox</b> can only work with custom Context Menus. (<b>Not</b> the browser's Context Menu.)
+	 * </p>
+	 *
+	 * @param _downCount
+	 *         The number of times to press {@link Keys#DOWN}.
+	 *         (<i>Note:</i> The first send of {@link Keys#DOWN} will select the top level item in the Context Menu.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given Down Count is &lt; 1!
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void rightClickAndSelectContextMenuItem(int _downCount) {
+
+		LOGGER.info("rightClickAndSelectContextMenuItem(_downCount: {}) [START]", _downCount);
+
+		//------------------------ Pre-Checks ----------------------------------
+		if(_downCount < 1) {
+			throw new IllegalArgumentException("Given Down Count must be > 0!");
+		}
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Actions actions;
+
+		//------------------------ Code ----------------------------------------
+		actions = new Actions(WEB_DRIVER_WRAPPER.DRIVER);
+
+		actions.contextClick(webElement);
+
+		for(int i = 0; i < _downCount; i++) {
+			actions.sendKeys(Keys.DOWN);
+		}
+
+		actions.sendKeys(Keys.ENTER);
+
+		performAction(actions); // Synchronize done inside.
+
+		LOGGER.debug("rightClickAndSelectContextMenuItem(_downCount: {}) [END]", _downCount);
 	}
 
 	/**
@@ -1798,7 +2006,7 @@ public class WebElementWrapper {
 
 				// Highlight Option.
 				WebElementWrapper option = getDescendant(By.xpath(".//option[normalize-space(.) = " + Quotes.escape(_visibleText) + "]"));
-				option.click(false, false, false); // Selenium 3 broke manually scrolling Select Options, but does it automatically on click.
+				option.click(false, false, false, null); // Selenium 3 broke manually scrolling Select Options, but does it automatically on click.
 
 				// Close Drop-Down.
 				blur();
@@ -3098,53 +3306,76 @@ public class WebElementWrapper {
 
 	//////////////////// WebElementWrapper only Helper Methods ////////////////////
 	/**
+	 * @param _waitForRefresh Whether to wait for a page reload, after the click.
+	 * @param _scrollIntoView If {@code true}, then the element will be scrolled into view first.
+	 * @param _javascriptClick If {@code true}, then a javascript click will be performed.
+	 * @param _keys If defined, the key(s) to hold down while doing the click.
+	 *
+	 * @return This {@link WebElementWrapper} for function call chain-ability.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	private WebElementWrapper click(boolean _waitForRefresh, boolean _scrollIntoView, boolean _javascriptClick) {
+	private WebElementWrapper click( boolean _waitForRefresh, boolean _scrollIntoView, boolean _javascriptClick, CharSequence _keys ) {
 
-		LOGGER.info("click() [START]");
+		LOGGER.info( "click() [START]" );
 
 		//------------------------ Pre-Checks ----------------------------------
+		if(_javascriptClick && _keys != null) {
+			throw new RuntimeException("Cannot hold keys with a Javascript Click!");
+		}
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		
-		//------------------------ Code ----------------------------------------
-		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
+		Actions actions;
 
-			if(_scrollIntoView || isFullyInViewport()) {
+		//------------------------ Code ----------------------------------------
+		synchronized( WEB_DRIVER_WRAPPER.LOCK ) {
+
+			///// Scroll To and Hover Over /////
+			if( _scrollIntoView || isFullyInViewport() ) {
 				hoverOver();
 			}
 
-			if(_javascriptClick) {
-				((JavascriptExecutor) WEB_DRIVER_WRAPPER.DRIVER).executeScript("arguments[0].click();", webElement);
+			///// Click /////
+			if( _javascriptClick ) {
+				( (JavascriptExecutor) WEB_DRIVER_WRAPPER.DRIVER ).executeScript( "arguments[0].click();", webElement );
 			}
 			else {
-				while(true) {
+
+				if(_keys != null) { // Don't need to catch StaleElementReferenceException, because action is being done at browser level.
+					new Actions(WEB_DRIVER_WRAPPER.DRIVER).keyDown(_keys).perform();
+				}
+
+				while (true) {
 					try {
 						webElement.click();
 						break;
 					}
-					catch(StaleElementReferenceException e) {
-						if(!reacquireWebElement()) {
+					catch (StaleElementReferenceException e) {
+						if( !reacquireWebElement() ) {
 							throw e;
 						}
 					}
+				} // END "Catch StaleElementReferenceException" Loop.
+
+				if(_keys != null) { // Don't need to catch StaleElementReferenceException, because action is being done at browser level.
+					new Actions(WEB_DRIVER_WRAPPER.DRIVER).keyUp(_keys).perform();
 				}
-			}
+			} // END "Normal Click" Else.
 
-			if(_waitForRefresh) {
+			///// Wait for Refresh /////
+			if( _waitForRefresh ) {
 
-				waitForUnload(WebDriverWrapper.maxPageLoadTimeInSeconds);
 				// Page is unloaded.
+				waitForUnload( WebDriverWrapper.maxPageLoadTimeInSeconds );
 
-				WEB_DRIVER_WRAPPER.waitForPageLoad();
 				// Page is loaded.
+				WEB_DRIVER_WRAPPER.waitForPageLoad();
 			}
 		}
 
-		LOGGER.debug("click() [END]");
+		LOGGER.debug( "click() [END]" );
 
 		return this;
 	}
@@ -3281,5 +3512,40 @@ public class WebElementWrapper {
 		}
 
 		LOGGER.debug("javascriptScrollIntoView() [END]");
+	}
+
+	/**
+	 * Will perform given {@link Actions}, and catch {@link StaleElementReferenceException}s.
+	 *
+	 * @param _actions
+	 *         The {@link Actions} to perform.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	private void performAction(Actions _actions) {
+
+		LOGGER.debug("performAction(_actions: {}) [START]", _actions);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_actions, "Action");
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		while(true) {
+			try {
+				_actions.perform();
+				break;
+			}
+			catch(StaleElementReferenceException e) {
+				if(!reacquireWebElement()) {
+					throw e;
+				}
+			}
+		}
+
+		LOGGER.trace("performAction(_actions: {}) [END]", _actions);
 	}
 }

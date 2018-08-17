@@ -6,10 +6,10 @@ import org.openqa.selenium.WebElement;
 /**
  * This Class extends {@link WebElementWrapper} and contains all of it's functionality.
  * <p>
- *     The only difference is that this class has the {@link #getWebElement()} method.
+ * The only difference is that this class has the {@link #getWebElement()} method.
  * </p>
  * <p>
- *     The purpose of this class is to be used <b><i>temporarily</i></b>, while transitioning an existing project to SWATT.
+ * The purpose of this class is to be used <b><i>temporarily</i></b>, while transitioning an existing project to SWATT.
  * </p>
  *
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
@@ -33,13 +33,17 @@ public class WebElementTransitionalWrapper extends WebElementWrapper {
     //========================= Variables ======================================
 
     //========================= Constructors ===================================
+
     /**
      * Creates this WebElementWrapper for use with a give Selenium WebElement.
      *
-     * @param _driver The WebDriverWrapper that created this object.
-     * @param _webElement The WebElement to interact with.
+     * @param _driver
+     *         The WebDriverWrapper that created this object.
+     * @param _webElement
+     *         The WebElement to interact with.
      *
-     * @throws IllegalArgumentException If either of the parameters are {@code null}.
+     * @throws IllegalArgumentException
+     *         If either of the parameters are {@code null}.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
@@ -47,8 +51,25 @@ public class WebElementTransitionalWrapper extends WebElementWrapper {
         super(_driver, _webElement, null);
     }
 
+    /**
+     * Creates this WebElementWrapper for use with a give Selenium WebElement.
+     *
+     * @param _webElementWrapper
+     *         The WebDriverWrapper that created this object.
+     * @param _webElementWrapper
+     *         The WebElementWrapper to extend.
+     *
+     * @throws IllegalArgumentException
+     *         If either of the parameters are {@code null}.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    public WebElementTransitionalWrapper(WebElementWrapper _webElementWrapper) {
+        super(_webElementWrapper.WEB_DRIVER_WRAPPER, _webElementWrapper.webElement, _webElementWrapper.originalBy);
+    }
 
     //========================= Methods ========================================
+
     /**
      * @return A reference to the {@link WebDriver} that this wrapper is based on.
      *

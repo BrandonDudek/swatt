@@ -57,6 +57,34 @@ public class WebDriverWrapper {
 
 	//========================= Static Enums ===================================
 	/**
+	 * The different Web Browsers supported by {@link WebDriverWrapper}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static enum BrowserType {
+
+		CHROME("Chrome"),
+		FIREFOX("Firefox"),
+		IE("Internet Explorer"),
+		/**
+		 * An headless (GUI-less) browser. (see: <a href="http://htmlunit.sourceforge.net/">HtmlUnit</a>)
+		 */
+		HTML_UNIT("HtmlUnit"),
+		;
+
+		private final String VALUE;
+
+		private BrowserType(String _value) {
+			VALUE = _value;
+		}
+
+		@Override
+		public String toString() {
+			return VALUE;
+		}
+	}
+
+	/**
 	 * A list of supported Google Chrome Web Browsers.
 	 * <ul>
 	 *     <li>{@link #CHROME}</li>
@@ -65,6 +93,8 @@ public class WebDriverWrapper {
 	 * </ul>
 	 *
 	 * @see <a href="https://sites.google.com/a/chromium.org/chromedriver/">https://sites.google.com/a/chromium.org/chromedriver</a>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static enum ChromeBrowser {
 		
@@ -109,6 +139,8 @@ public class WebDriverWrapper {
 	 *     <li>{@link #FIREFOX_WIN_32}</li>
 	 *     <li>{@link #FIREFOX_WIN_64}</li>
 	 * </ul>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static enum FirefoxBrowser {
 		
@@ -172,6 +204,8 @@ public class WebDriverWrapper {
 	 *     <li>{@link #IE_WIN_32}</li>
 	 *     <li>{@link #IE_WIN_64}</li>
 	 * </ul>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static enum IEBrowser {
 
@@ -234,6 +268,8 @@ public class WebDriverWrapper {
 	 *     <li>{@link #FIRE_BUG}</li>
 	 *     <li>{@link #FIRE_PATH}</li>
 	 * </ul>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static enum FirefoxExtension {
 
@@ -756,6 +792,7 @@ public class WebDriverWrapper {
 	 */
 	public final Object LOCK = new Object();
 
+	public final BrowserType BROWSER_TYPE;
 	final protected String DRIVER_NAME;
 	final protected WebDriver DRIVER;
 
@@ -828,6 +865,7 @@ public class WebDriverWrapper {
 			//noinspection SpellCheckingInspection
 			options.addArguments("disable-infobars");
 			DRIVER = new ChromeDriver(options);
+			BROWSER_TYPE = BrowserType.CHROME;
 			DRIVER_NAME = _browser.toString();
 		}
 
@@ -1005,6 +1043,7 @@ public class WebDriverWrapper {
 			/////
 
 			DRIVER = new FirefoxDriver(firefoxOptions);
+			BROWSER_TYPE = BrowserType.FIREFOX;
 			DRIVER_NAME = _browser.toString();
 		}
 
@@ -1130,6 +1169,7 @@ public class WebDriverWrapper {
 			options.setCapability("logLevel", "ERROR"); // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#ie-specific
 
 			DRIVER = new InternetExplorerDriver(options);
+			BROWSER_TYPE = BrowserType.IE;
 			DRIVER_NAME = _browser.toString();
 
 			//((RemoteWebDriver) WEB_DRIVER).setLogLevel(Level.ALL); // Does not work.
@@ -1165,6 +1205,7 @@ public class WebDriverWrapper {
 
 		//-------------------------Code-----------------------------------------
 		DRIVER = new HtmlUnitDriver(_browserVersion, true);
+		BROWSER_TYPE = BrowserType.HTML_UNIT;
 		DRIVER_NAME = _browserVersion.toString();
 
 		LOGGER.debug("WebDriverWrapper(_browserVersion: {}) [END]", _browserVersion);
@@ -1717,6 +1758,10 @@ public class WebDriverWrapper {
 			// Fluent Wait Settings.
 			fluentWait.withTimeout(Duration.ofSeconds((long) _secondsToWait)).pollingEvery(Duration.ofMillis(POLLING_INTERVAL_MS))
 					.ignoreAll(Arrays.asList(new Class[]{NoSuchElementException.class, ElementNotVisibleException.class, InvalidElementStateException.class}));
+
+			if(BROWSER_TYPE == BrowserType.IE) { // TODO: https://github.com/SeleniumHQ/selenium/issues/4555
+				fluentWait.ignoring(WebDriverException.class /*TODO: Null pointer exception when calling webDriver.findElements #4555*/);
+			}
 
 			startTime = System.currentTimeMillis();
 
