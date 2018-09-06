@@ -7,8 +7,23 @@ package xyz.swatt.exceptions;
  */
 public class XmlException extends RuntimeException {
 
+	//========================= Static Enums ===================================
+
 	//========================= STATIC CONSTANTS ===============================
 	private static final long serialVersionUID = -4759721633736849807L;
+
+	//========================= Static Variables ===============================
+
+	//========================= Static Constructor =============================
+	static {
+
+	}
+
+	//========================= Static Methods =================================
+
+	//========================= CONSTANTS ======================================
+
+	//========================= Variables ======================================
 
 	//========================= Constructors ===================================
 	/**
@@ -67,4 +82,6 @@ public class XmlException extends RuntimeException {
 	public XmlException(String message, Throwable cause) {
 		super( message, cause );
 	}
+
+	//========================= Methods ========================================
 }

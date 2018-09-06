@@ -1,22 +1,16 @@
 package xyz.swatt.exceptions;
 
 /**
- * An Abstract Runtime Exception that all other Exceptions in the {@link xyz.swatt.exceptions} package inherit from.
- * <p>
- *     This allows all of these exceptions to be caught by a single class.
- * </p>
- * <p>
- *     Every class extends {@link java.lang.RuntimeException}, so that it does not need to be declared as {@code thrown}.
- * </p>
+ * This Exception will be thrown by The Selenium Wrappers, when there is an error executing Javascript.
  *
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
-public abstract class AbstractSwattException extends RuntimeException {
+public class JavascriptException extends AbstractSwattException {
 
 	//========================= Static Enums ===================================
 
 	//========================= STATIC CONSTANTS ===============================
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 542649872302938187L;
 
 	//========================= Static Variables ===============================
 
@@ -39,9 +33,9 @@ public abstract class AbstractSwattException extends RuntimeException {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 *
-	 * @see RuntimeException#RuntimeException()
+	 * @see AbstractSwattException#AbstractSwattException()
 	 */
-	public AbstractSwattException() {
+	public JavascriptException() {
 		super();
 	}
 
@@ -55,9 +49,9 @@ public abstract class AbstractSwattException extends RuntimeException {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 *
-	 * @see RuntimeException#RuntimeException(String)
+	 * @see AbstractSwattException#AbstractSwattException(String)
 	 */
-	public AbstractSwattException(String _message) {
+	public JavascriptException(String _message) {
 		super(_message);
 	}
 
@@ -75,9 +69,9 @@ public abstract class AbstractSwattException extends RuntimeException {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 *
-	 * @see RuntimeException#RuntimeException(Throwable)
+	 * @see AbstractSwattException#AbstractSwattException(Throwable)
 	 */
-	public AbstractSwattException(Throwable _cause) {
+	public JavascriptException(Throwable _cause) {
 		super(_cause);
 	}
 
@@ -96,9 +90,9 @@ public abstract class AbstractSwattException extends RuntimeException {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 *
-	 * @see RuntimeException#RuntimeException(String, Throwable)
+	 * @see AbstractSwattException#AbstractSwattException(String, Throwable)
 	 */
-	public AbstractSwattException(String _message, Throwable _cause) {
+	public JavascriptException(String _message, Throwable _cause) {
 		super(_message, _cause);
 	}
 

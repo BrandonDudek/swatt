@@ -3,7 +3,7 @@ package xyz.swatt.exceptions;
 /**
  * This Exception is meant to be thrown by Selenium Web Page Classes.
  * <p>
- *     It will be used as a common {@link Exception} to catch.
+ *     It will be used as a common {@link Exception} for test methods to catch.
  * </p>
  *
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)

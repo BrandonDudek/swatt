@@ -2233,6 +2233,8 @@ public class WebElementWrapper {
 	 *
 	 * @return This {@link WebElement}'s Outer HTML as a String.
 	 *
+	 * @throws JavascriptException If the Javascript command to get the "Outer HTML" fails.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	@Override
@@ -2249,6 +2251,8 @@ public class WebElementWrapper {
 	 *
 	 * @return This {@link WebElement}'s Outer HTML as a String.
 	 *
+	 * @throws JavascriptException If the Javascript command to get the "Outer HTML" fails.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public String toString(boolean _prettyPrint) {
@@ -2258,6 +2262,7 @@ public class WebElementWrapper {
 		//------------------------ Pre-Checks ----------------------------------
 
 		//------------------------ CONSTANTS -----------------------------------
+		final String JAVASCRIPT_COMMAND = "return arguments[0].outerHTML;";
 
 		//------------------------ Variables -----------------------------------
 		String toString;
@@ -2265,7 +2270,21 @@ public class WebElementWrapper {
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			toString = (String) ((JavascriptExecutor) WEB_DRIVER_WRAPPER.DRIVER).executeScript("return arguments[0].outerHTML;", webElement);
+			toString = (String) ((JavascriptExecutor) WEB_DRIVER_WRAPPER.DRIVER).executeScript(JAVASCRIPT_COMMAND, webElement);
+
+			if(toString.equals("Error executing JavaScript")) {
+				if(isStale()) {
+					if(reacquireWebElement()) {
+						return toString(_prettyPrint);
+					}
+					else {
+						throw new StaleElementReferenceException(webElement.toString());
+					}
+				}
+				else {
+					throw new JavascriptException(toString + "\n\t" + JAVASCRIPT_COMMAND);
+				}
+			}
 
 			if(_prettyPrint) {
 
@@ -3548,4 +3567,6 @@ public class WebElementWrapper {
 
 		LOGGER.trace("performAction(_actions: {}) [END]", _actions);
 	}
+
+	//========================= Classes ========================================
 }

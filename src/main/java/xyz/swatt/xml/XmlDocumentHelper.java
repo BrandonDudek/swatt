@@ -39,8 +39,11 @@ import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A Helper Class to deal with XML {@link Document}s.
@@ -111,6 +114,52 @@ public final class XmlDocumentHelper {
 	}
 
 	/**
+	 * Finds all Decimal Entities with the equivalent Hexadecimal Entity.
+	 *
+	 * @param _s
+	 *            The String to perform the find and replace on.
+	 *
+	 * @return The given String with the replacements made.
+	 *
+	 * @throws IllegalArgumentException If the given string is blank.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static String decimalEscapedToHexEscaped(String _s) {
+
+		LOGGER.info("decimalEscapedToHexEscaped(_s: {}) [START]", _s);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.stringNotWhitespaceOnly(_s, null);
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Matcher matcher = Pattern.compile("&#([0-9]{2,4});").matcher(_s);
+
+		HashMap<String, String> replacements = new HashMap<>();
+
+		//------------------------ Code ----------------------------------------
+		////////// Determine Replacements //////////
+		while(matcher.find()) {
+
+			String dec = matcher.group(1);
+			String replacementString = "&#x" + Integer.toHexString(Integer.parseInt(dec)) + ";";
+
+			replacements.put(matcher.group(), replacementString);
+		}
+
+		////////// Make Replacements //////////
+		for(String find : replacements.keySet()) {
+			_s = _s.replaceAll(Matcher.quoteReplacement(find), replacements.get(find));
+		}
+
+		LOGGER.debug("decimalEscapedToHexEscaped(_s: {}) [END]", _s);
+
+		return _s;
+	}
+
+	/**
 	 * Will create a new XML {@link Document}.
 	 *
 	 * @return A brand new, empty XML {@link Document}, with no root.
@@ -144,8 +193,8 @@ public final class XmlDocumentHelper {
 	}
 
 	/**
-	 * Will XML Escape any character outside of the range of Basic Latin printable characters: \x09 - \x0D and \x21 - \x7E.
-	 * (Note: Same a ASCII printable characters.)
+	 * Will XML Escape any character outside of the range of Basic Latin printable characters (\x09-\x0D|\x21-\x7E).
+	 * (Note: Same as only keeping ASCII printable characters.)
 	 *
 	 * @param _inputString The {@link String} to parse for escaping.
 	 * @param _format  Whether the XML Entities should be in Decimal or HEX format.
@@ -175,7 +224,7 @@ public final class XmlDocumentHelper {
 		//------------------------ Code ----------------------------------------
 		for( char c : _inputString.toCharArray() ) {
 
-			if( ( (int) c >= 9 && (int) c <= 13 ) || ( (int) c >= 21 && (int) c <= 126 ) ) {
+			if( ( (int) c >= 9 && (int) c <= 13 ) || ( (int) c >= 32 && (int) c <= 126 ) ) { // Using Decimal values here (note: the javadoc shows Hex values).
 				stringBuilder.append( c );
 			}
 			else {
@@ -579,6 +628,52 @@ public final class XmlDocumentHelper {
 	}
 
 	/**
+	 * Finds all Hexadecimal Entities with the equivalent Decimal Entity.
+	 *
+	 * @param _s
+	 *            The String to perform the find and replace on.
+	 *
+	 * @return The given String with the replacements made.
+	 *
+	 * @throws IllegalArgumentException If the given string is blank.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static String hexEscapedToDecimalEscaped(String _s) {
+
+		LOGGER.info("hexEscapedToDecimalEscaped(_s: {}) [START]", _s);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.stringNotWhitespaceOnly(_s, null);
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Matcher matcher = Pattern.compile("&#x([0-9a-zA-z]{2,4});").matcher(_s);
+
+		HashMap<String, String> replacements = new HashMap<>();
+
+		//------------------------ Code ----------------------------------------
+		////////// Determine Replacements //////////
+		while(matcher.find()) {
+
+			String hex = matcher.group(1);
+			String replacementString = "&#" + Integer.valueOf(hex, 16) + ";";
+
+			replacements.put(matcher.group(), replacementString);
+		}
+
+		////////// Make Replacements //////////
+		for(String find : replacements.keySet()) {
+			_s = _s.replaceAll(Matcher.quoteReplacement(find), replacements.get(find));
+		}
+
+		LOGGER.debug("hexEscapedToDecimalEscaped(_s: {}) [END]", _s);
+
+		return _s;
+	}
+
+	/**
 	 * Will take in an HTML {@link String} and try to parse it to an XML {@link Document}, with UTF-8 encoding.
 	 * <p>(The parsing will try to resolve the differences between HTML and XML.)</p>
 	 * <p><b>Note:</b> All tags and attributes are converted to lower case, for consistency.</p>
@@ -736,4 +831,6 @@ public final class XmlDocumentHelper {
 	//========================= Constructors ===================================
 
 	//========================= Methods ========================================
+
+	//========================= Classes ========================================
 }
