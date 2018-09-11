@@ -55,13 +55,17 @@ import java.util.function.Function;
  */
 public class WebDriverWrapper {
 
+	//========================= Static Interfaces ==============================
+	private static interface SpecificBrowser {
+	}
+
 	//========================= Static Enums ===================================
 	/**
 	 * The different Web Browsers supported by {@link WebDriverWrapper}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum BrowserType {
+	public static enum BrowserType implements SpecificBrowser {
 
 		CHROME("Chrome"),
 		FIREFOX("Firefox"),
@@ -96,7 +100,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum ChromeBrowser {
+	public static enum ChromeBrowser implements SpecificBrowser {
 		
 		/**
 		 * Will attempt to pick Windows or Mac, based on your computer.
@@ -142,7 +146,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum FirefoxBrowser {
+	public static enum FirefoxBrowser implements SpecificBrowser {
 		
 		/**
 		 * Will attempt to pick Windows or Mac, based on your computer. (Preferring 64 over 32 bit for windows.)
@@ -207,7 +211,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum IEBrowser {
+	public static enum IEBrowser implements SpecificBrowser {
 
 		/**
 		 * Will attempt to use 64 bit windows, and fall back on 32 bit windows.
@@ -465,6 +469,51 @@ public class WebDriverWrapper {
 		LOGGER.debug("getBodyElement(WebDriverWrapper _driver) [END]");
 		
 		return body;
+	}
+
+	/**
+	 * Will create a Browser of the given Type, with defaults options, and return it.
+	 *
+	 * @param _browserType
+	 *         The Type of browser to create.
+	 *         (You can pass in any of the {@link WebDriverWrapper} Browser Enums.)
+	 *
+	 * @return The newly created {@link WebDriverWrapper}.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given Browser Type is {@code null}.
+	 *         <p>Or if the given Browser Type is Unknown.</p>
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static WebDriverWrapper getWebDriverWrapper(SpecificBrowser _browserType) {
+
+		LOGGER.info("getWebDriverWrapper(_browserType: {}) [START]", _browserType);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_browserType, "Browser Type");
+
+		//-------------------------CONSTANTS------------------------------------
+
+		//-------------------------Variables------------------------------------
+		WebDriverWrapper wdw;
+
+		//-------------------------Code-----------------------------------------
+		if(_browserType instanceof ChromeBrowser) {
+			wdw = new WebDriverWrapper((ChromeBrowser) _browserType);
+		}
+		else if(_browserType instanceof FirefoxBrowser) {
+			wdw = new WebDriverWrapper((FirefoxBrowser) _browserType);
+		}
+		else if(_browserType instanceof IEBrowser) {
+			wdw = new WebDriverWrapper((IEBrowser) _browserType);
+		}
+		else {
+			throw new IllegalArgumentException("Unknown Browser Type: " + _browserType + "!");
+		}
+
+		LOGGER.debug("getWebDriverWrapper(_browserType: {}) - WebDriverWrapper - [END]", _browserType);
+
+		return wdw;
 	}
 
 	/**
@@ -1237,6 +1286,52 @@ public class WebDriverWrapper {
 		switchToLastWindow();
 
 		LOGGER.debug("closeWindow() [END]");
+	}
+
+	/**
+	 * Will Execute the given JavaScript code.
+	 *
+	 * @param _javascriptCode
+	 *         The JavaScript Code to be Executed.
+	 *
+	 * @return Whatever was returned by the JavaScript Code Execution, as a {@link String};
+	 * or {@code null}, if nothing was returned by the JavaScript Code Execution.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given JavaScript Code is blank.
+	 * @throws JavascriptException
+	 *         If the JavaScript Code Execution returned something other than a {@link String}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public String executeJavascript(String _javascriptCode) {
+
+		LOGGER.info("executeJavascript(_javascriptCode: {}) [START]", _javascriptCode);
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.stringNotWhitespaceOnly(_javascriptCode, "JavaScript Code");
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		JavascriptExecutor jsExecutor = (JavascriptExecutor) DRIVER;
+		String toRet;
+
+		//------------------------ Code ----------------------------------------
+		Object jsReturnObject = jsExecutor.executeScript(_javascriptCode);
+
+		if(jsReturnObject == null) {
+			toRet = null;
+		}
+		else if(!(jsReturnObject instanceof String)) {
+			throw new JavascriptException("Unknown Return Type: " + jsReturnObject.getClass().getName() + "!");
+		}
+		else {
+			toRet = (String) jsReturnObject;
+		}
+
+		LOGGER.debug("executeJavascript(_javascriptCode: {}) [END]", _javascriptCode);
+
+		return toRet;
 	}
 
 	/**
