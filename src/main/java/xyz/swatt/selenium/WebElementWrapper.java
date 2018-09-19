@@ -382,7 +382,7 @@ public class WebElementWrapper {
 	 * @see WebDriverWrapper#waitForPageLoad()
 	 */
 	public WebElementWrapper click(boolean _waitForRefresh) {
-		return click(_waitForRefresh, true, false, null);
+		return click(_waitForRefresh, false, null);
 	}
 
 	/**
@@ -511,7 +511,7 @@ public class WebElementWrapper {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		click(false, true, false, _keys);
+		click(false, false, _keys);
 
 		LOGGER.debug("keyClick(_keys: {}) [END]", _keys);
 
@@ -1774,6 +1774,15 @@ public class WebElementWrapper {
 			catch(StaleElementReferenceException e) {
 				isStale = true;
 			}
+			catch(WebDriverException e) {
+
+				if(WEB_DRIVER_WRAPPER.BROWSER_TYPE == WebDriverWrapper.BrowserType.IE && e.getMessage().equals("Error executing JavaScript")) {
+					isStale = true;
+				}
+				else {
+					throw e;
+				}
+			}
 		}
 
 		LOGGER.debug("isStale() - {} - [END]", isStale);
@@ -1852,7 +1861,7 @@ public class WebElementWrapper {
 	 * @see WebDriverWrapper#waitForPageLoad()
 	 */
 	public WebElementWrapper javascriptClick(boolean _waitForRefresh) {
-		return click(_waitForRefresh, true, true, null);
+		return click(_waitForRefresh, true, null);
 	}
 
 	/**
@@ -2006,7 +2015,7 @@ public class WebElementWrapper {
 
 				// Highlight Option.
 				WebElementWrapper option = getDescendant(By.xpath(".//option[normalize-space(.) = " + Quotes.escape(_visibleText) + "]"));
-				option.click(false, false, false, null); // Selenium 3 broke manually scrolling Select Options, but does it automatically on click.
+				option.click(false, false, null); // Selenium 3 broke manually scrolling Select Options, but does it automatically on click.
 
 				// Close Drop-Down.
 				blur();
@@ -3326,7 +3335,6 @@ public class WebElementWrapper {
 	//////////////////// WebElementWrapper only Helper Methods ////////////////////
 	/**
 	 * @param _waitForRefresh Whether to wait for a page reload, after the click.
-	 * @param _scrollIntoView If {@code true}, then the element will be scrolled into view first.
 	 * @param _javascriptClick If {@code true}, then a javascript click will be performed.
 	 * @param _keys If defined, the key(s) to hold down while doing the click.
 	 *
@@ -3334,9 +3342,9 @@ public class WebElementWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	private WebElementWrapper click( boolean _waitForRefresh, boolean _scrollIntoView, boolean _javascriptClick, CharSequence _keys ) {
+	private WebElementWrapper click(boolean _waitForRefresh, boolean _javascriptClick, CharSequence _keys) {
 
-		LOGGER.info( "click() [START]" );
+		LOGGER.info("click(_waitForRefresh: {}, _waitForRefresh: {}, _waitForRefresh: {}) [START]", _waitForRefresh, _javascriptClick, _keys);
 
 		//------------------------ Pre-Checks ----------------------------------
 		if(_javascriptClick && _keys != null) {
@@ -3346,19 +3354,14 @@ public class WebElementWrapper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		Actions actions;
 
 		//------------------------ Code ----------------------------------------
-		synchronized( WEB_DRIVER_WRAPPER.LOCK ) {
+		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			///// Scroll To and Hover Over /////
-			if( _scrollIntoView || isFullyInViewport() ) {
-				hoverOver();
-			}
+			new Actions(WEB_DRIVER_WRAPPER.DRIVER).moveToElement(webElement).perform(); // Scrolls to and Hovers over.
 
-			///// Click /////
-			if( _javascriptClick ) {
-				( (JavascriptExecutor) WEB_DRIVER_WRAPPER.DRIVER ).executeScript( "arguments[0].click();", webElement );
+			if(_javascriptClick) {
+				((JavascriptExecutor) WEB_DRIVER_WRAPPER.DRIVER).executeScript("arguments[0].click();", webElement);
 			}
 			else {
 
@@ -3366,13 +3369,13 @@ public class WebElementWrapper {
 					new Actions(WEB_DRIVER_WRAPPER.DRIVER).keyDown(_keys).perform();
 				}
 
-				while (true) {
+				while(true) {
 					try {
-						webElement.click();
+						new Actions(WEB_DRIVER_WRAPPER.DRIVER).click().perform();
 						break;
 					}
-					catch (StaleElementReferenceException e) {
-						if( !reacquireWebElement() ) {
+					catch(StaleElementReferenceException e) {
+						if(!reacquireWebElement()) {
 							throw e;
 						}
 					}
@@ -3384,17 +3387,17 @@ public class WebElementWrapper {
 			} // END "Normal Click" Else.
 
 			///// Wait for Refresh /////
-			if( _waitForRefresh ) {
+			if(_waitForRefresh) {
 
 				// Page is unloaded.
-				waitForUnload( WebDriverWrapper.maxPageLoadTimeInSeconds );
+				waitForUnload(WebDriverWrapper.maxPageLoadTimeInSeconds);
 
 				// Page is loaded.
 				WEB_DRIVER_WRAPPER.waitForPageLoad();
 			}
 		}
 
-		LOGGER.debug( "click() [END]" );
+		LOGGER.debug("click(_waitForRefresh: {}, _waitForRefresh: {}, _waitForRefresh: {}) [END]", _waitForRefresh, _javascriptClick, _keys);
 
 		return this;
 	}
@@ -3429,46 +3432,34 @@ public class WebElementWrapper {
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			try {
-				id = webElement.getAttribute("id");
-				if(id == null || (id = id.trim()).isEmpty()) {
+			id = webElement.getAttribute("id");
+			if(id == null || (id = id.trim()).isEmpty()) {
+				LOGGER.debug("getXpathIdsSelector() [END]");
+				return null;
+			}
+
+			xpath = new StringBuilder("/" + webElement.getTagName() + "[@id='" + id + "']");
+			ancestor = webElement;
+
+			while(true) {
+				try {
+					ancestor = ancestor.findElement(By.xpath(".."));
+				}
+				catch(NoSuchElementException e) {
 					LOGGER.debug("getXpathIdsSelector() [END]");
-					return null;
+					return xpath.toString();
 				}
 
-				xpath = new StringBuilder("/" + webElement.getTagName() + "[@id='" + id + "']");
-				ancestor = webElement;
+				name = ancestor.getTagName();
+				id = ancestor.getAttribute("id");
 
-				while(true) {
-					try {
-						ancestor = ancestor.findElement(By.xpath(".."));
-					}
-					catch(NoSuchElementException e) {
-						LOGGER.debug("getXpathIdsSelector() [END]");
-						return xpath.toString();
-					}
-
-					name = ancestor.getTagName();
-					id = ancestor.getAttribute("id");
-
-					if(id != null && !(id = id.trim()).isEmpty()) {
-						name += "[@id='" + id + "']";
-					}
-
-					xpath.insert(0, "/" + name);
+				if(id != null && !(id = id.trim()).isEmpty()) {
+					name += "[@id='" + id + "']";
 				}
+
+				xpath.insert(0, "/" + name);
 			}
-			catch(StaleElementReferenceException e) {
-
-				// Do not attempt to reacquire as that would cause extremely long loops. (Growth is exponential!.)
-				if(xpath != null) {
-					return "/" + xpath;
-				}
-				else {
-					return null;
-				}
-			}
-		}
+		} // Exceptions are thrown, so that WebDriverWrapper.getWebElementWrappers(WebElement, By, double, int, Boolean) can deal with them.
 	}
 
 	/**

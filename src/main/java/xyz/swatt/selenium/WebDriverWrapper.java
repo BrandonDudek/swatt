@@ -38,6 +38,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -56,8 +57,11 @@ import java.util.function.Function;
 public class WebDriverWrapper {
 
 	//========================= Static Interfaces ==============================
-	private static interface SpecificBrowser {
-	}
+
+	/**
+	 * A common Interface for the Browser Enums.
+	 */
+	private static interface SpecificBrowser {}
 
 	//========================= Static Enums ===================================
 	/**
@@ -885,28 +889,24 @@ public class WebDriverWrapper {
 
 		synchronized(CHROME_LOCK) {
 
-			////////// Set System Property "webdriver.gecko.driver" //////////
-			File driverFile = DRIVER_FILES.get(_browser.DRIVER_NAME);
-			if(driverFile == null) { // New Browser type or has not been copied out of JAR yet.
-
-				String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
-				driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
-				InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chrome-drivers/" + _browser);
-				try {
-					FileUtils.copyToFile(resourceInStream, driverFile);
-				}
-				catch(IOException e) {
-					throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
-				}
-
-				// Validate Copy.
-				if(driverFile.length() <= 0) {
-					throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
-				}
-
-				DRIVER_FILES.put(_browser.DRIVER_NAME, driverFile);
+			////////// Set System Property "webdriver.gecko.driver" ////////// Chrome must use a different Driver each time, so support multithreading.
+			String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
+			File driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
+			InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chrome-drivers/" + _browser);
+			try {
+				FileUtils.copyToFile(resourceInStream, driverFile);
 			}
-			System.setProperty("webdriver.chrome.driver", driverFile.getAbsolutePath()); // Have to always set in case 32/64 version changed.
+			catch(IOException e) {
+				throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+			}
+
+			// Validate Copy.
+			if(driverFile.length() <= 0) {
+				throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
+			}
+
+			DRIVER_FILES.put(_browser.DRIVER_NAME, driverFile);
+			System.setProperty("webdriver.chrome.driver", driverFile.getAbsolutePath());
 
 			////////// Launch Browser //////////
 			ChromeOptions options = new ChromeOptions();
@@ -1155,27 +1155,23 @@ public class WebDriverWrapper {
 
 		synchronized(IE_LOCK) {
 
-			////////// Set System Property "webdriver.ie.driver" //////////
-			File driverFile = DRIVER_FILES.get(_browser.DRIVER_NAME);
-			if(driverFile == null) { // New Browser type or has not been copied out of JAR yet.
-
-				String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
-				driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
-				InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("ie-drivers/" + _browser);
-				try {
-					FileUtils.copyToFile(resourceInStream, driverFile);
-				}
-				catch(IOException e) {
-					throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
-				}
-
-				// Validate Copy.
-				if(driverFile.length() <= 0) {
-					throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
-				}
-
-				DRIVER_FILES.put(_browser.DRIVER_NAME, driverFile);
+			////////// Set System Property "webdriver.gecko.driver" ////////// IE must use a different Driver each time, so support multithreading.
+			String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
+			File driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
+			InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("ie-drivers/" + _browser);
+			try {
+				FileUtils.copyToFile(resourceInStream, driverFile);
 			}
+			catch(IOException e) {
+				throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+			}
+
+			// Validate Copy.
+			if(driverFile.length() <= 0) {
+				throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
+			}
+
+			DRIVER_FILES.put(_browser.DRIVER_NAME, driverFile);
 			System.setProperty("webdriver.ie.driver", driverFile.getAbsolutePath()); // Have to always set in case 32/64 version changed.
 
 			////////// Launch Browser //////////
@@ -1841,7 +1837,7 @@ public class WebDriverWrapper {
 			//------------------------ CONSTANTS -----------------------------------
 
 			//------------------------ Variables -----------------------------------
-			long startTime, endTime;
+			long startTime, endTime, secondsWaited;
 
 			@SuppressWarnings("Convert2Diamond")
 			FluentWait fluentWait = _webElement == null ? new FluentWait<WebDriver>(DRIVER) : new FluentWait<WebElement>(_webElement);
@@ -1928,10 +1924,9 @@ public class WebDriverWrapper {
 			}
 			//////////////////// Fluent Wait [END] ////////////////////
 
-			if(LOGGER.isTraceEnabled()) {
-				endTime = System.currentTimeMillis();
-				LOGGER.trace("Waited {} seconds.", (endTime - startTime) / 1000.0);
-			}
+			endTime = System.currentTimeMillis();
+			secondsWaited = TimeUnit.MILLISECONDS.toSeconds(endTime - startTime);
+			LOGGER.trace("Waited {} seconds.", secondsWaited);
 
 			if(webElements != null) { // (For Each loops blow up if collection is NULL.)
 
@@ -1941,8 +1936,21 @@ public class WebDriverWrapper {
 				int i = 0;
 				for(WebElement webElement : webElements) {
 
-					webElementWrappers.add(new WebElementWrapper(this, webElement, byUsed));
+					WebElementWrapper wew;
+					try {
+						wew = new WebElementWrapper(this, webElement, byUsed);
+					}
+					catch(NoSuchElementException/*Sometimes thrown by IE*/ | StaleElementReferenceException e) {
 
+						if(secondsWaited <= _secondsToWait) {
+							return getWebElementWrappers(_webElement, _by, (_secondsToWait - secondsWaited), _numOfElementsToGet, _visibility); // Try Again.
+						}
+						else {
+							continue; // Ignore.
+						}
+					}
+
+					webElementWrappers.add(wew);
 					i++;
 
 					if(_numOfElementsToGet > 0 && i >= _numOfElementsToGet) {
@@ -2594,6 +2602,35 @@ public class WebDriverWrapper {
 		LOGGER.debug("takeScreenshot() [END]");
 
 		return screenshot;
+	}
+
+	/**
+	 * Will take a screenshot and throw a {@link WebPageException} with the given message and the screenshot's full path.
+	 *
+	 * @param _message
+	 *         The Error message for the {@link WebPageException}.
+	 *
+	 * @throws WebPageException
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void throwWebPageException(String _message) throws WebPageException {
+
+		LOGGER.info("throwWebPageException(_message: {}) [START]", _message);
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		File screenshot = takeScreenshot();
+		String path = screenshot.getAbsolutePath();
+		String errorMessage = _message + "\n\tScreenshot: " + path;
+
+		LOGGER.debug("throwWebPageException(_message: {}) [END]", _message);
+
+		throw new WebPageException(errorMessage);
 	}
 
 	/**

@@ -7,7 +7,10 @@ import xyz.swatt.xml.XmlDocumentHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.util.Scanner;
 
 /**
@@ -16,7 +19,7 @@ import java.util.Scanner;
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 public class StringHelper {
-	
+
 	//========================= Static Enums ===================================
 	public static enum CharacterPosition {
 
@@ -370,6 +373,51 @@ public class StringHelper {
 
 		return toRet;
 	}
+
+    /**
+     * Will write the given {@link String} to the given {@link File}.
+     * <p>
+     * <b>Note:</b>
+     * If the file does not exit, it will be created, along with any missing path folders. Or if the File Exists, it will be overwritten.
+     * </p>
+     *
+     * @param _string
+     *         The {@link String} to be written to the {@link File}.
+     * @param _file
+     *         The {@link File} to write the {@link String} into.
+     * @param _options
+     *         <i>Optional</i> File Open Options to overwrite default behavior (see: {@link java.nio.file.StandardOpenOption}).
+     *
+     * @return The given {@link File} for method call chaining.
+     *
+     * @throws IllegalArgumentException
+     *         If the given {@link String} or {@link File} are {@code null}.
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    public File toFile(String _string, File _file, OpenOption... _options) {
+
+        LOGGER.info("toFile(_string: {}, _file: {}) [START]", _string, _file == null ? "(NULL)" : _file.getAbsolutePath());
+
+        //------------------------ Pre-Checks ----------------------------------
+        ArgumentChecks.notNull(_string, "String");
+        ArgumentChecks.notNull(_file, "File");
+
+        //------------------------ CONSTANTS -----------------------------------
+
+        //------------------------ Variables -----------------------------------
+
+        //------------------------ Code ----------------------------------------
+        try {
+            Files.write(_file.toPath(), _string.getBytes(), _options);
+        }
+        catch(IOException e) {
+            throw new RuntimeException("Could not write to file!\n\tFile: " + _file.getAbsolutePath() + "\n\tString: " + _string, e);
+        }
+
+        LOGGER.debug("toFile(_string: {}, _file: {}) [END]", _string, _file.getAbsolutePath());
+
+        return _file;
+    }
 
 	/**
 	 * Converts a File into a String.

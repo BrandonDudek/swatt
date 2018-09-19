@@ -1,5 +1,6 @@
 package xyz.swatt.asserts;
 
+import net.sf.saxon.s9api.Processor;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -289,7 +290,7 @@ public class ArgumentChecks {
 				(_string == null ? "(NULL)" : Quotes.escape(_string)), _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
-		_argumentName = (_argumentName == null || _argumentName.trim().isEmpty()) ? "" : _argumentName.trim() + " ";
+		_argumentName = formatArgumentName(_argumentName);
 
 		//------------------------ CONSTANTS -----------------------------------
 
@@ -308,7 +309,60 @@ public class ArgumentChecks {
 
 		LOGGER.debug("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [END]", Quotes.escape(_string), _argumentName);
 	}
-	
+
+	/**
+	 * Check a given {@link String} to ensure that is not Whitespace Only.
+	 *
+	 * @param _xPath
+	 *         The {@link String} to Check.
+	 * @param _argumentName
+	 *         The Name of the Argument being checked. (Can be NULL or Empty String, to ignore.)
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the {@link String} is NULL, Empty, or Whitespace Only.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static void xpathIsValid(String _xPath, String _argumentName) throws IllegalArgumentException {
+
+		LOGGER.info("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [START]", Quotes.escape(_xPath), _argumentName);
+
+		//------------------------ Pre-Checks ----------------------------------
+		_argumentName = formatArgumentName(_argumentName);
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		if(_xPath == null) {
+			throw new IllegalArgumentException("Given " + _argumentName + "XPath cannot be NULL!");
+		}
+		else if(_xPath.isEmpty()) {
+			throw new IllegalArgumentException("Given " + _argumentName + "XPath cannot be an Empty String!");
+		}
+		else if(_xPath.trim().isEmpty()) {
+			throw new IllegalArgumentException("Given " + _argumentName + "XPath cannot be a Whitespace Only String!");
+		}
+
+		try {
+			new Processor(false).newXPathCompiler().compile(_xPath).load();
+		}
+		catch(Exception e) {
+			throw new IllegalArgumentException("Given " + _argumentName + "XPath is invalid!", e);
+		}
+
+		LOGGER.debug("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [END]", Quotes.escape(_xPath), _argumentName);
+	}
+
+	//-------------------- Helper Static Methods --------------------
+
+	/**
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	private static String formatArgumentName(String _argumentName) {
+		return (_argumentName == null || _argumentName.trim().isEmpty()) ? "" : _argumentName.trim() + " ";
+	}
+
 	//========================= CONSTANTS ======================================
 	
 	//========================= Variables ======================================
