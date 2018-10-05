@@ -38,7 +38,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -57,7 +56,6 @@ import java.util.function.Function;
 public class WebDriverWrapper {
 
 	//========================= Static Interfaces ==============================
-
 	/**
 	 * A common Interface for the Browser Enums.
 	 */
@@ -306,26 +304,6 @@ public class WebDriverWrapper {
 	public static final String DEFAULT_DOWNLOAD_PATH = System.getProperty("user.home") + "/Downloads/";
 
 	/**
-	 * The default maximum amount of time (in seconds) to wait for a {@link WebElement} to appear, disappear, or change.
-	 * <p>
-	 *     Can be overwritten by setting {@link #maxElementLoadTimeInSeconds}.
-	 * </p>
-	 */
-	public static final int DEFAULT_MAX_ELEMENT_LOAD_TIME_S = 1; // second(s). (Package Private for JavaDoc {@value} functionality.)
-
-	/**
-	 * The default maximum amount of time (in seconds) to wait for a Web Page to load.
-	 * <p>
-	 *     Can be overwritten by setting {@link #maxPageLoadTimeInSeconds}.
-	 * </p>
-	 * <p>
-	 *     (We know this is higher than most web apps prefer,
-	 *     but we set it high enough to handle outliers (one-off) load times without failing.)
-	 * </p>
-	 */
-	public static final int DEFAULT_MAX_PAGE_LOAD_TIME_S = 10; // seconds.
-
-	/**
 	 * If this program is running on a Apple (Macintosh / Mac) Computer.
 	 */
 	public static final boolean IS_MAC = System.getProperty("os.name").toLowerCase().contains("mac");
@@ -336,13 +314,13 @@ public class WebDriverWrapper {
 	 * This is the smallest amount of time it takes for a Web Browser to update the DOM.
 	 * (Actually somewhere between 100-200ms, so I am picking the lower end for speed.)
 	 */
-	public static final int POLLING_INTERVAL_MS = 100; // milliseconds.
+	public static final Duration POLLING_INTERVAL = Duration.ofMillis(100);
 
 	/**
 	 * The smallest recommended time to wait for any {@link WebElement} to appear, disappear, or change.
-	 * (Twice the {@link #POLLING_INTERVAL_MS}. [This will cause the wait to check 2 times for the requirement.])
+	 * (Twice the {@link #POLLING_INTERVAL}. [This will cause the wait to check 2 times for the requirement.])
 	 */
-	public static final double RECOMMENDED_MIN_POLLING_TIME_S = POLLING_INTERVAL_MS * 2.0 / 1000;
+	public static final Duration RECOMMENDED_MIN_POLLING_TIME = POLLING_INTERVAL.multipliedBy(2);
 
 	/**
 	 * Used to make sure that we only create/launch one browser at a time,
@@ -369,13 +347,22 @@ public class WebDriverWrapper {
 
 	//========================= Static Variables ===============================
 	/**
-	 * Default: {@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S}.
+	 * The default maximum amount of time to wait for a {@link WebElement} to appear, disappear, or change. (Default: {@code 0.5} seconds.)
+	 * <p>
+	 *     (In general a user will expect an action result to happen "immediately".)
+	 * </p>
 	 */
-	public static long maxElementLoadTimeInSeconds = DEFAULT_MAX_ELEMENT_LOAD_TIME_S;
+	public static Duration maxElementLoadTime = Duration.ofMillis(500);
+
 	/**
-	 * Default: {@value #DEFAULT_MAX_PAGE_LOAD_TIME_S}.
+	 * The maximum amount of time to wait for a Web Page to load. (Default: {@code 3} seconds.)
+	 * <p>
+	 *     (According to Goggle's Web Master Trend Analyst, John Mu, web pages h load in
+	 *     <a href="https://productforums.google.com/forum/#!topic/webmasters/x-tAmtvK9iA/discussion">2</a>-<a
+	 *     href="https://productforums.google.com/forum/#!topic/webmasters/x-tAmtvK9iA/discussion">3</a> seconds.)
+	 * </p>
 	 */
-	public static long maxPageLoadTimeInSeconds = DEFAULT_MAX_PAGE_LOAD_TIME_S;
+	public static Duration maxPageLoadTime = Duration.ofSeconds(3);
 
 	/**
 	 * A way to override the absolute path to Firefox app.
@@ -1205,11 +1192,14 @@ public class WebDriverWrapper {
 			// This ignores that error.
 			options.ignoreZoomSettings();
 
-			// IE uses "simulated" (javascript) events by default. (Because IE requires focus to use "native" events.)
+			// IE uses "simulated" (javascript) events by default. (Because IE can sometimes miss commands if a user changes the focus.)
 			// To force "native" events, uncomment these two calls, and remove the "enablePersistentHovering()" call.
-			// (see: http://jimevansmusic.blogspot.com/2013/01/revisiting-native-events-in-ie-driver.html)
-			//options.requireWindowFocus();
-			options.enableNativeEvents();
+			//options.enableNativeEvents(); // Using "native" events because "simulated" (javascript) events have been causing IE to randomly throw errors.
+			// (It will also randomly miss click events, when in debug mode.) [TODO: Find a way to call out and report this bug.]
+
+			// Will attempt to ensure that the IE browser window is in focus, before performing a command on it.
+			//options.requireWindowFocus(); // Cannot use because it will randomly cause an "IE Command Line" error. (TODO: Report Bug to Selenium / IE Driver.)
+			// (Note: IE will sometimes miss commands if the window is not in focus.)
 
 			options.setCapability("logLevel", "ERROR"); // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#ie-specific
 
@@ -1331,31 +1321,29 @@ public class WebDriverWrapper {
 	}
 
 	/**
-	 * Same as calling {@link #getAlert(double _secondsToWait)} and passing {@link #maxPageLoadTimeInSeconds} ({@value #DEFAULT_MAX_PAGE_LOAD_TIME_S}) for
-	 * {@code _secondsToWait}.
+	 * Waits {@link #maxPageLoadTime} for an alert to pop-up, then returns the {@link Alert}.
 	 *
 	 * @return The {@link Alert} that is present, or {@code null}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public Alert getAlert() {
-		return getAlert(maxPageLoadTimeInSeconds);
+		return getAlert(maxPageLoadTime);
 	}
 
 	/**
-	 * Waits up to {@code _secondsToWait} seconds for an alert to pop-up, then
-	 * returns the {@link Alert}.
+	 * Waits up to the given Wait Time for an alert to pop-up, then returns the {@link Alert}.
 	 *
-	 * @param _secondsToWait
+	 * @param _waitTime
 	 * 		How long to wait (in seconds) for the {@link Alert} to appear.
 	 *
 	 * @return The {@link Alert} that is present, or {@code null}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public Alert getAlert(double _secondsToWait) {
+	public Alert getAlert(Duration _waitTime) {
 
-		LOGGER.info("getAlert(_secondsToWait: {}) [START]", _secondsToWait);
+		LOGGER.info("getAlert(_waitTime: {}) [START]", _waitTime);
 
 		//------------------------ Pre-Checks ----------------------------------
 
@@ -1371,7 +1359,7 @@ public class WebDriverWrapper {
 			fluentWait = new FluentWait<>(DRIVER);
 
 			// Fluent Wait Settings.
-			fluentWait.withTimeout(Duration.ofSeconds((long) _secondsToWait)).pollingEvery(Duration.ofMillis(POLLING_INTERVAL_MS))
+			fluentWait.withTimeout(_waitTime).pollingEvery(POLLING_INTERVAL)
 					.ignoring(NoSuchElementException.class);
 
 			try {
@@ -1382,7 +1370,7 @@ public class WebDriverWrapper {
 			}
 		}
 
-		LOGGER.debug("getAlert(_secondsToWait: {}) [END]", _secondsToWait);
+		LOGGER.debug("getAlert(_waitTime: {}) [END]", _waitTime);
 
 		return alert;
 	}
@@ -1437,229 +1425,221 @@ public class WebDriverWrapper {
 
 	//////////////////// Get Web Element Wrapper(s) Functions [START] ////////////////////
 	/**
-	 * Waits around {@link #maxElementLoadTimeInSeconds} ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second) for the {@link WebElement} to exist.
+	 * Waits around {@link #maxElementLoadTime} for the {@link WebElement} to exist and contain the correct visibility.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of Web Elements found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of Web Elements found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the Web Element.
+	 *         How to search for the Web Element.
 	 *
 	 * @return The Web Element Wrapper, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given By object is {@code NULL}.
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebElementWrapper getWebElementWrapper(By _by) {
-		return getWebElementWrapper(_by, maxElementLoadTimeInSeconds);
+		return getWebElementWrapper(_by, maxElementLoadTime);
 	}
 
 	/**
-	 * Waits around {@link #maxElementLoadTimeInSeconds} ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second) for the {@link WebElement} to exist
-	 * and contain the correct visibility.
+	 * Waits around {@link #maxElementLoadTime} for the {@link WebElement} to exist and contain the correct visibility.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
+	 *         How to search for the {@link WebElement}.
 	 * @param _visibility
-	 * 		If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
+	 *         If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given By object is {@code NULL}.
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebElementWrapper getWebElementWrapper(By _by, boolean _visibility) {
-		return getWebElementWrapper(_by, _visibility, maxElementLoadTimeInSeconds, null);
+		return getWebElementWrapper(_by, _visibility, maxElementLoadTime, null);
 	}
 
 	/**
-	 * Waits around {@code _secondsToWait} seconds for the {@link WebElement} to exist.
+	 * Waits the given amount of time for the {@link WebElement} to exist and contain the correct visibility, then grabs it.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the {@link WebElement} to exists.
-	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
-	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
+	 *         How to search for the {@link WebElement}.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given By object is {@code null}.
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getWebElementWrapper(By _by, double _secondsToWait) {
-		return getWebElementWrapper(_by, null, _secondsToWait, null);
+	public WebElementWrapper getWebElementWrapper(By _by, Duration _waitTime) {
+		return getWebElementWrapper(_by, null, _waitTime, null);
 	}
-	
+
 	/**
-	 * Waits around {@link #maxElementLoadTimeInSeconds} ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second) for the {@link WebElement} to exist.
+	 * Waits around {@link #maxElementLoadTime} for the {@link WebElement} to exist and contain the correct visibility.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
+	 *         How to search for the {@link WebElement}.
 	 * @param _noElementExceptionMessage
-	 * 		If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
+	 *         If the given By object is {@code NULL}.
+	 * @throws org.openqa.selenium.NoSuchElementException
+	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebElementWrapper getWebElementWrapper(By _by, String _noElementExceptionMessage) {
-		return getWebElementWrapper(_by, null, maxElementLoadTimeInSeconds, _noElementExceptionMessage);
+		return getWebElementWrapper(_by, null, maxElementLoadTime, _noElementExceptionMessage);
 	}
 
 	/**
-	 * Waits around {@code _secondsToWait} second(s) for the {@link WebElement} to exist and contain the correct visibility.
+	 * Waits the given amount of time for the {@link WebElement} to exist and contain the correct visibility, then grabs it.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
+	 *         How to search for the {@link WebElement}.
 	 * @param _visibility
-	 * 		If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the {@link WebElement} to exists and contain the correct visibility.
-	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
-	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
+	 *         If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given By object is {@code null}.
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getWebElementWrapper(By _by, boolean _visibility, double _secondsToWait) {
-		return getWebElementWrapper(_by, _visibility, _secondsToWait, null);
+	public WebElementWrapper getWebElementWrapper(By _by, boolean _visibility, Duration _waitTime) {
+		return getWebElementWrapper(_by, _visibility, _waitTime, null);
 	}
 
 	/**
-	 * Waits around {@link #maxElementLoadTimeInSeconds} ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second) for the Web Element to exist
-	 * and contain the correct visibility.
+	 * Waits {@link #maxElementLoadTime} for the {@link WebElement} to exist and contain the correct visibility, then grabs it.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
+	 *         How to search for the {@link WebElement}.
 	 * @param _visibility
-	 * 		If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
+	 *         If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
 	 * @param _noElementExceptionMessage
-	 * 		If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
+	 *         If the given By object is {@code NULL}.
+	 * @throws org.openqa.selenium.NoSuchElementException
+	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebElementWrapper getWebElementWrapper(By _by, boolean _visibility, String _noElementExceptionMessage) {
-		return getWebElementWrapper(_by, _visibility, maxElementLoadTimeInSeconds, _noElementExceptionMessage);
+		return getWebElementWrapper(_by, _visibility, maxElementLoadTime, _noElementExceptionMessage);
 	}
 
 	/**
-	 * Waits around {@code _secondsToWait} seconds for the {@link WebElement} to exist.
+	 * Waits the given amount of time for the {@link WebElement} to exist and contain the correct visibility, then grabs it.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the {@link WebElement} to exists and contain the correct visibility.
-	 * 		<p><i>Note:</i> Unit is truncated to milliseconds (3 decimal places).</p>
+	 *         How to search for the {@link WebElement}.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 * @param _noElementExceptionMessage
-	 * 		If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
+	 *         If the given By object is {@code null}.
+	 *         <p>Or if the given Wait Time is negative.</p>
+	 * @throws org.openqa.selenium.NoSuchElementException
+	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getWebElementWrapper(By _by, double _secondsToWait, String _noElementExceptionMessage) {
-		return getWebElementWrapper(_by, null, _secondsToWait, _noElementExceptionMessage);
+	public WebElementWrapper getWebElementWrapper(By _by, Duration _waitTime, String _noElementExceptionMessage) {
+		return getWebElementWrapper(_by, null, _waitTime, _noElementExceptionMessage);
 	}
 
 	/**
-	 * Waits around {@code _secondsToWait} second(s) for the {@link WebElement} to exist and contain the correct visibility.
+	 * Waits the given amount of time for the {@link WebElement} to exist and contain the correct visibility, then grabs it.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
+	 *         How to search for the {@link WebElement}.
 	 * @param _visibility
-	 * 		If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the {@link WebElement} to exists and contain the correct visibility.
-	 * 		<p><i>Note:</i> Unit is truncated to milliseconds (3 decimal places).</p>
+	 *         If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 * @param _noElementExceptionMessage
-	 * 		If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
+	 *         If the given By object is {@code null}.
+	 *         <p>Or if the given Wait Time is negative.</p>
+	 * @throws org.openqa.selenium.NoSuchElementException
+	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
-	 * 		If more than 1 {@link WebElement} is found.
-	 *
+	 *         If more than 1 {@link WebElement} is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getWebElementWrapper(By _by, Boolean _visibility, double _secondsToWait, String _noElementExceptionMessage) {
+	public WebElementWrapper getWebElementWrapper(By _by, Boolean _visibility, Duration _waitTime, String _noElementExceptionMessage) {
 
-		LOGGER.info("getWebElement(_by: {}, _visibility: {}, _secondsToWait: {}, _noElementExceptionMessage: {}) [START]",
-				_by, _visibility, _secondsToWait, (_noElementExceptionMessage == null ? "(NULL)" : Quotes.escape(_noElementExceptionMessage)));
+		LOGGER.info("getWebElement(_by: {}, _visibility: {}, _waitTime: {}, _noElementExceptionMessage: {}) [START]",
+				_by, _visibility, _waitTime, (_noElementExceptionMessage == null ? "(NULL)" : Quotes.escape(_noElementExceptionMessage)));
 
 		//------------------------ Pre-Checks ----------------------------------
 
@@ -1672,12 +1652,20 @@ public class WebDriverWrapper {
 		//------------------------ Code ----------------------------------------
 		synchronized(LOCK) {
 
-			webElementWrappers = getWebElementWrappers(null, _by, _secondsToWait, 1, _visibility);
+			webElementWrappers = getWebElementWrappers(null, _by, _waitTime, 1, _visibility);
 
 			switch(webElementWrappers.size()) {
 				case 0:
 					if(_noElementExceptionMessage != null) {
-						throw new NoSuchElementException(_noElementExceptionMessage);
+						File screenshot;
+						try {
+							screenshot = takeScreenshot();
+						}
+						catch(Exception e) {
+							screenshot = null;
+						}
+						throw new org.openqa.selenium.NoSuchElementException(_noElementExceptionMessage +
+								(screenshot == null ? "" : "\n\nScreenshot: " + screenshot.getAbsolutePath()));
 					}
 					else {
 						break; // Return NULL.
@@ -1690,130 +1678,135 @@ public class WebDriverWrapper {
 			}
 		}
 
-		LOGGER.debug("getWebElement(_by: {}, _visibility: {}, _secondsToWait: {}, _noElementExceptionMessage: {}) [END]",
-				_by, _visibility, _secondsToWait, (_noElementExceptionMessage == null ? "(NULL)" : Quotes.escape(_noElementExceptionMessage)));
+		LOGGER.debug("getWebElement(_by: {}, _visibility: {}, _waitTime: {}, _noElementExceptionMessage: {}) [END]",
+				_by, _visibility, _waitTime, (_noElementExceptionMessage == null ? "(NULL)" : Quotes.escape(_noElementExceptionMessage)));
 
 		return webElementWrapper;
 	}
 
 	/**
-	 * Waits around {@link #maxElementLoadTimeInSeconds} ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second[s]) for at least one Web Element to exist.
-	 * Then grabs all of the existing {@link WebElement}s.
+	 * Waits {@link #maxElementLoadTime} for at least one {@link WebElement} to exist and contain the correct visibility; then grabs all of the available {@link
+	 * WebElement}s.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}s.
+	 *         How to search for the {@link WebElement}s.
 	 *
 	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public List<WebElementWrapper> getWebElementWrappers(By _by) {
-		return getWebElementWrappers(_by, maxElementLoadTimeInSeconds);
+		return getWebElementWrappers(_by, maxElementLoadTime);
 	}
 
 	/**
-	 * Waits around {@link #maxElementLoadTimeInSeconds} ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second[s]) for at least one {@link WebElement} to exist
-	 * and contain the correct visibility. Then grabs all of the {@link WebElement}s that match the {@code _visibility} argument.
+	 * Waits {@link #maxElementLoadTime} for at least one {@link WebElement} to exist and contain the correct visibility; then grabs all of the available {@link
+	 * WebElement}s.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.)
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
+	 *         How to search for the {@link WebElement}.
 	 * @param _visibility
-	 * 		If {@code true} only returns visible {@link WebElement}s, else if {@code false}, only returns hidden {@link WebElement}s.
+	 *         If {@code true} only returns visible {@link WebElement}s, else if {@code false}, only returns hidden {@link WebElement}s.
 	 *
 	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public List<WebElementWrapper> getWebElementWrappers(By _by, boolean _visibility) {
-		return getWebElementWrappers(null, _by, maxElementLoadTimeInSeconds, -1, _visibility);
+		return getWebElementWrappers(null, _by, maxElementLoadTime, -1, _visibility);
 	}
 
 	/**
-	 * Waits around {@code _secondsToWait} second(s) for at least one {@link WebElement} to exist. Then grabs all of the existing {@link WebElement}s.
+	 * Waits the given amount of time for at least one {@link WebElement} to exist and contain the correct visibility; then grabs all of the available {@link
+	 * WebElement}s.
 	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
 	 * </p>
 	 *
 	 * @param _by
-	 * 		How to search for the {@link WebElement}.
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the {@link WebElement} to exists.
-	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
-	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
-	 *
-	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
-	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 */
-	public List<WebElementWrapper> getWebElementWrappers(By _by, double _secondsToWait) {
-		return getWebElementWrappers(null, _by, _secondsToWait, -1, null);
-	}
-
-	/**
-	 * Waits around {@code _secondsToWait} second(s) for at least one {@link WebElement} to exist and contain the correct visibility.
-	 * Then grabs all of the Web Elements that match the {@code _visibility} argument.
-	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
-	 * </p>
-	 *
-	 * @param _by
-	 * 		How to search for the {@link WebElement}.
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the {@link WebElement} to exist and contain the correct visibility.
-	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
-	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
-	 * @param _visibility
-	 * 		If {@code true} only returns visible {@link WebElement}s, else if {@code false}, only returns hidden {@link WebElement}s.
-	 *
-	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
-	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 */
-	public List<WebElementWrapper> getWebElementWrappers(By _by, double _secondsToWait, boolean _visibility) {
-		return getWebElementWrappers(null, _by, _secondsToWait, -1, _visibility);
-	}
-	
-	/**
-	 * Waits around {@code _secondsToWait} seconds for all of the {@link WebElement}(s) to exist, then grabs them.
-	 * <p>
-	 *     <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
-	 *     because of the time it takes to construct {@link WebElementWrapper}s.
-	 * </p>
-	 *
-	 * @param _webElement
-	 * 		If present, the search will be at this {@link WebElement} level (a descendant search); else, It will be at the {@link WebDriver} (page) level.
-	 * @param _by
-	 * 		How to search for the {@link WebElement}.
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the {@link WebElement} to exists, also might wait for visibility.
-	 * 		<p><i>Note:</i> Value is truncated to milliseconds (3 decimal places).</p>
-	 * 		<p>Pass in {@code 0} to skip the default ({@link #maxElementLoadTimeInSeconds}) wait time ({@value #DEFAULT_MAX_ELEMENT_LOAD_TIME_S} second).</p>
-	 * @param _numOfElementsToGet
-	 * 		Number of {@link WebElement} we are looking for, or {@code -1} if we are looking for "all".
-	 * @param _visibility
-	 * 		If set to {@code true}, grabs only visible {@link WebElement}s.
-	 * 		<p>If set to {@code false}, grabs only hidden {@link WebElement}s.</p>
-	 * 		<p>If {@code null}, all {@link WebElement}s are returned.</p>
+	 *         How to search for the {@link WebElement}.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 *
 	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 * 		<p>Or if _numOfElementsToGet is not {@code 1} or {@code -1}.</p>
-	 *
+	 *         If the given By object is {@code null}.
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	List<WebElementWrapper> getWebElementWrappers(WebElement _webElement, By _by, double _secondsToWait, int _numOfElementsToGet, Boolean _visibility) {
+	public List<WebElementWrapper> getWebElementWrappers(By _by, Duration _waitTime) {
+		return getWebElementWrappers(null, _by, _waitTime, -1, null);
+	}
+
+	/**
+	 * Waits the given amount of time for at least one {@link WebElement} to exist and contain the correct visibility; then grabs all of the available {@link
+	 * WebElement}s.
+	 * <p>
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
+	 * </p>
+	 *
+	 * @param _by
+	 *         How to search for the {@link WebElement}.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
+	 * @param _visibility
+	 *         If {@code true} only returns visible {@link WebElement}s, else if {@code false}, only returns hidden {@link WebElement}s.
+	 *
+	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given By object is {@code null}.
+	 *         <p>Or if the given Wait Time is negative.</p>
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public List<WebElementWrapper> getWebElementWrappers(By _by, boolean _visibility, Duration _waitTime) {
+		return getWebElementWrappers(null, _by, _waitTime, -1, _visibility);
+	}
+
+	/**
+	 * Waits the given amount of time for at least one {@link WebElement} to exist and contain the correct visibility; then grabs all of the available {@link
+	 * WebElement}s.
+	 * <p>
+	 * <b>Note:</b> Wait time can be a little longer (proportional to number of {@link WebElement}s found),
+	 * because of the time it takes to construct {@link WebElementWrapper}s.
+	 * </p>
+	 *
+	 * @param _webElement
+	 *         If present, the search will be at this {@link WebElement} level (a descendant search); else, It will be at the {@link WebDriver} (page) level.
+	 * @param _by
+	 *         How to search for the {@link WebElement}.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
+	 * @param _numOfElementsToGet
+	 *         Number of {@link WebElement} we are looking for, or {@code -1} if we are looking for "all".
+	 * @param _visibility
+	 *         If set to {@code true}, grabs only visible {@link WebElement}s.
+	 *         <p>If set to {@code false}, grabs only hidden {@link WebElement}s.</p>
+	 *         <p>If {@code null}, all {@link WebElement}s are returned.</p>
+	 *
+	 * @return A List of {@link WebElementWrapper}(s), if successful; or an empty List, if not.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given By object is {@code null}.
+	 *         <p>If the given Wait Time is negative.</p>
+	 *         <p>Or if _numOfElementsToGet is not {@code 1} or {@code -1}.</p>
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	List<WebElementWrapper> getWebElementWrappers(WebElement _webElement, By _by, Duration _waitTime, int _numOfElementsToGet, Boolean _visibility) {
 
 		synchronized(LOCK) {
 
@@ -1823,12 +1816,16 @@ public class WebDriverWrapper {
 
 				webElementString = _webElement == null ? "NULL" : new WebElementWrapper(this, _webElement, null).toString();
 
-				LOGGER.info("getWebElements(_webElement: {}, _by: {}, _secondsToWait: {}, _numOfElementToGet: {}, _visibility: {}) [START]",
-						webElementString, _by, _secondsToWait, _numOfElementsToGet, _visibility);
+				LOGGER.info("getWebElements(_webElement: {}, _by: {}, _waitTime: {}, _numOfElementToGet: {}, _visibility: {}) [START]",
+						webElementString, _by, _waitTime, _numOfElementsToGet, _visibility);
 			}
 
 			//------------------------ Pre-Checks ----------------------------------
 			ArgumentChecks.notNull(_by, "By");
+
+			if(_waitTime.isNegative()) {
+				throw new IllegalArgumentException("Given Wait Time cannot be negative! (" + _waitTime + ")");
+			}
 
 			if(_numOfElementsToGet != -1 && _numOfElementsToGet < 1) {
 				throw new IllegalArgumentException("_numOfElementsToGet is < 1 but not -1! (" + _numOfElementsToGet + ")");
@@ -1837,7 +1834,7 @@ public class WebDriverWrapper {
 			//------------------------ CONSTANTS -----------------------------------
 
 			//------------------------ Variables -----------------------------------
-			long startTime, endTime, secondsWaited;
+			long startTime, endTime, msWaited;
 
 			@SuppressWarnings("Convert2Diamond")
 			FluentWait fluentWait = _webElement == null ? new FluentWait<WebDriver>(DRIVER) : new FluentWait<WebElement>(_webElement);
@@ -1847,11 +1844,12 @@ public class WebDriverWrapper {
 
 			//------------------------ Code ----------------------------------------
 			// Fluent Wait Settings.
-			fluentWait.withTimeout(Duration.ofSeconds((long) _secondsToWait)).pollingEvery(Duration.ofMillis(POLLING_INTERVAL_MS))
-					.ignoreAll(Arrays.asList(new Class[]{NoSuchElementException.class, ElementNotVisibleException.class, InvalidElementStateException.class}));
+			fluentWait.withTimeout(_waitTime).pollingEvery(POLLING_INTERVAL)
+					.ignoreAll(Arrays.asList(new Class[]{org.openqa.selenium.NoSuchElementException.class, ElementNotVisibleException.class,
+							InvalidElementStateException.class}));
 
 			if(BROWSER_TYPE == BrowserType.IE) { // TODO: https://github.com/SeleniumHQ/selenium/issues/4555
-				fluentWait.ignoring(WebDriverException.class /*TODO: Null pointer exception when calling webDriver.findElements #4555*/);
+				fluentWait.ignoring(WebDriverException.class); // TODO: Null pointer exception when calling webDriver.findElements #4555.
 			}
 
 			startTime = System.currentTimeMillis();
@@ -1875,7 +1873,7 @@ public class WebDriverWrapper {
 					}
 
 					if(elements == null || elements.isEmpty()) {
-						throw new NoSuchElementException("No Element found " + _by + "!");
+						throw new org.openqa.selenium.NoSuchElementException("No Element found " + _by + "!");
 					}
 
 					LOGGER.trace("Found {} Elements.", elements.size());
@@ -1925,8 +1923,8 @@ public class WebDriverWrapper {
 			//////////////////// Fluent Wait [END] ////////////////////
 
 			endTime = System.currentTimeMillis();
-			secondsWaited = TimeUnit.MILLISECONDS.toSeconds(endTime - startTime);
-			LOGGER.trace("Waited {} seconds.", secondsWaited);
+			msWaited = endTime - startTime;
+			LOGGER.trace("Waited {} ms.", msWaited);
 
 			if(webElements != null) { // (For Each loops blow up if collection is NULL.)
 
@@ -1942,8 +1940,8 @@ public class WebDriverWrapper {
 					}
 					catch(NoSuchElementException/*Sometimes thrown by IE*/ | StaleElementReferenceException e) {
 
-						if(secondsWaited <= _secondsToWait) {
-							return getWebElementWrappers(_webElement, _by, (_secondsToWait - secondsWaited), _numOfElementsToGet, _visibility); // Try Again.
+						if(msWaited <= _waitTime.toMillis()) {
+							return getWebElementWrappers(_webElement, _by, _waitTime.minusMillis(msWaited), _numOfElementsToGet, _visibility); // Try Again.
 						}
 						else {
 							continue; // Ignore.
@@ -1958,8 +1956,8 @@ public class WebDriverWrapper {
 					}
 				}
 			}
-			LOGGER.debug("getWebElements(_webElement: {}, _by: {}, _secondsToWait: {}, _numOfElementToGet: {}, _visibility: {}) [END]",
-						webElementString, _by, _secondsToWait, _numOfElementsToGet, _visibility);
+			LOGGER.debug("getWebElements(_webElement: {}, _by: {}, _waitTime: {}, _numOfElementToGet: {}, _visibility: {}) [END]",
+					webElementString, _by, _waitTime, _numOfElementsToGet, _visibility);
 
 			return webElementWrappers;
 		}
@@ -2330,14 +2328,14 @@ public class WebDriverWrapper {
 	/**
 	 * Switches to the one and only visible Frame/IFrame on the page.
 	 * <p>
-	 *     Waits {@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds for the Frame/IFrame to be available.
+	 *     Waits {@link #maxPageLoadTime} for the Frame/IFrame to be available.
 	 * </p>
 	 * <p>
 	 *     Same as calling {@link #switchToFrame(By)} and sending {@code By.xpath( "//frame | //iframe" )}.
 	 * </p>
 	 *
-	 * @throws NoSuchElementException
-	 * 		If no Frame/IFrame is visible after {@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds of waiting.
+	 * @throws org.openqa.selenium.NoSuchElementException
+	 * 		If no Frame/IFrame is visible after {@link #maxPageLoadTime} seconds of waiting.
 	 * @throws TooManyResultsException
 	 * 		If multiple Frames/IFrames are visible.
 	 *
@@ -2350,14 +2348,14 @@ public class WebDriverWrapper {
 	/**
 	 * Switches to the given Frame/IFrame.
 	 * <p>
-	 *     Waits {@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds for the Frame/IFrame to be available.
+	 *     Waits {@link #maxPageLoadTime} for the Frame/IFrame to be available.
 	 * </p>
 	 *
 	 * @param _by
 	 * 		How to search for the Frame/IFrame.
 	 *
-	 * @throws NoSuchElementException
-	 * 		If the Frame/IFrame cannot be found or is not visible after {@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds of waiting.
+	 * @throws org.openqa.selenium.NoSuchElementException
+	 * 		If the Frame/IFrame cannot be found or is not visible after {@link #maxPageLoadTime} seconds of waiting.
 	 * @throws TooManyResultsException
 	 * 		If the search returns multiple, visible Frames/IFrames.
 	 * @throws NoSuchFrameException
@@ -2365,7 +2363,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 *
-	 * @see #getWebElementWrapper(By, double)
+	 * @see #getWebElementWrapper(By, Duration)
 	 */
 	public void switchToFrame(By _by) {
 
@@ -2381,7 +2379,7 @@ public class WebDriverWrapper {
 		//------------------------ Code ----------------------------------------
 		synchronized(LOCK) {
 
-			frames = getWebElementWrappers(_by, maxPageLoadTimeInSeconds);
+			frames = getWebElementWrappers(_by, maxPageLoadTime);
 
 			/*
 			 * Do not use ExpectedConditions.frameToBeAvailableAndSwitchToIt methods,
@@ -2432,7 +2430,7 @@ public class WebDriverWrapper {
 	/**
 	 * Switches to the Window at the given index.
 	 * <p>
-	 *     Waiting up to {@link #maxPageLoadTimeInSeconds} ({@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds) for the Window to load.
+	 *     Waiting up to {@link #maxPageLoadTime} for the Window to load.
 	 * </p>
 	 * <p>
 	 *     <b>Note:</b> Window indexes are in the order that the windows were opened and only include currently opened windows.
@@ -2443,7 +2441,7 @@ public class WebDriverWrapper {
 	 *
 	 * @throws IndexOutOfBoundsException
 	 * 		If the given Index is less than 0 or greater than the number of open windows,
-	 * 		after waiting {@link #maxPageLoadTimeInSeconds} ({@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds) for the Window to load.
+	 * 		after waiting {@link #maxPageLoadTime} for the Window to load.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
@@ -2467,7 +2465,7 @@ public class WebDriverWrapper {
 			startTime_ms = System.currentTimeMillis();
 
 			////////// Wait For Window to Load //////////
-			while(DRIVER.getWindowHandles().size() <= _index && System.currentTimeMillis() < startTime_ms + (maxPageLoadTimeInSeconds * 1000)) {
+			while(DRIVER.getWindowHandles().size() <= _index && System.currentTimeMillis() < startTime_ms + maxPageLoadTime.toMillis()) {
 
 				try { // Wait for window to load.
 					Thread.sleep(100);
@@ -2478,7 +2476,7 @@ public class WebDriverWrapper {
 			////////// Post-Checks //////////
 			if(DRIVER.getWindowHandles().size() <= _index) {
 				throw new IndexOutOfBoundsException("ERROR! Given Index (" + _index + ") is greater than the number of open windows, after waiting "
-						+ maxPageLoadTimeInSeconds + " seconds!");
+						+ maxPageLoadTime + " seconds!");
 			}
 
 			////////// Switch to Window //////////
@@ -2491,7 +2489,7 @@ public class WebDriverWrapper {
 	/**
 	 * Switches to the window with the given Page Title.
 	 * <p>
-	 *     Waiting up to {@link #maxPageLoadTimeInSeconds} ({@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds) for the Window to load.
+	 *     Waiting up to {@link #maxPageLoadTime} for the Window to load.
 	 * </p>
 	 * <p>
 	 *     <b>Note:</b> Page Title is compared, ignoring the case, after trimming and normalization have been applied to the Title(s) and compare string.
@@ -2542,12 +2540,12 @@ public class WebDriverWrapper {
 				if(pageCount <= 0) {
 
 					try { // Wait for window to load.
-						Thread.sleep(POLLING_INTERVAL_MS);
+						Thread.sleep(POLLING_INTERVAL.toMillis());
 					}
 					catch(InterruptedException e) { /*Do Nothing*/ }
 				}
 
-			} while(pageCount <= 0 && System.currentTimeMillis() < startTime_ms + (maxPageLoadTimeInSeconds * 1000));
+			} while(pageCount <= 0 && System.currentTimeMillis() < startTime_ms + maxPageLoadTime.toMillis());
 
 			if(pageCount <= 0) {
 
@@ -2634,13 +2632,13 @@ public class WebDriverWrapper {
 	}
 
 	/**
-	 * This method will wait {@link #maxPageLoadTimeInSeconds} ({@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds) for the given page to load.
+	 * This method will wait {@link #maxPageLoadTime} for the given page to load.
 	 * <p>
 	 *     <b>Note:</b> This will only wait for the DOM to be loaded. Any JavaScript may take longer.
 	 * </p>
 	 *
 	 * @throws TimeoutException
-	 * 		If the Page does not finish loading in {@link #maxPageLoadTimeInSeconds} ({@value #DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds).
+	 * 		If the Page does not finish loading in {@link #maxPageLoadTime}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
@@ -2662,7 +2660,7 @@ public class WebDriverWrapper {
 			fluentWait = new FluentWait<>(DRIVER);
 
 			// Fluent Wait Settings..
-			fluentWait.withTimeout(Duration.ofSeconds(maxPageLoadTimeInSeconds)).pollingEvery(Duration.ofMillis(POLLING_INTERVAL_MS))
+			fluentWait.withTimeout(maxPageLoadTime).pollingEvery(POLLING_INTERVAL)
 					.ignoring(JavascriptException.class) /*IE throws this if the call is made to early in the page load.*/;
 
 			try {
@@ -2714,7 +2712,7 @@ public class WebDriverWrapper {
 
 		//------------------------ Code ----------------------------------------
 		// Try to get alert first.
-		alert = getAlert(0);
+		alert = getAlert(Duration.ZERO);
 
 		if(alert == null) {
 			try { // Assume no Alert.

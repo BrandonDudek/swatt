@@ -24,6 +24,11 @@ public class TestNgMatrixReporter implements IReporter {
 
     //========================= Static Variables ===============================
     /**
+     * If set, the Report File will be placed in this directory, instead of the default Test Output directory.
+     */
+    public static String outputDirectoryOverride = null;
+
+    /**
      * The name of the Report File to create (minus the ".html" extension).
      */
     public static String reportFileName = "testing-matrix";
@@ -185,6 +190,7 @@ public class TestNgMatrixReporter implements IReporter {
         PrintWriter pw;
 
         //------------------------ Code ----------------------------------------
+        outputDirectoryPath = outputDirectoryOverride == null ? outputDirectoryPath : outputDirectoryOverride;
         File outputDirectory = new File(outputDirectoryPath);
         if(!outputDirectory.exists() && !outputDirectory.mkdirs()) {
             throw new RuntimeException("Could not create Output Directory: " + outputDirectoryPath + "!");

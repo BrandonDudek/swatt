@@ -24,10 +24,10 @@ import java.util.List;
 public class WebDriverWrapperTests {
 
     //========================= STATIC CONSTANTS ===============================
-    private static final long MIN_ELEMENT_WAIT_TIME_MS = WebDriverWrapper.maxElementLoadTimeInSeconds * 1000; // s to ms.
+    private static final long MIN_ELEMENT_WAIT_TIME_MS = WebDriverWrapper.maxElementLoadTime.toMillis() * 1000; // s to ms.
 
     // Processing time for visibility checks.
-    private static final long MAX_ELEMENT_WAIT_TIME_MS = MIN_ELEMENT_WAIT_TIME_MS + WebDriverWrapper.POLLING_INTERVAL_MS  + 400;
+    private static final long MAX_ELEMENT_WAIT_TIME_MS = MIN_ELEMENT_WAIT_TIME_MS + WebDriverWrapper.POLLING_INTERVAL.toMillis() + 400;
 
     private static final Document HTML_AS_XML;
     private static final WebDriverWrapper DRIVER = new WebDriverWrapper(BrowserVersion.FIREFOX_52);
@@ -73,7 +73,7 @@ public class WebDriverWrapperTests {
         //------------------------ Code ----------------------------------------
         ///// Action /////
         startTime = System.currentTimeMillis();
-        webElementWrapper = DRIVER.getWebElementWrapper(By.cssSelector("p.test1visible"), true, WebDriverWrapper.maxElementLoadTimeInSeconds);
+        webElementWrapper = DRIVER.getWebElementWrapper(By.cssSelector("p.test1visible"), true, WebDriverWrapper.maxElementLoadTime);
         endTime = System.currentTimeMillis();
 
         ///// Validate /////
@@ -82,10 +82,10 @@ public class WebDriverWrapperTests {
         }
 
         timeTakenInMs = endTime - startTime;
-        if(timeTakenInMs >= WebDriverWrapper.maxElementLoadTimeInSeconds * 1000) {
+        if(timeTakenInMs >= WebDriverWrapper.maxElementLoadTime.toMillis() * 1000) {
 
             throw new RuntimeException("WebDriverHelper.getWebElementWrapper(WebDriver _driver, By _by) took too long to get the visible Web Element!"
-                    + "\n\tExpected Time < " + (WebDriverWrapper.maxElementLoadTimeInSeconds * 1000) + " ms.\n\tActual Time: " + timeTakenInMs + " ms.");
+                    + "\n\tExpected Time < " + (WebDriverWrapper.maxElementLoadTime.toMillis() * 1000) + " ms.\n\tActual Time: " + timeTakenInMs + " ms.");
         }
 
         LOGGER.debug("getOneVisibleElementWhenThereAreAlsoHiddenOnes() {{} ms} [END]", timeTakenInMs);
@@ -169,7 +169,7 @@ public class WebDriverWrapperTests {
         //------------------------ Code ----------------------------------------
         ///// Action /////
         startTime = System.currentTimeMillis();
-        webElementWrappers = DRIVER.getWebElementWrappers(By.cssSelector(_cssSelector), WebDriverWrapper.maxElementLoadTimeInSeconds, true);
+        webElementWrappers = DRIVER.getWebElementWrappers(By.cssSelector(_cssSelector), true, WebDriverWrapper.maxElementLoadTime);
         endTime = System.currentTimeMillis();
 
         ///// Validate /////

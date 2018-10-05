@@ -25,7 +25,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -372,8 +371,7 @@ public class WebElementWrapper {
 	 * @return This {@link WebElementWrapper} for function call chain-ability.
 	 *
 	 * @throws TimeoutException
-	 * 		If the page never unloads, or if the page does not finish loading in {@link WebDriverWrapper#maxPageLoadTimeInSeconds}
-	 * 		({@value WebDriverWrapper#DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds).
+	 * 		If the page never unloads, or if the page does not finish loading in {@link WebDriverWrapper#maxPageLoadTime}.
 	 * @throws WebDriverException
 	 * 		If the {@link WebElement} is covered, and another {@link WebElement} would receive the click.
 	 * 		
@@ -410,8 +408,8 @@ public class WebElementWrapper {
 	 * 		If this {@link WebElement} is not click-able after {@code _waitTimeInSeconds} seconds.
 	 * 		
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 * 
-	 * @see #waitForClickability(double)
+	 *
+	 * @see #waitForClickable(double)
 	 */
 	public WebElementWrapper click(double _waitTimeInSeconds) {
 		return click(_waitTimeInSeconds, false);
@@ -442,11 +440,11 @@ public class WebElementWrapper {
 	 * 		If {@code _waitTimeInSeconds < 0}.
 	 * @throws TimeoutException
 	 * 		If this {@link WebElement} is not click-able after {@code _waitTimeInSeconds}.
-	 * 	 	<p>Or if the page never unloads, or if the page does not finish loading in {@link WebDriverWrapper#maxPageLoadTimeInSeconds} seconds.</p>
+	 * 	 	<p>Or if the page never unloads, or if the page does not finish loading in {@link WebDriverWrapper#maxPageLoadTime} seconds.</p>
 	 * 		
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 * 
-	 * @see #waitForClickability(double)
+	 *
+	 * @see #waitForClickable(double)
 	 */
 	public WebElementWrapper click(double _waitTimeInSeconds, boolean _waitForRefresh) {
 
@@ -460,8 +458,8 @@ public class WebElementWrapper {
 
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) { // Synchronizing Chained Actions.
-			
-			waitForClickability(_waitTimeInSeconds);
+
+			waitForClickable(_waitTimeInSeconds);
 			click(_waitForRefresh);
 		}
 		
@@ -584,10 +582,10 @@ public class WebElementWrapper {
 	}
 
 	/**
-	 * Drags this {@link WebElement} to the middle of the given {@link WebElement}.
+	 * Drags this Element to the middle of the given Element.
 	 *
 	 * @param _destinationElement
-	 * 		Where to drag this {@link WebElement} to.
+	 *            Where to drag this Element to.
 	 *
 	 * @return This {@link WebElementWrapper} for function call chain-ability.
 	 *
@@ -595,40 +593,61 @@ public class WebElementWrapper {
 	 */
 	public WebElementWrapper dragTo(WebElementWrapper _destinationElement) {
 
-		LOGGER.info("dragTo(WebElementWrapper _destinationElement) [START]");
+		LOGGER.info("dragTo( _destinationElement: {} ) [START]", _destinationElement);
 
 		//------------------------ Pre-Checks ----------------------------------
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		Actions clickAndHoldActions = new Actions(WEB_DRIVER_WRAPPER.DRIVER).clickAndHold(webElement);
-		Actions releasedActions = new Actions(WEB_DRIVER_WRAPPER.DRIVER).release(webElement);
-		
+		Actions actions = new Actions(WEB_DRIVER_WRAPPER.DRIVER).dragAndDrop(webElement, _destinationElement.webElement);
+
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
-			
+
 			hoverOver();
 
-			performAction(clickAndHoldActions);
-
-			try {
-				Thread.sleep(300);// Can update, up to 0.5s.
-			}
-			catch(InterruptedException e) { /*Do Nothing*/ }
-
-			_destinationElement.hoverOver();
-			
-			try {
-				Thread.sleep(300); // Can update, up to 0.5s.
-			}
-			catch(InterruptedException e) { /*Do Nothing*/ }
-
-			performAction(releasedActions);
+			performAction(actions);
 		}
-		
-		LOGGER.debug("dragTo(WebElementWrapper _destinationElement) [END]");
-		
+
+		LOGGER.debug("dragTo( _destinationElement: {} ) [END]", _destinationElement);
+
+		return this;
+	}
+
+	/**
+	 * Will do a "click and hold" on this Element and drag it bu the given offsets.
+	 *
+	 * @param _offsetX
+	 *         How far to drag it horizontally, in pixels (px).
+	 * @param _offsetY
+	 *         How far to drag it vertically, in pixels (px).
+	 *
+	 * @return This {@link WebElementWrapper} for function call chain-ability.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebElementWrapper dragTo(int _offsetX, int _offsetY) {
+
+		LOGGER.info("dragTo(_offsetX: {}, _offsetY: {}) [START]", _offsetX, _offsetY);
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		Actions actions = new Actions(WEB_DRIVER_WRAPPER.DRIVER).dragAndDropBy(webElement, _offsetX, _offsetY);
+
+		//------------------------ Code ----------------------------------------
+		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
+
+			hoverOver();
+
+			performAction(actions);
+		}
+
+		LOGGER.debug("dragTo(_offsetX: {}, _offsetY: {}) [END]", _offsetX, _offsetY);
+
 		return this;
 	}
 
@@ -745,228 +764,255 @@ public class WebElementWrapper {
 	}
 
 	//////////////////// Get Descendant(s) Functions [START] ////////////////////
+
 	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
-	 * <p>
-	 *     <b>Note:</b> Waits {@code WebDriverWrapper#maxElementLoadTime} ({@link WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 *     for descendant(s) to exist.
-	 * </p>
+	 * Waits {@link WebDriverWrapper#maxElementLoadTime} for a descendant {@link WebElement}, that match the given search query, to exist and contain the
+	 * correct visibility; then grabs that {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 *
-	 * @return A {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>Or if the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 * @throws NoSuchElementException
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
 	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 * 		
+	 *         If more than one descendant is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebElementWrapper getDescendant(By _by) {
-		return getDescendant(_by, null, -1, null);
+		return getDescendant(_by, null, WebDriverWrapper.maxElementLoadTime, null);
 	}
 
 	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
-	 * <p>
-	 *     <b>Note:</b> Waits {@code WebDriverWrapper#maxElementLoadTime} ({@link WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 *     for descendant(s) to exist.
-	 * </p>
+	 * Waits {@link WebDriverWrapper#maxElementLoadTime} for a descendant {@link WebElement}, that match the given search query, to exist and contain the
+	 * correct visibility; then grabs that {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 * @param _isVisible
-	 * 		If {@code true}, grabs only visible {@link WebElement}s.
-	 * 		<p>If {@code false}, grabs only hidden {@link WebElement}s.</p>
-	 * 		<p>If {@code null}, all {@link WebElement}s are returned.</p>
+	 *         If set to {@code true}, grabs only a visible Web Element. If set to {@code false}, grabs only a hidden Web Element. If {@code null}, grabs a Web
+	 *         Element with any visibility.
 	 *
-	 * @return A {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>Or if the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 * @throws NoSuchElementException
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
 	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 *
+	 *         If more than one descendant is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebElementWrapper getDescendant(By _by, boolean _isVisible) {
-		return getDescendant(_by, _isVisible, -1);
+		return getDescendant(_by, _isVisible, WebDriverWrapper.maxElementLoadTime);
 	}
 
 	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
+	 * Waits the given amount of time for a descendant {@link WebElement}, that match the given search query, to exist and contain the correct visibility; then
+	 * grabs that {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the descendant to exist.
-	 * 		<p>(Will default to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * 		if {@code < 0} is passed in.</p>
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
+	 * @param _waitTime
+	 *         How long to wait for the descendant {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the descendant {@link WebElement} once.</p>
 	 *
-	 * @return A {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
-	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 */
-	public WebElementWrapper getDescendant(By _by, double _secondsToWait) {
-		return getDescendant(_by, null, _secondsToWait, null);
-	}
-
-	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
-	 * <p>
-	 *     <b>Note:</b> Waits {@code WebDriverWrapper#maxElementLoadTime} ({@link WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 *     for descendant(s) to exist.
-	 * </p>
-	 *
-	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
-	 * @param _notFoundErrorMessage
-	 * 		If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no {@link WebElement} is found.
-	 *
-	 * @return a {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>If the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _notFoundErrorMessage} argument is <b>not</b> {@code null}.
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
 	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 *
+	 *         If more than one descendant is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getDescendant(By _by, String _notFoundErrorMessage) {
-		return getDescendant(_by, null, -1, _notFoundErrorMessage);
+	public WebElementWrapper getDescendant(By _by, Duration _waitTime) {
+		return getDescendant(_by, null, _waitTime, null);
 	}
 
 	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
-	 * <p>
-	 *     <b>Note:</b> Waits {@code WebDriverWrapper#maxElementLoadTime} ({@link WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 *     for descendant(s) to exist.
-	 * </p>
+	 * Waits {@link WebDriverWrapper#maxElementLoadTime} for a descendant {@link WebElement}, that match the given search query, to exist and contain the
+	 * correct visibility; then grabs that {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
+	 * @param _notFoundError
+	 *         If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found. (A screenshot will also be
+	 *         taken.)
+	 *
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>Or if the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 * @throws NoSuchElementException
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
+	 * @throws TooManyResultsException
+	 *         If more than one descendant is found.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebElementWrapper getDescendant(By _by, String _notFoundError) {
+		return getDescendant(_by, null, WebDriverWrapper.maxElementLoadTime, _notFoundError);
+	}
+
+	/**
+	 * Waits the given amount of time for a descendant {@link WebElement}, that match the given search query, to exist and contain the correct visibility; then
+	 * grabs that {@link WebElement} descendants.
+	 *
+	 * @param _by
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 * @param _isVisible
-	 * 		If {@code true}, grabs only visible {@link WebElement}s.
-	 * 		<p>If {@code false}, grabs only hidden {@link WebElement}s.</p>
-	 * 		<p>If {@code null}, all {@link WebElement}s are returned.</p>
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the descendant to exist.
-	 * 		<p>(Will default to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * 		if {@code < 0} is passed in.</p>
+	 *         If set to {@code true}, grabs only a visible Web Element. If set to {@code false}, grabs only a hidden Web Element. If {@code null}, grabs a Web
+	 *         Element with any visibility.
+	 * @param _waitTime
+	 *         How long to wait for the descendant {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the descendant {@link WebElement} once.</p>
 	 *
-	 * @return a {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>If the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 *         <p>Or if the given Wait Time is negative.</p>
+	 * @throws NoSuchElementException
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
 	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 *
+	 *         If more than one descendant is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 *
-	 * @see #getDescendants(By _by, Boolean _isVisible, double _secondsToWait)
 	 */
-	public WebElementWrapper getDescendant(By _by, boolean _isVisible, double _secondsToWait) {
-		return getDescendant(_by, _isVisible, _secondsToWait, null);
+	public WebElementWrapper getDescendant(By _by, boolean _isVisible, Duration _waitTime) {
+		return getDescendant(_by, _isVisible, _waitTime, null);
 	}
 
 	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
-	 * <p>
-	 *     <b>Note:</b> Waits {@code WebDriverWrapper#maxElementLoadTime} ({@link WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 *     for descendant(s) to exist.
-	 * </p>
+	 * Waits {@link WebDriverWrapper#maxElementLoadTime} for a descendant {@link WebElement}, that match the given search query, to exist and contain the
+	 * correct visibility; then grabs that {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 * @param _isVisible
-	 * 		If {@code true}, grabs only visible {@link WebElement}s.
-	 * 		<p>If {@code false}, grabs only hidden {@link WebElement}s.</p>
-	 * 		<p>If {@code null}, all {@link WebElement}s are returned.</p>
-	 * @param _notFoundErrorMessage
-	 * 		If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no {@link WebElement} is found.
+	 *         If set to {@code true}, grabs only a visible Web Element. If set to {@code false}, grabs only a hidden Web Element. If {@code null}, grabs a Web
+	 *         Element with any visibility.
+	 * @param _notFoundError
+	 *         If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found. (A screenshot will also be
+	 *         taken.)
 	 *
-	 * @return a {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>Or if the given {@link By} object is a CSS Selector starts with "&gt;".</p>
 	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _notFoundErrorMessage} argument is <b>not</b> {@code null}.
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
 	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 *
+	 *         If more than one descendant is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getDescendant(By _by, boolean _isVisible, String _notFoundErrorMessage) {
-		return getDescendant(_by, _isVisible, -1, _notFoundErrorMessage);
+	public WebElementWrapper getDescendant(By _by, boolean _isVisible, String _notFoundError) {
+		return getDescendant(_by, _isVisible, WebDriverWrapper.maxElementLoadTime, _notFoundError);
 	}
 
 	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
+	 * Waits the given amount of time for a descendant {@link WebElement}, that match the given search query, to exist and contain the correct visibility; then
+	 * grabs that {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the descendant to exist.
-	 * 		<p>(Will default to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * 		if {@code < 0} is passed in.</p>
-	 * @param _notFoundErrorMessage
-	 * 		If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no {@link WebElement} is found.
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
+	 * @param _waitTime
+	 *         How long to wait for the descendant {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the descendant {@link WebElement} once.</p>
+	 * @param _notFoundError
+	 *         If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found. (A screenshot will also be
+	 *         taken.)
 	 *
-	 * @return a {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>If the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _notFoundErrorMessage} argument is <b>not</b> {@code null}.
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
 	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 *
+	 *         If more than one descendant is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getDescendant(By _by, double _secondsToWait, String _notFoundErrorMessage) {
-		return getDescendant(_by, null, _secondsToWait, _notFoundErrorMessage);
+	public WebElementWrapper getDescendant(By _by, Duration _waitTime, String _notFoundError) {
+		return getDescendant(_by, null, _waitTime, _notFoundError);
 	}
 
 	/**
-	 * Gets the descendant of this {@link WebElement} that matches the given search query.
+	 * Waits the given amount of time for a descendant {@link WebElement}, that match the given search query, to exist and contain the correct visibility; then
+	 * grabs that {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendant. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 *         How to search for the descendant.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 * @param _isVisible
-	 * 		If {@code true}, grabs only visible {@link WebElement}s.
-	 * 		<p>If {@code false}, grabs only hidden {@link WebElement}s.</p>
-	 * 		<p>If {@code null}, all {@link WebElement}s are returned.</p>
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the descendant to exist.
-	 * 		<p>(Will default to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * 		if {@code < 0} is passed in.</p>
-	 * @param _notFoundErrorMessage
-	 * 		If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no {@link WebElement} is found.
+	 *         If set to {@code true}, grabs only a visible Web Element. If set to {@code false}, grabs only a hidden Web Element. If {@code null}, grabs a Web
+	 *         Element with any visibility.
+	 * @param _waitTime
+	 *         How long to wait for the descendant {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the descendant {@link WebElement} once.</p>
+	 * @param _notFoundError
+	 *         If <b>not</b> {@code null}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found. (A screenshot will also be
+	 *         taken.)
 	 *
-	 * @return a {@link WebElementWrapper} that is the descendant of this {@link WebElement} and matches the given search query, if one exists; else returns {@code null}.
+	 * @return A WebElementWrapper that is a descendants of this Element and matches the given search query and visibility; or {@code null}, if no such
+	 * descendant was found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>If the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws NoSuchElementException
-	 * 		If no {@link WebElement} is found, and if the {@code _notFoundErrorMessage} argument is <b>not</b> {@code null}.
+	 *         If no Web Element is found, and the {@code _notFoundError} argument is <b>not</b> {@code null}.
 	 * @throws TooManyResultsException
-	 * 		If more than one descendant is found.
-	 *
+	 *         If more than one descendant is found.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebElementWrapper getDescendant(By _by, Boolean _isVisible, double _secondsToWait, String _notFoundErrorMessage) {
+	public WebElementWrapper getDescendant(By _by, Boolean _isVisible, Duration _waitTime, String _notFoundError) {
 
-		LOGGER.info("getDescendant(_by: {}, _isVisible: {}, _secondsToWait: {}, _notFoundErrorMessage: {}) [START]", _by, _isVisible, _secondsToWait,
-				(_notFoundErrorMessage == null ? "(NULL)" : Quotes.escape(_notFoundErrorMessage)));
+		LOGGER.info("getDescendant( _by: {}, _isVisible: {}, _waitTime: {}, _notFoundError: {} ) [START]", _by, _isVisible, _waitTime,
+				(_notFoundError == null ? "(NULL)" : Quotes.escape(_notFoundError)));
 
 		//------------------------ Pre-Checks ----------------------------------
 
@@ -974,17 +1020,18 @@ public class WebElementWrapper {
 
 		//------------------------ Variables -----------------------------------
 		WebElementWrapper descendant = null;
+
 		List<WebElementWrapper> descendants;
 
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			descendants = getDescendants(_by, _isVisible, _secondsToWait);
+			descendants = getDescendants(_by, _isVisible, _waitTime);
 
 			switch(descendants.size()) {
 				case 0:
-					if(_notFoundErrorMessage != null) {
-						throw new NoSuchElementException(_notFoundErrorMessage);
+					if(_notFoundError != null) {
+						throwNoSuchElementException(_notFoundError);
 					}
 					else {
 						break;
@@ -997,141 +1044,135 @@ public class WebElementWrapper {
 			}
 		}
 
-		LOGGER.debug("getDescendant(_by: {}, _isVisible: {}, _secondsToWait: {}, _notFoundErrorMessage: {}) [END]", _by, _isVisible, _secondsToWait,
-				(_notFoundErrorMessage == null ? "(NULL)" : Quotes.escape(_notFoundErrorMessage)));
+		LOGGER.debug("getDescendant( _by: {}, _isVisible: {}, _waitTime: {}, _notFoundError: {} ) [END]", _by, _isVisible, _waitTime,
+				(_notFoundError == null ? "(NULL)" : Quotes.escape(_notFoundError)));
 
 		return descendant;
 	}
 
 	/**
-	 * Gets all the descendants of this {@link WebElement} that match the given search query.
-	 * <p>
-	 *     <b>Note:</b> Waits {@code WebDriverWrapper#maxElementLoadTime} ({@link WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 *     for descendant(s) to exist.
-	 * </p>
+	 * Waits {@link WebDriverWrapper#maxElementLoadTime} for at least one descendant {@link WebElement}, that match the given search query, to exist and contain
+	 * the correct visibility; then grabs all of the available {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendants. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 *         How to search for the descendants.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 *
-	 * @return a List of {@link WebElementWrapper}s that are descendants of this {@link WebElement} and match the given search query;
-	 * 		or an empty List, if no descendants were found.
+	 * @return All of WebElementWrappers that are descendants of this Element and match the given search query and visibility; or an empty List, if no
+	 * descendants were found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 *
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>Or if the given {@link By} object is a CSS Selector starts with "&gt;".</p>
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public List<WebElementWrapper> getDescendants(By _by) {
-		return getDescendants(_by, null, -1);
+
+		return getDescendants(_by, null, WebDriverWrapper.maxElementLoadTime);
 	}
 
 	/**
-	 * Gets all the descendants of this {@link WebElement} that match the given search query.
-	 * <p>
-	 *     <b>Note:</b> Waits {@code WebDriverWrapper#maxElementLoadTime} ({@link WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 *     for descendant(s) to exist.
-	 * </p>
+	 * Waits {@link WebDriverWrapper#maxElementLoadTime} for at least one descendant {@link WebElement}, that match the given search query, to exist and contain
+	 * the correct visibility; then grabs all of the available {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendants. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
+	 *         How to search for the descendants.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 * @param _isVisible
-	 * 		If {@code true}, grabs only visible {@link WebElement}s.
-	 * 		<p>If {@code false}, grabs only hidden {@link WebElement}s.</p>
-	 * 		<p>If {@code null}, all {@link WebElement}s are returned.</p>
+	 *         If set to true, grabs only visible Web Elements. If set to false, grabs only hidden Web Elements. If null, all Web Elements are returned.
 	 *
-	 * @return a List of {@link WebElementWrapper}s that are descendants of this {@link WebElement} and match the given search query;
-	 * 		or an empty List, if no descendants were found.
+	 * @return All of WebElementWrappers that are descendants of this Element and match the given search query and visibility; or an empty List, if no
+	 * descendants were found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 *
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>Or if the given {@link By} object is a CSS Selector starts with "&gt;".</p>
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public List<WebElementWrapper> getDescendants(By _by, Boolean _isVisible) {
-		return getDescendants(_by, _isVisible, -1);
+
+		return getDescendants(_by, _isVisible, WebDriverWrapper.maxElementLoadTime);
 	}
 
 	/**
-	 * Gets all the descendants of this {@link WebElement} that match the given search query.
+	 * Waits the given amount of time for at least one descendant {@link WebElement}, that match the given search query, to exist and contain the correct
+	 * visibility; then grabs all of the available {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendants. (<i>Note: XPaths starting with "//" will be updated to start with ".//"</i>.)
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the descendant to exist.
-	 * 		<p>(Will default to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * 		if {@code < 0} is passed in.</p>
+	 *         How to search for the descendants.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 *
-	 * @return a List of {@link WebElementWrapper}s that are descendants of this {@link WebElement} and match the given search query;
-	 * 		or an empty List, if no descendants were found.
+	 * @return All of WebElementWrappers that are descendants of this Element and match the given search query and visibility; or an empty List, if no
+	 * descendants were found.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given By object is {@code NULL}.
-	 *
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>If the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public List<WebElementWrapper> getDescendants(By _by, double _secondsToWait) {
-		return getDescendants(_by, null, _secondsToWait);
+	public List<WebElementWrapper> getDescendants(By _by, Duration _waitTime) {
+		return getDescendants(_by, null, _waitTime);
 	}
 
 	/**
-	 * Gets all the descendants of this {@link WebElement} that match the given search query.
+	 * Waits the given amount of time for at least one descendant {@link WebElement}, that match the given search query, to exist and contain the correct
+	 * visibility; then grabs all of the available {@link WebElement} descendants.
 	 *
 	 * @param _by
-	 * 		How to search for the descendants.
-	 * 		<p>
-	 * 		    If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
-	 * 		    This CSS selector MUST be preceded by a parent query.
-	 * 		    Instead use an XPath starting with "./".
-	 * 		</p>
-	 * 		<p>
-	 * 		    <b>Note:</b> XPaths starting with "//" will be updated to start with ".//".
-	 * 		</p>
+	 *         How to search for the descendants.
+	 *         <p>If looking for a direct decedent, do NOT start with the CSS "child combinator" selector (&gt;).
+	 *         This CSS selector MUST be preceded by a parent query.Instead use an XPath starting with "./".</p>
+	 *         <p><b>Note:</b> XPaths starting with "//" will be updated to start with ".//".</p>
 	 * @param _isVisible
-	 * 		If {@code true}, grabs only visible {@link WebElement}s.
-	 * 		<p>If {@code false}, grabs only hidden {@link WebElement}s.</p>
-	 * 		<p>If {@code null}, all {@link WebElement}s are returned.</p>
-	 * @param _secondsToWait
-	 * 		How long to wait (in seconds) for the descendant to exist.
-	 * 		<p>(Will default to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * 		if {@code < 0} is passed in.</p>
+	 *         If set to true, grabs only visible Web Elements. If set to false, grabs only hidden Web Elements. If null, all Web Elements are returned.
+	 * @param _waitTime
+	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
+	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 *
-	 * @return a List of {@link WebElementWrapper}s that are descendants of this {@link WebElement} and match the given search query;
-	 * 		or an empty List, if no descendants were found.
+	 * @return All of WebElementWrappers that are descendants of this Element and match the given search query and visibility; or an empty List, if no
+	 * descendants were found.
 	 *
-	 * @throws IllegalArgumentException If the given {@link By} object is {@code NULL}.
-	 *             <p>
-	 *                 Or if the given {@link By} object is a CSS Selector starts with "&gt;".
-	 *             </p>
-
-	 *
+	 * @throws IllegalArgumentException
+	 *         If the given {@link By} object is {@code null}.
+	 *         <p>If the given {@link By} object is a CSS Selector starts with "&gt;".</p>
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public List<WebElementWrapper> getDescendants(By _by, Boolean _isVisible, double _secondsToWait) {
+	public List<WebElementWrapper> getDescendants(By _by, Boolean _isVisible, Duration _waitTime) {
 
-		LOGGER.info("getDescendants(_by: {}, _isVisible: {}, _secondsToWait: {}) [START]", _by, _isVisible, _secondsToWait);
+		LOGGER.info("getDescendants( _by: {}, _isVisible: {}, _waitTime: {} ) [START]", _by, _isVisible, _waitTime);
 
 		//------------------------ Pre-Checks ----------------------------------
-		ArgumentChecks.notNull(_by, "By");
+		ArgumentChecks.notNull(_by, "By object");
 
-		if( _by instanceof By.ByCssSelector) { // See: https://github.com/SeleniumHQ/selenium/issues/2091
+		if(_by instanceof By.ByCssSelector) { // See: https://github.com/SeleniumHQ/selenium/issues/2091
 
 			String selector = _by.toString();
-			if(selector.trim().startsWith( ">" )) {
+			if(selector.trim().startsWith(">")) {
 				throw new IllegalArgumentException("Given CSS Selector cannot start with \">\"!");
 			}
 		}
+
+		// Wait Time is validated in the WebDriverWrapper#getWebElementWrappers(...) method call.
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
 		List<WebElementWrapper> descendants = null;
 
-		//------------------------ Code ----------------------------------------
-		_secondsToWait = _secondsToWait < 0 ? WebDriverWrapper.maxElementLoadTimeInSeconds : _secondsToWait;
+		//------------------------ Initialize ----------------------------------
+		if(_by instanceof ByXPath) { // Force ".//".
 
-		if(_by instanceof ByXPath) {
-
-			// Force ".//".
 			String xpath = _by.toString();
 			xpath = xpath.substring(xpath.indexOf(" ") + 1).trim();
 			if(xpath.startsWith("//") || xpath.startsWith("\\\\")) {
@@ -1139,12 +1180,15 @@ public class WebElementWrapper {
 			}
 		}
 
+		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
+
 			do {
 				try {
-					descendants = WEB_DRIVER_WRAPPER.getWebElementWrappers(webElement, _by, _secondsToWait, -1, _isVisible);
+					descendants = WEB_DRIVER_WRAPPER.getWebElementWrappers(webElement, _by, _waitTime, -1, _isVisible);
 				}
 				catch(StaleElementReferenceException e) {
+
 					if(!reacquireWebElement()) {
 						throw e;
 					}
@@ -1159,7 +1203,7 @@ public class WebElementWrapper {
 			} while(descendants == null);
 		}
 
-		LOGGER.debug("getDescendants(_by: {}, _isVisible: {}, _secondsToWait: {}) - ({}) - [END]", _by, _isVisible, _secondsToWait, descendants.size());
+		LOGGER.debug("getDescendants( _by: {}, _isVisible: {}, _waitTime: {} ) [END]", _by, _isVisible, _waitTime);
 
 		return descendants;
 	}
@@ -1851,8 +1895,7 @@ public class WebElementWrapper {
 	 * @return This {@link WebElementWrapper} for function call chain-ability.
 	 *
 	 * @throws TimeoutException
-	 * 		If the page never unloads, or if the page does not finish loading in
-	 * 		{@link WebDriverWrapper#maxPageLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_PAGE_LOAD_TIME_S} seconds).
+	 * 		If the page never unloads, or if the page does not finish loading in {@link WebDriverWrapper#maxPageLoadTime}.
 	 * @throws WebDriverException
 	 * 		If the {@link WebElement} is covered, and another {@link WebElement} would receive the click.
 	 *
@@ -2547,20 +2590,19 @@ public class WebElementWrapper {
 	}
 
 	/**
-	 * Waits, up to the given length of time, for this {@link WebElement} to be removed from the DOM.
+	 * Waits, up to the given length of time, for this Web Element to be removed from the DOM.
 	 *
 	 * @param _waitTime
-	 * 		How long (in seconds) to wait.
-	 * 		<p><i>Note:</i> Unit is truncated to milliseconds (3 decimal places).</p>
+	 *            How long to wait.
 	 *
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement} is not removed from the DOM in the given amount of time.
+	 *             If this Web Element is not removed from the DOM in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForUnload(double _waitTime) {
+	public void waitForUnload(Duration _waitTime) {
 
-		LOGGER.info("waitForUnload(_waitTime: {}) [START]", _waitTime);
+		LOGGER.info("waitForUnload( _waitTime: {} ) [START]", _waitTime);
 
 		//------------------------ Pre-Checks ----------------------------------
 
@@ -2573,392 +2615,393 @@ public class WebElementWrapper {
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
 			fluentWait = initializeFluentWait(_waitTime);
+
 			fluentWait.ignoring(NoSuchElementException.class, StaleElementReferenceException.class).until(ExpectedConditions.stalenessOf(webElement));
 		}
 
-		LOGGER.debug("waitForUnload(_waitTime: {}) [END]", _waitTime);
+		LOGGER.debug("waitForUnload( _waitTime: {} ) [END]", _waitTime);
 	}
 
 	//////////////////// Wait for Attribute Functions [START] ////////////////////
+
 	/**
-	 * Waits for a given Attribute to exist.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for a given Attribute to exist.
 	 *
 	 * @param _name
-	 * 		The name of the Attribute to look for.
+	 *         The name of the Attribute to look for.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _name is {@code null}.
-	 * 		<p>Or the given _name is an Empty String or just Whitespace.</p>
+	 *         If the given Attribute Name is blank.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s Attribute does not change in the given amount of time.
+	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForAttribute(String _name) {
-		waitForAttribute(_name, null, WebDriverWrapper.maxElementLoadTimeInSeconds, true, true);
+		waitForAttribute(_name, null, WebDriverWrapper.maxElementLoadTime, true, true);
 	}
 
 	/**
-	 * Waits for a given Attribute to exist.
+	 * Waits up to the given length of time, for a given Attribute to exist.
+	 * <p>
+	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
+	 * </p>
 	 *
 	 * @param _name
-	 * 		The name of the Attribute to look for.
+	 *         The name of the Attribute to look for.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *         How long to wait for the change to occur.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _name is {@code null}.
-	 * 		<p>The given _name is an Empty String or just Whitespace.</p>
-	 * 		<p>Or the given _waitTime is {@code < 0}.</p>
+	 *         If the given Attribute Name is blank.
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s Attribute does not change in the given amount of time.
+	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForAttribute(String _name, double _waitTime) {
+	public void waitForAttribute(String _name, Duration _waitTime) {
 		waitForAttribute(_name, null, _waitTime, true, true);
 	}
 
 	/**
-	 * Waits for a given Attribute to exist and/or for the value to equal a given value.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for a given Attribute to exist and for the value to equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _name
-	 * 		The name of the Attribute to look for.
+	 *         The name of the Attribute to look for.
 	 * @param _value
-	 * 		The value to compare against. If {@code null} this method will just look for the existence/non-existence of the Attribute.
+	 *         The value to compare against; or if {@code null}, this method will just look for the existence of the given Attribute.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _name is {@code null}.
-	 * 		<p>Or the given _name is an Empty String or just Whitespace.</p>
+	 *         If the given Attribute Name is blank.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s Attribute does not change in the given amount of time.
+	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForAttribute(String _name, String _value) {
-		waitForAttribute(_name, _value, WebDriverWrapper.maxElementLoadTimeInSeconds, true, true);
+		waitForAttribute(_name, _value, WebDriverWrapper.maxElementLoadTime, true, true);
 	}
 
 	/**
-	 * Waits for a given Attribute to exist and/or for the value to equal a given value.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for a given Attribute to exist and for the value to equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _name
-	 * 		The name of the Attribute to look for.
+	 *         The name of the Attribute to look for.
 	 * @param _value
-	 * 		The value to compare against. If {@code null} this method will just look for the existence/non-existence of the Attribute.
+	 *         The value to compare against; or if {@code null}, this method will just look for the existence of the given Attribute.
 	 * @param _caseSensitive
-	 * 		If {@code true}, {@link String#equals(Object)} is used.
-	 * 		<p>If {@code false}, {@link String#equalsIgnoreCase(String)}</p>
+	 *         If {@code true}, {@link String#equals(Object)} is used; else if {@code false}, {@link String#equalsIgnoreCase(String)} is used.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _name is {@code null}.
-	 * 		<p>Or the given _name is an Empty String or just Whitespace.</p>
+	 *         If the given Attribute Name is blank.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s Attribute does not change in the given amount of time.
+	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForAttribute(String _name, String _value, boolean _caseSensitive) {
-		waitForAttribute(_name, _value, WebDriverWrapper.maxElementLoadTimeInSeconds, _caseSensitive, true);
+		waitForAttribute(_name, _value, WebDriverWrapper.maxElementLoadTime, _caseSensitive, true);
 	}
 
 	/**
-	 * Waits for a given Attribute to exist and/or for the value to equal a given value.
+	 * Waits up to the given length of time, for a given Attribute to exist and for the value to equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _name
-	 * 		The name of the Attribute to look for.
+	 *         The name of the Attribute to look for.
 	 * @param _value
-	 * 		The value to compare against. If {@code null} this method will just look for the existence/non-existence of the Attribute.
+	 *         The value to compare against; or if {@code null}, this method will just look for the existence of the given Attribute.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *         How long to wait for the change to occur.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _name is {@code null}.
-	 * 		<p>The given _name is an Empty String or just Whitespace.</p>
-	 * 		<p>Or the given _waitTime is {@code < 0}.</p>
+	 *         If the given Attribute Name is blank.
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s Attribute does not change in the given amount of time.
+	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForAttribute(String _name, String _value, double _waitTime) {
+	public void waitForAttribute(String _name, String _value, Duration _waitTime) {
 		waitForAttribute(_name, _value, _waitTime, true, true);
 	}
 
 	/**
-	 * Waits for a given Attribute to exist and/or for the value to equal a given value.
+	 * Waits up to the given length of time, for a given Attribute to exist and for the value to equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _name
-	 * 		The name of the Attribute to look for.
+	 *         The name of the Attribute to look for.
 	 * @param _value
-	 * 		The value to compare against. If {@code null} this method will just look for the existence/non-existence of the Attribute.
+	 *         The value to compare against; or if {@code null}, this method will just look for the existence/non-existence of the given Attribute.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *         How long to wait for the change to occur.
 	 * @param _caseSensitive
-	 * 		If {@code true}, {@link String#equals(Object)} is used.
-	 * 		<p>If {@code false}, {@link String#equalsIgnoreCase(String)}</p>
+	 *         If {@code true}, {@link String#equals(Object)} is used; else if {@code false}, {@link String#equalsIgnoreCase(String)} is used.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _name is {@code null}.
-	 * 		<p>The given _name is an Empty String or just Whitespace.</p>
-	 * 		<p>Or the given _waitTime is {@code < 0}.</p>
+	 *         If the given Attribute Name is blank.
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s Attribute does not change in the given amount of time.
+	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForAttribute(String _name, String _value, double _waitTime, boolean _caseSensitive) {
+	public void waitForAttribute(String _name, String _value, Duration _waitTime, boolean _caseSensitive) {
 		waitForAttribute(_name, _value, _waitTime, _caseSensitive, true);
 	}
 
 	/**
-	 * Waits for a given Attribute to exist / not exist and/or for the value to equal / not equal a given value.
+	 * Waits up to the given length of time, for a given Attribute to exist / not exist and/or for the value to equal / not equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _name
-	 * 		The name of the Attribute to look for.
+	 *         The name of the Attribute to look for.
 	 * @param _value
-	 * 		The value to compare against. If {@code null} this method will just look for the existence/non-existence of the Attribute.
+	 *         The value to compare against; or if {@code null}, this method will just look for the existence/non-existence of the given Attribute.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *         How long to wait for the change to occur.
 	 * @param _caseSensitive
-	 * 		If {@code true}, {@link String#equals(Object)} is used.
-	 * 		<p>If {@code false}, {@link String#equalsIgnoreCase(String)}</p>
+	 *         If {@code true}, {@link String#equals(Object)} is used; else if {@code false}, {@link String#equalsIgnoreCase(String)} is used.
 	 * @param _isEqualTo
-	 * 		If {@code true}, wait for the value to equal the given {@code _value} or just existence, if the given {@code _value} is {@code null}.
-	 * 		<p>If {@code false}, wait for the value to NOT equal the given {@code _value} or just not existence, if the given {@code _value} is {@code null}.</p>
+	 *         If {@code true}, waits for the value to equal the given value; else if {@code false}, waits for the value to <b>not</b> equal the given value.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _name is {@code null}.
-	 * 		<p>The given _name is an Empty String or just Whitespace.</p>
-	 * 		<p>Or the given _waitTime is {@code < 0}.</p>
+	 *         If the given Attribute Name is blank.
+	 *         <p>Or if the given Wait Time is negative.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s Attribute does not change in the given amount of time.
+	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForAttribute(String _name, String _value, double _waitTime, boolean _caseSensitive, boolean _isEqualTo) {
+	public void waitForAttribute(String _name, String _value, Duration _waitTime, boolean _caseSensitive, boolean _isEqualTo) {
 
-		LOGGER.info("waitForAttribute(_name: {}, _value: {}, _waitTime: {}, _isEqualTo: {}) [START]", _name, _value, _waitTime, _isEqualTo);
+		LOGGER.info("waitForAttribute( _name: {}, _value: {}, _waitTime: {}, _isEqualTo: {} ) [START]", _name, _value, _waitTime, _isEqualTo );
 
 		//------------------------ Pre-Checks ----------------------------------
-		ArgumentChecks.stringNotWhitespaceOnly(_value, "Value");
+		ArgumentChecks.stringNotWhitespaceOnly(_name, "Attribute Name");
 
-		if(_waitTime < 0) {
-			throw new IllegalArgumentException("Given Wait time must be >= 0!");
+		if(_waitTime.isNegative()) {
+			throw new IllegalArgumentException("Given Wait Time cannot be negative! (" + _waitTime + ")");
 		}
+
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		FluentWait<WebDriver> fluentWait;
+		FluentWait< WebDriver > fluentWait;
 
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			fluentWait = initializeFluentWait(_waitTime);
+			fluentWait = initializeFluentWait( _waitTime );
+
 			fluentWait.until((Function<WebDriver, Boolean>) driver -> {
 
-				String value = getAttribute(_name);
+				String value = getAttribute( _name );
 
 				///// NULL Compares /////
 				if(_isEqualTo) { // We want them to be equal.
 
-					if(Objects.equals(value, _value)) {
+					//noinspection StringEquality
+					if( value == _value ) {
 						return true;
 					}
-					else if(value == null || _value == null) {
+					else if(value == null || _value == null ) {
 						return false;
 					}
-					else { /*Neither of them are null, so do the Non-NULL Compares*/ }
+					/*else {
+						// Neither of them are null, so do the Non-NULL Compares.
+					}*/
 				}
 				else { // We don't want them to be equal.
 
-					if(Objects.equals(value, _value)) {
+					//noinspection StringEquality
+					if( value == _value ) {
 						return false;
 					}
-					else if(value == null || _value == null) {
+					else if(value == null || _value == null ) {
 						return true;
 					}
-					else { /*Neither of them are null, so do the Non-NULL Compares*/ }
+					/*else {
+						// Neither of them are null, so do the Non-NULL Compares.
+					}*/
 				}
 
 				///// Non-NULL Compares /////
 				boolean valuesAreEqual;
-
 				if(_caseSensitive) {
-					valuesAreEqual = value.trim().equals(_value.trim());
+					valuesAreEqual = value.trim().equals( _value.trim());
 				}
 				else {
-					valuesAreEqual = value.trim().equalsIgnoreCase(_value.trim());
+					valuesAreEqual = value.trim().equalsIgnoreCase( _value.trim() );
 				}
 
 				return valuesAreEqual == _isEqualTo;
 			});
 		}
 
-		LOGGER.debug("waitForAttribute(_name: {}, _value: {}, _waitTime: {}, _isEqualTo: {}) [END]", _name, _value, _waitTime, _isEqualTo);
+		LOGGER.debug("waitForAttribute( _name: {}, _value: {}, _waitTime: {}, _isEqualTo: {} ) [END]", _name, _value, _waitTime, _isEqualTo );
 	}
 	//////////////////// Wait for Attribute Functions [END] ////////////////////
 
 	//////////////////// Wait for Class Functions [START] ////////////////////
+
 	/**
-	 * Waits up to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * for the {@code @class} to contain the given value.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Element's {@code @Class} attribute to contain a given value.
 	 *
 	 * @param _token
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given {@code _token} is {@code null}.
-	 * 		<p>Or if the given {@code _token} is an Empty String or just Whitespace.</p>
+	 *             If the given Token is blank.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s {@code @class}v does not change in the given amount of time.
+	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForClass(String _token) {
-		waitForClass(_token, WebDriverWrapper.maxElementLoadTimeInSeconds, true);
+		waitForClass(_token, WebDriverWrapper.maxElementLoadTime, true);
 	}
 
 	/**
-	 * Waits up to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * for the {@code @class} to contain / not contain the given value.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Element's {@code @Class} attribute to contain / not contain a given value.
 	 *
 	 * @param _token
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 * @param _isEqualTo
-	 * 		If {@code true}, waits for the {@code @class} to contain the value.
-	 * 		<p>If {@code false}, waits for the {@code @class} to NOT contain the value.</p>
+	 *            If {@code true}, waits for contains; or if {@code false}, waits for does <b>not</b> contain.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given {@code _token} is {@code null}.
-	 * 		<p>Or if the given {@code _token} is an Empty String or just Whitespace.</p>
+	 *             If the given Token is blank.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s {@code @class}v does not change in the given amount of time.
+	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForClass(String _token, boolean _isEqualTo) {
-		waitForClass(_token, WebDriverWrapper.maxElementLoadTimeInSeconds, _isEqualTo);
+		waitForClass(_token, WebDriverWrapper.maxElementLoadTime, _isEqualTo);
 	}
 
 	/**
-	 * Waits for the {@code @class} to contain the given value.
+	 * Waits up to the given amount of time, for this Element's {@code @Class} attribute to contain a given value.
 	 *
 	 * @param _token
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *            How long to wait for the change to occur.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given {@code _token} is {@code null}.
-	 * 		<p>If the given {@code _token} is an Empty String or just Whitespace.</p>
-	 * 		<p>Or if the given {@code _waitTime} is {@code < 0}.</p>
+	 *             If the given Token is blank.
+	 *             <p>Or if the given _waitTime is {@code < 0}.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s {@code @class} does not change in the given amount of time.
+	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForClass(String _token, double _waitTime) {
-		waitForClass(_token, _waitTime, true);
+	public void waitForClass(String _token, Duration _waitTime) {
+		waitForClass( _token, _waitTime, true);
 	}
 
 	/**
-	 * Waits for the {@code @class} to contain / not contain the given value.
+	 * Waits up to the given amount of time, for this Element's {@code @Class} attribute to contain / not contain a given value.
 	 *
 	 * @param _token
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *            How long to wait for the change to occur.
 	 * @param _isEqualTo
-	 * 		If {@code true}, waits for the {@code @class} to contain the value.
-	 * 		<p>If {@code false}, waits for the {@code @class} to NOT contain the value.</p>
+	 *            If {@code true}, waits for contains; or if {@code false}, waits for does <b>not</b> contain.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given {@code _token} is {@code null}.
-	 * 		<p>If the given {@code _token} is an Empty String or just Whitespace.</p>
-	 * 		<p>Or if the given {@code _waitTime} is {@code < 0}.</p>
+	 *             If the given Token is blank.
+	 *             <p>Or if the given _waitTime is {@code < 0}.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s {@code @class}v does not change in the given amount of time.
+	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForClass(String _token, double _waitTime, boolean _isEqualTo) {
+	public void waitForClass(String _token, Duration _waitTime, boolean _isEqualTo) {
 
-		LOGGER.info("waitForClass(_token: {}, _waitTime: {}, _isEqualTo: {}) [START]", _token, _waitTime, _isEqualTo);
+		LOGGER.info("waitForClass( _token: {}, _waitTime: {}, _isEqualTo: {} ) [START]", _token, _waitTime, _isEqualTo );
 
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.stringNotWhitespaceOnly(_token, "Token");
 
-		if(_waitTime < 0) {
-			throw new IllegalArgumentException("Given Wait time must be >= 0!");
+		if(_waitTime.isNegative()) {
+			throw new IllegalArgumentException("Given Wait Time cannot be negative! (" + _waitTime + ")");
 		}
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		FluentWait<WebDriver> fluentWait;
+		FluentWait< WebDriver > fluentWait;
 
 		//------------------------ Code ----------------------------------------
-		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
+		synchronized(WEB_DRIVER_WRAPPER.LOCK ) {
 
 			fluentWait = initializeFluentWait(_waitTime);
+
 			fluentWait.until((Function<WebDriver, Boolean>) driver -> {
 
-				boolean contains = classContains(_token);
+				boolean contains = classContains( _token );
 
 				return contains == _isEqualTo;
 			});
 		}
 
-		LOGGER.debug("waitForAttribute(_token: {}, _waitTime: {}, _isEqualTo: {}) [END]", _token, _waitTime, _isEqualTo);
+		LOGGER.debug("waitForAttribute( _token: {}, _waitTime: {}, _isEqualTo: {} ) [END]", _token, _waitTime, _isEqualTo );
 	}
 	//////////////////// Wait for Class Functions [END] ////////////////////
 
 	/**
-	 * Waits up to the given amount of time for this {@link WebElement} to be click-able (i.e. visible, enabled, and un-obscured).
+	 * Waits up to the given amount of time for this Web Element to be
+	 * click-able (i.e. visible, enabled, and un-obscured).
 	 *
 	 * @param _waitTimeInSeconds
-	 * 		The maximum amount of time to wait for this {@link WebElement} to be click-able (<i>truncated to a {@code long}</i>).
+	 *            The Maximum amount of time to wait for this Web Element to be
+	 *            click-able (<i>truncated to a {@code long}</i>).
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If {@code _waitTimeInSeconds < 0}.
+	 *             If {@code _waitTimeInSeconds < 0}.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement} is not click-able after {@code _waitTimeInSeconds}.
+	 *             If this Web Element is not click-able after
+	 *             {@code _waitTimeInSeconds}.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForClickability(double _waitTimeInSeconds) {
+	public void waitForClickable(double _waitTimeInSeconds) {
 
-		LOGGER.info("waitForClickability(_waitTimeInSeconds: {}) [START]", _waitTimeInSeconds);
+		LOGGER.info("waitForClickable( _waitTimeInSeconds: {} ) [START]", _waitTimeInSeconds );
 
 		//------------------------ Pre-Checks ----------------------------------
 		if(_waitTimeInSeconds < 0) {
-			throw new IllegalArgumentException("Given Wait time must be >= 0!");
+			throw new IllegalArgumentException("Given Wait time must be >= 0!" );
 		}
+
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		WebDriverWait webDriverWait;
+		WebDriverWait webDriverWait = null;
+
+		//------------------------ Initialize ----------------------------------
 
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			webDriverWait = new WebDriverWait(WEB_DRIVER_WRAPPER.DRIVER, (long) _waitTimeInSeconds, WebDriverWrapper.POLLING_INTERVAL_MS);
+			webDriverWait = new WebDriverWait(WEB_DRIVER_WRAPPER.DRIVER, (long) _waitTimeInSeconds, WebDriverWrapper.POLLING_INTERVAL.toMillis());
 
 			try {
 				webDriverWait.until(ExpectedConditions.elementToBeClickable(webElement));
@@ -2966,7 +3009,7 @@ public class WebElementWrapper {
 			catch(StaleElementReferenceException e) {
 
 				if(reacquireWebElement()) {
-					waitForClickability(_waitTimeInSeconds);
+					waitForClickable( _waitTimeInSeconds );
 				}
 				else {
 					throw e;
@@ -2974,118 +3017,114 @@ public class WebElementWrapper {
 			}
 		}
 
-		LOGGER.debug("waitForClickability(_waitTimeInSeconds: {}) [END]", _waitTimeInSeconds);
+		LOGGER.debug("waitForClickable( _waitTimeInSeconds: {} ) [END]", _waitTimeInSeconds );
 	}
 
 	//////////////////// Wait for Value Functions [START] ////////////////////
+
 	/**
-	 * Waits {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds)
-	 * for this {@link WebElement}'s value to equal a given value.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Element's value to equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _value
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 * @param _caseSensitive
-	 * 		If {@code true}, {@link String#equals(Object)} is used.
-	 * 		<p>If {@code false}, {@link String#equalsIgnoreCase(String)} is used.</p>
+	 *            If {@code true}, {@link String#equals(Object)} is used; else if {@code false}, {@link String#equalsIgnoreCase(String)} is used.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _value is {@code null}.
+	 *             If the given Value is {@code null}.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s value does not change in
-	 * 		{@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds).
+	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForValue(String _value, boolean _caseSensitive) {
-		waitForValue(_value, WebDriverWrapper.maxElementLoadTimeInSeconds, _caseSensitive, true);
+		waitForValue(_value, WebDriverWrapper.maxElementLoadTime, _caseSensitive, true);
 	}
 
 	/**
-	 * Waits for this {@link WebElement}'s value to equal a given value.
+	 * Waits up to the given length of time, for this Element's value to equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _value
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *            How long to wait for the change to occur.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _value is {@code null}.
-	 * 		<p>Or if the given _waitTime is {@code < 0}.</p>
+	 *             If the given Value is {@code null}.
+	 *             <p>Or if the given Wait Time is {@code < 0}.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s value does not change in the given amount of time.
+	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForValue(String _value, double _waitTime) {
+	public void waitForValue(String _value, Duration _waitTime) {
 		waitForValue(_value, _waitTime, true, true);
 	}
 
 	/**
-	 * Waits for this {@link WebElement}'s value to equal a given value.
+	 * Waits up to the given length of time, for this Element's value to equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _value
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *            How long to wait for the change to occur.
 	 * @param _caseSensitive
-	 * 		If {@code true}, {@link String#equals(Object)} is used.
-	 * 		<p>If {@code false}, {@link String#equalsIgnoreCase(String)} is used.</p>
+	 *            If {@code true}, {@link String#equals(Object)} is used; else if {@code false}, {@link String#equalsIgnoreCase(String)} is used.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _value is {@code null}.
-	 * 		<p>Or if the given _waitTime is {@code < 0}.</p>
+	 *             If the given Value is {@code null}.
+	 *             <p>Or if the given Wait Time is {@code < 0}.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s value does not change in the given amount of time.
+	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForValue(String _value, double _waitTime, boolean _caseSensitive) {
+	public void waitForValue(String _value, Duration _waitTime, boolean _caseSensitive) {
 		waitForValue(_value, _waitTime, _caseSensitive, true);
 	}
 
 	/**
-	 * Waits for this {@link WebElement}'s value to equal / not equal a given value.
+	 * Waits up to the given length of time, for this Element's value to equal / not equal a given value.
 	 * <p>
 	 *     <b>Note:</b> Both the actual value and the given value are trimmed before comparing.
 	 * </p>
 	 *
 	 * @param _value
-	 * 		The value to compare against.
+	 *            The value to compare against.
 	 * @param _waitTime
-	 * 		How long to wait for the change to occur.
+	 *            How long to wait for the change to occur.
 	 * @param _caseSensitive
-	 * 		If {@code true}, {@link String#equals(Object)} is used.
-	 * 		<p>If {@code false}, {@link String#equalsIgnoreCase(String)} is used.</p>
+	 *            If {@code true}, {@link String#equals(Object)} is used; else if {@code false}, {@link String#equalsIgnoreCase(String)} is used.
 	 * @param _isEqualTo
-	 * 		If {@code true}, wait for the value to equal the given value.
-	 * 		<p>If {@code false}, wait for the value to NOT equal the given value.</p>
+	 *            If {@code true}, waits for the value to equal the given value; else if {@code false}, waits for the value to <b>not</b> equal the given value.
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the given _value is {@code null}.
-	 * 		<p>Or if the given _waitTime is {@code < 0}.</p>
+	 *             If the given Value is {@code null}.
+	 *             <p>Or if the given Wait Time is {@code < 0}.</p>
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s value does not change in the given amount of time.
+	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForValue(String _value, double _waitTime, boolean _caseSensitive, boolean _isEqualTo) {
+	public void waitForValue(String _value, Duration _waitTime, boolean _caseSensitive, boolean _isEqualTo) {
 
-		LOGGER.info("waitForValue(_value: {}, _waitTime: {}, _caseSensitive: {}, _isEqualTo: {}) [START]", _value, _waitTime, _caseSensitive, _isEqualTo);
+		LOGGER.info("waitForValue( _value: {}, _waitTime: {}, _caseSensitive: {}, _isEqualTo: {} ) [START]",
+				_value, _waitTime, _caseSensitive, _isEqualTo);
 
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_value, "Value");
 
-		if(_waitTime < 0) {
-			throw new IllegalArgumentException("Given Wait time must be >= 0!");
+		if(_waitTime.isNegative()) {
+			throw new IllegalArgumentException("Given Wait Time cannot be negative! (" + _waitTime + ")");
 		}
 
 		//------------------------ CONSTANTS -----------------------------------
@@ -3093,14 +3132,16 @@ public class WebElementWrapper {
 		//------------------------ Variables -----------------------------------
 		FluentWait<WebDriver> fluentWait;
 
+		//------------------------ Initialize ----------------------------------
+
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
 			fluentWait = initializeFluentWait(_waitTime);
+
 			fluentWait.until((Function<WebDriver, Boolean>) driver -> {
 
 				String value = getValue().trim();
-
 				boolean valuesAreEqual;
 				if(_caseSensitive) {
 					valuesAreEqual = value.equals(_value.trim());
@@ -3113,107 +3154,108 @@ public class WebElementWrapper {
 			});
 		}
 
-		LOGGER.debug("waitForValue(_value: {}, _waitTime: {}, _caseSensitive: {}, _isEqualTo: {}) [END]", _value, _waitTime, _caseSensitive, _isEqualTo);
+		LOGGER.debug("waitForValue( _value: {}, _waitTime: {}, _caseSensitive: {}, _isEqualTo: {} ) [END]",
+				_value, _waitTime, _caseSensitive, _isEqualTo);
 	}
 	//////////////////// Wait for Value Functions [END] ////////////////////
 
 	//////////////////// Wait for Visibility Functions [START] ////////////////////
+
 	/**
-	 * Waits up to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds),
-	 * for this {@link WebElement} to become visible.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Web Element to become visible.
 	 * <p>
-	 *     <b>Note:</b> A Stale {@link WebElement} will be treated as invisible.
+	 *     <b>Note:</b> If waiting for Invisibility, a Stale Element will be treated as Invisible.
 	 * </p>
 	 *
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s visibility does not change in
-	 * 		{@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds).
+	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForVisibility() {
-		waitForVisibility(true, WebDriverWrapper.maxElementLoadTimeInSeconds);
+		waitForVisibility(true, WebDriverWrapper.maxElementLoadTime);
 	}
 
 	/**
-	 * Waits up to {@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds),
-	 * for this {@link WebElement} to become visible/invisible.
+	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Web Element to become visible/invisible.
 	 * <p>
-	 *     <b>Note:</b> If waiting for invisibility, a Stale {@link WebElement} will be treated as invisible.
+	 *     <b>Note:</b> If waiting for Invisibility, a Stale Element will be treated as Invisible.
 	 * </p>
 	 *
-	 *
 	 * @param _visible
-	 * 		{@code true} if we are waiting for {@link WebElement} to be visible, or {@code false} if we are waiting for {@link WebElement} to be invisible.
+	 *            True if we are waiting for Web Element to be visible, or false if we are waiting for Web Element to be invisible.
 	 *
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s visibility does not change in
-	 * 		{@link WebDriverWrapper#maxElementLoadTimeInSeconds} ({@value WebDriverWrapper#DEFAULT_MAX_ELEMENT_LOAD_TIME_S} seconds).
+	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
 	public void waitForVisibility(boolean _visible) {
-		waitForVisibility(_visible, WebDriverWrapper.maxElementLoadTimeInSeconds);
+		waitForVisibility(_visible, WebDriverWrapper.maxElementLoadTime);
 	}
 
 	/**
-	 * Waits, up to the given length of time, for this {@link WebElement} to become visible.
-	 * <p>
-	 *     <b>Note:</b> A Stale {@link WebElement} will be treated as invisible.
-	 * </p>
+	 * Waits up to the given length of time, for this Web Element to become visible.
 	 *
 	 * @param _waitTime
-	 * 		How long (in seconds) to wait.
-	 * 		<p><i>Note:</i> Unit is truncated to milliseconds (3 decimal places).</p>
+	 *            How long to wait.
 	 *
+	 * @throws IllegalArgumentException
+	 *         If the given Wait Time is negative.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s visibility does not change in the given amount of time.
+	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForVisibility(double _waitTime) {
-		waitForVisibility(true, _waitTime);
+	public void waitForVisibility(Duration _waitTime) {
+		waitForVisibility( true, _waitTime);
 	}
 
 	/**
-	 * Waits, up to the given length of time, for this {@link WebElement} to become visible/invisible.
+	 * Waits up to the given length of time, for this Web Element to become visible/invisible.
 	 * <p>
-	 *     <b>Note:</b> If waiting for invisibility, a Stale {@link WebElement} will be treated as invisible.
+	 *     <b>Note:</b> If waiting for Invisibility, a Stale Element will be treated as Invisible.
 	 * </p>
 	 *
 	 * @param _visible
-	 * 		{@code true} if we are waiting for {@link WebElement} to be visible, or {@code false} if we are waiting for {@link WebElement} to be invisible.
+	 *            True if we are waiting for Web Element to be visible, or false if we are waiting for Web Element to be invisible.
 	 * @param _waitTime
-	 * 		How long (in seconds) to wait.
-	 * 		<p><i>Note:</i> Unit is truncated to milliseconds (3 decimal places).</p>
+	 *            How long to wait.
 	 *
+	 * @throws IllegalArgumentException
+	 *         If the given Wait Time is negative.
 	 * @throws TimeoutException
-	 * 		If this {@link WebElement}'s visibility does not change in the given amount of time.
+	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
 	 */
-	public void waitForVisibility(boolean _visible, double _waitTime) {
+	public void waitForVisibility(boolean _visible, Duration _waitTime) {
 
-		LOGGER.info("waitForVisibility(_visible: {}, _waitTime: {}) [START]", _visible, _waitTime);
+		LOGGER.info("waitForVisibility( _visible: {}, _waitTime: {} ) [START]", _visible, _waitTime );
 
 		//------------------------ Pre-Checks ----------------------------------
+		if(_waitTime.isNegative()) {
+			throw new IllegalArgumentException("Given Wait Time cannot be negative! (" + _waitTime + ")");
+		}
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
 		FluentWait<WebDriver> fluentWait;
 
+		//------------------------ Initialize ----------------------------------
+
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
-			fluentWait = initializeFluentWait(_waitTime);
+			fluentWait = initializeFluentWait(_waitTime );
 
-			if(_visible) {
+			if( _visible ) {
 
 				fluentWait.ignoring( ElementNotVisibleException.class );
 
 				long startTime = System.currentTimeMillis();
-				long maxEndWaitTime = startTime + (((long) _waitTime) * 1000);
+				long maxEndWaitTime = startTime + _waitTime.toMillis();
 
 				while(true) { // START "Try again for Visible on StaleElementReferenceException" loop.
 					try {
@@ -3233,11 +3275,9 @@ public class WebElementWrapper {
 							}
 							else {
 								try { // Attempt to wait for element to appear.
-									Thread.sleep(WebDriverWrapper.POLLING_INTERVAL_MS);
+									Thread.sleep(WebDriverWrapper.POLLING_INTERVAL.toMillis());
 								}
 								catch(InterruptedException e1) { /*Ignore*/ }
-
-								//noinspection UnnecessaryContinue
 								continue; // Try to re-acquire again, if not past the wait time.
 							}
 						} // END "Require if not past the wait time" loop.
@@ -3245,18 +3285,16 @@ public class WebElementWrapper {
 						// Try to wait for visibility again, with time left.
 						long newWaitTime = maxEndWaitTime - System.currentTimeMillis();
 						fluentWait.withTimeout(Duration.ofMillis(newWaitTime));
-
-						//noinspection UnnecessaryContinue
 						continue;
 					} // END Catch StaleElementReferenceException
 				} // END "Try again for Visible on StaleElementReferenceException" loop.
 			}
-			else {
+			else { // Wait for hidden.
 				fluentWait.until( (Function<WebDriver, Boolean>) driver -> !isDisplayed());
 			}
 		}
 
-		LOGGER.debug("waitForVisibility(_visible: {}, _waitTime: {}) [END]", _visible, _waitTime);
+		LOGGER.debug("waitForVisibility( _visible: {}, _waitTime: {} ) [END]", _visible, _waitTime );
 	}
 	//////////////////// Wait for Visibility Functions [END] ////////////////////
 
@@ -3294,7 +3332,7 @@ public class WebElementWrapper {
 
 				if(originalBy != null) {
 					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, originalBy,
-							WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
+							WebDriverWrapper.maxElementLoadTime, 2, null);
 				}
 
 				if(reacquiredWebElementWrappers.size() != 1) {
@@ -3304,13 +3342,13 @@ public class WebElementWrapper {
 					}
 					if(!webElementToStringSelectorXpath.isEmpty()) { // We were able to figure something out.
 						reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(webElementToStringSelectorXpath),
-								WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
+								WebDriverWrapper.maxElementLoadTime, 2, null);
 					}
 				}
 
 				if(reacquiredWebElementWrappers.size() != 1 && XPATH_IDS_SELECTOR != null) {
 					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(XPATH_IDS_SELECTOR),
-							WebDriverWrapper.maxElementLoadTimeInSeconds, 2, null);
+							WebDriverWrapper.maxElementLoadTime, 2, null);
 				}
 
 				if(reacquiredWebElementWrappers.size() == 1) {
@@ -3390,7 +3428,7 @@ public class WebElementWrapper {
 			if(_waitForRefresh) {
 
 				// Page is unloaded.
-				waitForUnload(WebDriverWrapper.maxPageLoadTimeInSeconds);
+				waitForUnload(WebDriverWrapper.maxPageLoadTime);
 
 				// Page is loaded.
 				WEB_DRIVER_WRAPPER.waitForPageLoad();
@@ -3466,7 +3504,7 @@ public class WebElementWrapper {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	// FluentWait cannot be a Object level variable, because the ignore methods are cumulative.
-	private FluentWait<WebDriver> initializeFluentWait(double _waitTime) {
+	private FluentWait<WebDriver> initializeFluentWait(Duration _waitTime) {
 
 		LOGGER.info("initializeFluentWait(_waitTime: {}) [START]", _waitTime);
 
@@ -3481,8 +3519,8 @@ public class WebElementWrapper {
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
 
 			fluentWait = new FluentWait<>(WEB_DRIVER_WRAPPER.DRIVER)
-					.pollingEvery(Duration.ofMillis(WebDriverWrapper.POLLING_INTERVAL_MS))
-					.withTimeout(Duration.ofMillis((long) (_waitTime * 1000)));
+					.pollingEvery(WebDriverWrapper.POLLING_INTERVAL)
+					.withTimeout(_waitTime);
 		}
 
 		LOGGER.debug("initializeFluentWait(_waitTime: {}) [END]", _waitTime);
@@ -3557,6 +3595,35 @@ public class WebElementWrapper {
 		}
 
 		LOGGER.trace("performAction(_actions: {}) [END]", _actions);
+	}
+
+	/**
+	 * Will take a screenshot and throw a {@link NoSuchElementException} with the given message and the screenshot's full path.
+	 *
+	 * @param _message
+	 *         The Error message for the {@link NoSuchElementException}.
+	 *
+	 * @throws NoSuchElementException
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	private void throwNoSuchElementException(String _message) throws NoSuchElementException {
+
+		LOGGER.info("throwNoSuchElementException(_message: {}) [START]", _message);
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		File screenshot = WEB_DRIVER_WRAPPER.takeScreenshot();
+		String path = screenshot.getAbsolutePath();
+		String errorMessage = _message + "\n\tScreenshot: " + path;
+
+		LOGGER.debug("throwNoSuchElementException(_message: {}) [END]", _message);
+
+		throw new NoSuchElementException(errorMessage);
 	}
 
 	//========================= Classes ========================================
