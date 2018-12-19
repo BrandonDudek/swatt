@@ -2057,7 +2057,8 @@ public class WebElementWrapper {
 				click();
 
 				// Highlight Option.
-				WebElementWrapper option = getDescendant(By.xpath(".//option[normalize-space(.) = " + Quotes.escape(_visibleText) + "]"));
+				WebElementWrapper option = getDescendant(By.xpath(".//option[normalize-space(.) = " + Quotes.escape(_visibleText) + "]"),
+						"Could not find option: " + Quotes.escape(_visibleText) + "!");
 				option.click(false, false, null); // Selenium 3 broke manually scrolling Select Options, but does it automatically on click.
 
 				// Close Drop-Down.
