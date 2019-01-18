@@ -1,7 +1,6 @@
 package xyz.swatt.xml;
 
 import net.sf.saxon.dom.DOMNodeWrapper;
-import net.sf.saxon.lib.SaxonOutputKeys;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.tree.NamespaceNode;
@@ -59,7 +58,7 @@ import java.util.regex.Pattern;
 public final class XmlDocumentHelper {
 
 	//========================= Static Enums ===================================
-	public static enum XmlEntityFormat {
+	public enum XmlEntityFormat {
 		DECIMAL, HEX
 	}
 
@@ -341,7 +340,7 @@ public final class XmlDocumentHelper {
 		Transformer transformer;
 		try {
 			transformer = TransformerFactory.newInstance().newTransformer(); // Saxon TransformerFactory is Namespace Aware by default.
-			transformer.setOutputProperty(SaxonOutputKeys.REQUIRE_WELL_FORMED, "yes");
+			//transformer.setOutputProperty(SaxonOutputKeys.REQUIRE_WELL_FORMED, "yes"); // No longer available in Saxon-HE.
 			transformer.transform(new StreamSource(new StringReader(_xmlString)), domResult);
 		}
 		catch(TransformerException e) {
@@ -502,6 +501,9 @@ public final class XmlDocumentHelper {
 				}
 				else if(realNode instanceof ElementNSImpl) {
 					node = (ElementNSImpl) realNode;
+				}
+				else if(realNode instanceof com.sun.org.apache.xerces.internal.dom.ElementNSImpl) {
+					node = (com.sun.org.apache.xerces.internal.dom.ElementNSImpl) realNode;
 				}
 				else if(realNode instanceof TextImpl) {
 					node = (TextImpl) realNode;
@@ -680,6 +682,8 @@ public final class XmlDocumentHelper {
 	 * <p><b>Warning:</b> If the given text does not have a root element, then only the first element is parsed..</p>
 	 *
 	 * @param _html The HTML {@link String} to convert to an XML {@link Document}.
+	 *
+	 * @return The given HTML as an XML {@link Document}.
 	 *
 	 * @throws IllegalArgumentException If the given HTML {@link String} is blank.
 	 * @throws XmlException If the given HTML {@link String} cannot be parsed or has multiple root elements.

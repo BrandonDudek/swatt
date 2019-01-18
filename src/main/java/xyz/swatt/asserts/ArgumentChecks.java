@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.support.ui.Quotes;
 
 import java.io.File;
+import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -272,7 +273,7 @@ public class ArgumentChecks {
 	}
 
 	/**
-	 * Check a given {@link String} to ensure that is not Whitespace Only.
+     * Check a given {@link String} to ensure that it is not Whitespace Only.
 	 *
 	 * @param _string
 	 * 		The {@link String} to Check.
@@ -280,7 +281,7 @@ public class ArgumentChecks {
 	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
 	 *
 	 * @throws IllegalArgumentException
-	 * 		If the {@link String} is {@code null}, Empty, or Whitespace Only.
+     * 		If the given {@link String} is {@code null}, Empty, or Whitespace Only.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
@@ -311,7 +312,44 @@ public class ArgumentChecks {
 	}
 
 	/**
-	 * Check a given {@link String} to ensure that is not Whitespace Only.
+     * Check a given {@link String} to ensure that it is a validly formatted URL.
+     *
+     * @param _url
+     *         The {@link String} to Check.
+     * @param _argumentName
+     *         The Name of the Argument being checked. (Can be NULL or Empty String, to ignore.)
+     *
+     * @throws IllegalArgumentException
+     *         If the given {@link String} is not a validly formatted XPath.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    public static void urlIsValid(String _url, String _argumentName) throws IllegalArgumentException {
+
+        LOGGER.info("urlIsValid(_string: {}, _argumentName: {}) [START]", Quotes.escape(_url), _argumentName);
+
+        //------------------------ Pre-Checks ----------------------------------
+        _argumentName = formatArgumentName(_argumentName);
+
+        //------------------------ CONSTANTS -----------------------------------
+
+        //------------------------ Variables -----------------------------------
+
+        //------------------------ Code ----------------------------------------
+        stringNotWhitespaceOnly(_url, _argumentName);
+
+        try {
+            new URL(_url).toURI();
+        }
+        catch(Exception e) {
+            throw new IllegalArgumentException("Given " + _argumentName + "URL is invalid!", e);
+        }
+
+        LOGGER.debug("urlIsValid(_string: {}, _argumentName: {}) [END]", Quotes.escape(_url), _argumentName);
+    }
+
+    /**
+     * Check a given {@link String} to ensure that it is a validly formatted XPath.
 	 *
 	 * @param _xPath
 	 *         The {@link String} to Check.
@@ -319,12 +357,13 @@ public class ArgumentChecks {
 	 *         The Name of the Argument being checked. (Can be NULL or Empty String, to ignore.)
 	 *
 	 * @throws IllegalArgumentException
-	 *         If the {@link String} is NULL, Empty, or Whitespace Only.
+     *         If the given {@link String} is not a validly formatted XPath.
+     *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static void xpathIsValid(String _xPath, String _argumentName) throws IllegalArgumentException {
 
-		LOGGER.info("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [START]", Quotes.escape(_xPath), _argumentName);
+        LOGGER.info("xpathIsValid(_string: {}, _argumentName: {}) [START]", Quotes.escape(_xPath), _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -334,15 +373,7 @@ public class ArgumentChecks {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		if(_xPath == null) {
-			throw new IllegalArgumentException("Given " + _argumentName + "XPath cannot be NULL!");
-		}
-		else if(_xPath.isEmpty()) {
-			throw new IllegalArgumentException("Given " + _argumentName + "XPath cannot be an Empty String!");
-		}
-		else if(_xPath.trim().isEmpty()) {
-			throw new IllegalArgumentException("Given " + _argumentName + "XPath cannot be a Whitespace Only String!");
-		}
+        stringNotWhitespaceOnly(_xPath, _argumentName);
 
 		try {
 			new Processor(false).newXPathCompiler().compile(_xPath).load();
@@ -351,7 +382,7 @@ public class ArgumentChecks {
 			throw new IllegalArgumentException("Given " + _argumentName + "XPath is invalid!", e);
 		}
 
-		LOGGER.debug("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [END]", Quotes.escape(_xPath), _argumentName);
+        LOGGER.debug("xpathIsValid(_string: {}, _argumentName: {}) [END]", Quotes.escape(_xPath), _argumentName);
 	}
 
 	//-------------------- Helper Static Methods --------------------

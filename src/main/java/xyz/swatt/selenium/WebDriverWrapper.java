@@ -5,10 +5,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.*;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -35,8 +35,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
@@ -59,7 +59,7 @@ public class WebDriverWrapper {
 	/**
 	 * A common Interface for the Browser Enums.
 	 */
-	private static interface SpecificBrowser {}
+    private interface SpecificBrowser {}
 
 	//========================= Static Enums ===================================
 	/**
@@ -67,7 +67,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum BrowserType implements SpecificBrowser {
+    public enum BrowserType implements SpecificBrowser {
 
 		CHROME("Chrome"),
 		FIREFOX("Firefox"),
@@ -80,7 +80,7 @@ public class WebDriverWrapper {
 
 		private final String VALUE;
 
-		private BrowserType(String _value) {
+        BrowserType(String _value) {
 			VALUE = _value;
 		}
 
@@ -102,7 +102,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum ChromeBrowser implements SpecificBrowser {
+    public enum ChromeBrowser implements SpecificBrowser {
 		
 		/**
 		 * Will attempt to pick Windows or Mac, based on your computer.
@@ -115,7 +115,7 @@ public class WebDriverWrapper {
 		private final String DRIVER_NAME;
 
 		@SuppressWarnings("unused")
-		private ChromeBrowser(String _driverName) {
+        ChromeBrowser(String _driverName) {
 			DRIVER_NAME = _driverName;
 		}
 
@@ -148,7 +148,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum FirefoxBrowser implements SpecificBrowser {
+    public enum FirefoxBrowser implements SpecificBrowser {
 		
 		/**
 		 * Will attempt to pick Windows or Mac, based on your computer. (Preferring 64 over 32 bit for windows.)
@@ -172,7 +172,7 @@ public class WebDriverWrapper {
 		private final String DRIVER_NAME, BROWSER_PATH;
 
 		@SuppressWarnings("unused")
-		private FirefoxBrowser(String _driverName, String _browserPath) {
+        FirefoxBrowser(String _driverName, String _browserPath) {
 			DRIVER_NAME = _driverName;
 			BROWSER_PATH = _browserPath;
 		}
@@ -213,7 +213,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum IEBrowser implements SpecificBrowser {
+    public enum IEBrowser implements SpecificBrowser {
 
 		/**
 		 * Will attempt to use 64 bit windows, and fall back on 32 bit windows.
@@ -240,7 +240,7 @@ public class WebDriverWrapper {
 		private final String DRIVER_NAME, BROWSER_PATH;
 
 		@SuppressWarnings("unused")
-		private IEBrowser(String _driverName, String _browserPath) {
+        IEBrowser(String _driverName, String _browserPath) {
 			DRIVER_NAME = _driverName;
 			BROWSER_PATH = _browserPath;
 		}
@@ -277,7 +277,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static enum FirefoxExtension {
+    public enum FirefoxExtension {
 
 		FIRE_BUG("firebug@software.joehewitt.com.xpi"),
 		FIRE_PATH("FireXPath@pierre.tholence.com.xpi");
@@ -2608,7 +2608,8 @@ public class WebDriverWrapper {
 	 * @param _message
 	 *         The Error message for the {@link WebPageException}.
 	 *
-	 * @throws WebPageException
+     * @throws WebPageException With the given message.
+     *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void throwWebPageException(String _message) throws WebPageException {

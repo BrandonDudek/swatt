@@ -10,10 +10,13 @@
 	</Appenders>
 	
 	<Loggers>
-	
-		<Logger name="xyz.swatt" level="warn" />
-		
-		<Logger name="xyz.swatt.tests" level="info" />
+
+        <Logger name="xyz.swatt" level="info"/>
+        <Logger name="xyz.swatt.asserts" level="warn"/>
+        <Logger name="xyz.swatt.string" level="warn"/>
+        <Logger name="xyz.swatt.xml" level="warn"/>
+
+        <Logger name="xyz.swatt.tests" level="debug"/>
 
 		<Root level="error" >
 			<AppenderRef ref="STDOUT" />
