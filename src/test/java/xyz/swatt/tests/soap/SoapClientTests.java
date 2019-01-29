@@ -39,6 +39,10 @@ public class SoapClientTests {
     //========================= Constructors ===================================
 
     //========================= Methods for External Use =======================
+    /*
+     * https://jansipke.nl/examples-of-public-soap-web-services
+     * http://soapclient.com/SoapServices.html
+     */
 
     /**
      * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
@@ -50,7 +54,6 @@ public class SoapClientTests {
                 {"http://tempuri.org/Subtract", "<Subtract xmlns=\"http://tempuri.org/\"><intA>3</intA><intB>2</intB></Subtract>", "1"},
         };
     }
-
     /**
      * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
      */

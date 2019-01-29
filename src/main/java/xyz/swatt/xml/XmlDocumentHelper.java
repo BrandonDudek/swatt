@@ -18,6 +18,7 @@ import org.jsoup.helper.W3CDom;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.exceptions.TooManyResultsException;
@@ -367,6 +368,9 @@ public final class XmlDocumentHelper {
 	 * <p>
 	 *     If an XPath boolean (<i>xs:boolean</i>) is given as the XPath, it will be wrapped in an {@code #TEXT} {@link Node} and returned.
 	 * </p>
+	 * <p>
+	 *     <i>Note:</i> All Root level Namespaces are automatically accounted for and do not have to be manually specified.
+	 * </p>
 	 *
 	 * @param _xmlNode
 	 * 		The Document or Element to do the XPath search on.
@@ -411,6 +415,9 @@ public final class XmlDocumentHelper {
 	 * <p>
 	 *     If an XPath boolean (<i>xs:boolean</i>) is given as the XPath, it will be wrapped in an {@code #TEXT} {@link Node} and returned.
 	 * </p>
+	 * <p>
+	 *     <i>Note:</i> All Root level Namespaces are automatically accounted for and do not have to be manually specified.
+	 * </p>
 	 *
 	 * @param _xmlNode
 	 * 		The Document or Element to do the XPath search on.
@@ -443,17 +450,33 @@ public final class XmlDocumentHelper {
 
 		//------------------------ Variables -----------------------------------
 		Document document = _xmlNode.getOwnerDocument() == null ? (Document) _xmlNode : _xmlNode.getOwnerDocument();
-		String defaultNamespace;
+		Node rootNode;
 		XPathCompiler xPathCompiler = PROCESSOR.newXPathCompiler();
 		XPathSelector xPathselector;
 
 		LinkedList<Node> nodes = new LinkedList<>();
 
 		//------------------------ Code ----------------------------------------
-		// Namespace of the Root Element. (Root Element can only have a Default Namespace.)
-		defaultNamespace = document.getFirstChild() == null ? null : document.getFirstChild().getNamespaceURI();
-		if(defaultNamespace != null) {
-			xPathCompiler.declareNamespace("", defaultNamespace);
+		// Set Namespaces of the Root Element, for XPath Compiler to use.
+		// That way the XPath does not have to specify the Default Namespace.
+		if((rootNode = document.getFirstChild()) != null) {
+
+			NamedNodeMap rootAttributes = rootNode.getAttributes();
+			for(int i = 0; i < rootAttributes.getLength(); i++) {
+
+				Node rootAttribute = rootAttributes.item(i);
+
+				String prefix = rootAttribute.getPrefix();
+				String localName = rootAttribute.getLocalName();
+				if(prefix == null) { // May be Default Namespace.
+					if(localName != null && localName.equalsIgnoreCase("xmlns")) { // Is Default Namespace?
+						xPathCompiler.declareNamespace("", rootAttribute.getNodeValue());
+					}
+				}
+				else if(prefix.equalsIgnoreCase("xmlns")) {
+					xPathCompiler.declareNamespace(localName, rootAttribute.getNodeValue());
+				}
+			}
 		}
 
 		try {
@@ -528,6 +551,9 @@ public final class XmlDocumentHelper {
 
 	/**
 	 * Gets a String result for the given xPath, by calling getTextContent() on the returned element.
+	 * <p>
+	 *     <i>Note:</i> All Root level Namespaces are automatically accounted for and do not have to be manually specified.
+	 * </p>
 	 *
 	 * @param _xmlNode
 	 *            The Document or Element to do the XPath search on.
@@ -579,6 +605,9 @@ public final class XmlDocumentHelper {
 
 	/**
 	 * Gets a List of String results for the given xPath, by calling getTextContent() on all of the returned Elements.
+	 * <p>
+	 *     <i>Note:</i> All Root level Namespaces are automatically accounted for and do not have to be manually specified.
+	 * </p>
 	 *
 	 * @param _xmlNode The Document or Element to do the XPath search on.
 	 *            <ul>

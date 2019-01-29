@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -31,7 +31,7 @@
         </apache.commons.collections.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
 
         <!-- Jackson -->
-        <jackson.version>2.9.5</jackson.version> <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+        <jackson.version>2.9.8</jackson.version> <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 
         <!-- JSoup -->
         <jsoup.version>1.11.3</jsoup.version> <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
