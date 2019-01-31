@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.4.0</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -17,7 +17,7 @@
     <properties>
 
         <!--===== Maven Build =====-->
-        <java.version>1.8</java.version>
+        <java.version>8</java.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
         <maven-javadoc-plugin.version>3.0.0</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
@@ -29,6 +29,9 @@
         <!-- Apache Common Collections -->
         <apache.commons.collections.version>4.2
         </apache.commons.collections.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
+
+        <!-- AspectJ -->
+        <aspectj.version>1.9.2</aspectj.version> <!-- Must keep in syc with spring-aop: https://mvnrepository.com/artifact/org.springframework/spring-aop -->
 
         <!-- Jackson -->
         <jackson.version>2.9.8</jackson.version> <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
@@ -51,6 +54,20 @@
 
     </properties>
 
+    <!--<repositories> - This is where snapshots are sent to.
+        <repository>
+            <id>ossrh</id>
+            <name>OSS Repository Hosting</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>-->
+
     <dependencies>
 
         <!-- Apache Common Collections -->
@@ -58,6 +75,13 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>${apache.commons.collections.version}</version>
+        </dependency>
+
+        <!-- AspectJ -->
+        <dependency> <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${aspectj.version}</version>
         </dependency>
 
         <!-- Jackson XML / JSON Mapper (Used by Spring's RestTemplate.) -->
@@ -185,6 +209,46 @@
                 </executions>
             </plugin>
 
+            <!-- AspectJ Weaving -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.11</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <complianceLevel>${java.version}</complianceLevel>
+                    <Xlint>ignore</Xlint>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>${aspectj.version}</version> <!-- set this to use a newer version of aspectj -->
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>        <!-- use this goal to weave all your main classes -->
+                            <goal>test-compile</goal>   <!-- use this goal to weave all your test classes -->
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Regression Testing -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>regression-tests.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                </configuration>
+            </plugin>
+
             <!-- GPG Signature of Released Files -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -192,7 +256,7 @@
                 <version>${maven-gpg-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>sign-artifacts</id>
+                        <id>sign-artifacts</id> <!-- Used <groupId> as certificate name. -->
                         <phase>verify</phase>
                         <goals>
                             <goal>sign</goal>

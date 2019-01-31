@@ -5,12 +5,15 @@
 	<test name="ECT-QED Tools Tests" >
 
 		<packages>
-
 			<package name="xyz.swatt.tests.*">
 				<exclude name="xyz.swatt.tests.selenium.compatibility" />
+				<!--<exclude name="xyz.swatt.tests.soap" /> &lt;!&ndash; For Debugging &ndash;&gt;-->
 			</package>
-
 		</packages>
+
+		<!--<classes> &lt;!&ndash; For Debugging Only. &ndash;&gt;
+			<class name="xyz.swatt.tests.log.LogMethodsAspectTests" />
+		</classes>-->
 
 	</test>
 	 

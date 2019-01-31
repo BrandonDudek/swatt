@@ -1,7 +1,6 @@
 package xyz.swatt.tests.selenium;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
-import net.sf.saxon.s9api.SaxonApiException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -24,7 +23,7 @@ import java.util.List;
 public class WebDriverWrapperTests {
 
     //========================= STATIC CONSTANTS ===============================
-    private static final long MIN_ELEMENT_WAIT_TIME_MS = WebDriverWrapper.maxElementLoadTime.toMillis() * 1000; // s to ms.
+    private static final long MIN_ELEMENT_WAIT_TIME_MS = WebDriverWrapper.maxElementLoadTime.toMillis(); // s to ms.
 
     // Processing time for visibility checks.
     private static final long MAX_ELEMENT_WAIT_TIME_MS = MIN_ELEMENT_WAIT_TIME_MS + WebDriverWrapper.POLLING_INTERVAL.toMillis() + 400;
@@ -137,15 +136,11 @@ public class WebDriverWrapperTests {
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @DataProvider
-    public Object[][] waitForVisibilityDataProvider() throws SaxonApiException {
-
+    public Object[][] waitForVisibilityDataProvider() {
         return new Object[][]{
-                
                 {"All Hidden", "#waitForVisibilityTest #hiddenp1", 0},
-                
                 {"Some Hidden", "#waitForVisibilityTest p",
-                        XmlDocumentHelper.getNodesForXPath(HTML_AS_XML, "/html/body//*[@id='waitForVisibilityTest']//p[ @visible='true' ]")
-                                .size()},
+                        XmlDocumentHelper.getNodesForXPath(HTML_AS_XML, "/html/body//*[@id='waitForVisibilityTest']//p[@visible='true']").size()},
                 
         };
     }

@@ -462,19 +462,21 @@ public final class XmlDocumentHelper {
 		if((rootNode = document.getFirstChild()) != null) {
 
 			NamedNodeMap rootAttributes = rootNode.getAttributes();
-			for(int i = 0; i < rootAttributes.getLength(); i++) {
+			if(rootAttributes != null) {
+				for(int i = 0; i < rootAttributes.getLength(); i++) {
 
-				Node rootAttribute = rootAttributes.item(i);
+					Node rootAttribute = rootAttributes.item(i);
 
-				String prefix = rootAttribute.getPrefix();
-				String localName = rootAttribute.getLocalName();
-				if(prefix == null) { // May be Default Namespace.
-					if(localName != null && localName.equalsIgnoreCase("xmlns")) { // Is Default Namespace?
-						xPathCompiler.declareNamespace("", rootAttribute.getNodeValue());
+					String prefix = rootAttribute.getPrefix();
+					String localName = rootAttribute.getLocalName();
+					if(prefix == null) { // May be Default Namespace.
+						if(localName != null && localName.equalsIgnoreCase("xmlns")) { // Is Default Namespace?
+							xPathCompiler.declareNamespace("", rootAttribute.getNodeValue());
+						}
 					}
-				}
-				else if(prefix.equalsIgnoreCase("xmlns")) {
-					xPathCompiler.declareNamespace(localName, rootAttribute.getNodeValue());
+					else if(prefix.equalsIgnoreCase("xmlns")) {
+						xPathCompiler.declareNamespace(localName, rootAttribute.getNodeValue());
+					}
 				}
 			}
 		}

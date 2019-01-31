@@ -127,6 +127,8 @@ public class SoapClient {
      * @param _xml
      *         The XML {@link Document} to send as the body in a SOAP envelope.
      *
+     * @return The response as a {@link SOAPMessage}.
+     *
      * @throws IllegalArgumentException
      *         If the given SOAPAction is a blank string.
      * @throws IllegalArgumentException
@@ -214,6 +216,8 @@ public class SoapClient {
      * @param _xml
      *         The XML {@link String} to send as the body in a SOAP envelope.
      *
+     * @return The response as a {@link SOAPMessage}.
+     *
      * @throws IllegalArgumentException
      *         If the given SOAPAction is a blank string.
      * @throws IllegalArgumentException
@@ -250,6 +254,8 @@ public class SoapClient {
      *         The SOAPAction that this message is requesting be performed, or {@code null} to not send a "SOAPAction".
      * @param _xml
      *         The XML {@link String} to send as the body in a SOAP envelope.
+     *
+     * @return The response as a {@link SOAPMessage}.
      *
      * @throws IllegalArgumentException
      *         If the given SOAPAction is a blank string.
