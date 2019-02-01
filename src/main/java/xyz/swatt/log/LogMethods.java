@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 /**
  * Will log [START] and [END] logs for all methods and constructors (except for the static constructor). Argument and Return values are included in the logs, by
  * default.
- * <p> </p>
+ * <p>&nbsp;</p>
  * <p>
  * <b>Notes:</b>
  * </p>
@@ -26,7 +26,7 @@ import java.lang.annotation.*;
  * <p>
  * <sub>(Work done in {@link LogMethodsAspect}.)</sub>
  * </p>
- * <p> </p>
+ * <p>&nbsp;</p>
  * <p>
  * <b>See:</b> <a href="https://www.mojohaus.org/aspectj-maven-plugin/examples/libraryJars.html">Using Aspect Libraries</a> on the MojoHaus website,
  * to use this AOP Annotation in your code.
