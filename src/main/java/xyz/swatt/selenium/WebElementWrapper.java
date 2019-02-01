@@ -481,7 +481,7 @@ public class WebElementWrapper {
 	 * @see #keyClick(CharSequence)
 	 */
 	public WebElementWrapper controlCommandClick() {
-		return keyClick(WEB_DRIVER_WRAPPER.CTRL_CMD_KEY);
+		return keyClick(WebDriverWrapper.CTRL_CMD_KEY);
 	}
 
 	/**
@@ -1630,7 +1630,6 @@ public class WebElementWrapper {
 			}
 
 			Object xNumber = javascriptExecutor.executeScript("return window.scrollX;"); // IE returns null for 0.
-			//noinspection Duplicates
 			if(xNumber == null) { // IE returns null for 0.
 				startViewportX = 0;
 			}
@@ -1642,7 +1641,6 @@ public class WebElementWrapper {
 			}
 
 			Object yNumber = javascriptExecutor.executeScript("return window.scrollY;"); // IE returns null for 0.
-			//noinspection Duplicates
 			if(yNumber == null) { // IE returns null for 0.
 				startViewportY = 0;
 			}
@@ -2995,7 +2993,7 @@ public class WebElementWrapper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		WebDriverWait webDriverWait = null;
+		WebDriverWait webDriverWait;
 
 		//------------------------ Initialize ----------------------------------
 
@@ -3279,6 +3277,7 @@ public class WebElementWrapper {
 									Thread.sleep(WebDriverWrapper.POLLING_INTERVAL.toMillis());
 								}
 								catch(InterruptedException e1) { /*Ignore*/ }
+								//noinspection UnnecessaryContinue
 								continue; // Try to re-acquire again, if not past the wait time.
 							}
 						} // END "Require if not past the wait time" loop.
@@ -3286,6 +3285,7 @@ public class WebElementWrapper {
 						// Try to wait for visibility again, with time left.
 						long newWaitTime = maxEndWaitTime - System.currentTimeMillis();
 						fluentWait.withTimeout(Duration.ofMillis(newWaitTime));
+						//noinspection UnnecessaryContinue
 						continue;
 					} // END Catch StaleElementReferenceException
 				} // END "Try again for Visible on StaleElementReferenceException" loop.
@@ -3465,7 +3465,8 @@ public class WebElementWrapper {
 
 		//------------------------ Variables -----------------------------------
 		String id;
-		String name;StringBuilder xpath = null;
+		String name;
+		StringBuilder xpath;
 		WebElement ancestor;
 
 		//------------------------ Code ----------------------------------------
@@ -3604,7 +3605,8 @@ public class WebElementWrapper {
 	 * @param _message
 	 *         The Error message for the {@link NoSuchElementException}.
 	 *
-	 * @throws NoSuchElementException
+	 * @throws NoSuchElementException With the given message.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	private void throwNoSuchElementException(String _message) throws NoSuchElementException {

@@ -55,8 +55,6 @@ public class WebElementTransitionalWrapper extends WebElementWrapper {
      * Creates this WebElementWrapper for use with a give Selenium WebElement.
      *
      * @param _webElementWrapper
-     *         The WebDriverWrapper that created this object.
-     * @param _webElementWrapper
      *         The WebElementWrapper to extend.
      *
      * @throws IllegalArgumentException

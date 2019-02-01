@@ -52,4 +52,15 @@ public @interface LogMethods {
      * @return If method returned values will be logged.
      */
     boolean returns() default true;
+
+    /**
+     * If {@code true}, then this method will not be logged.
+     * <p>(default = {@code false})</p>
+     * <p>
+     * <i>This is ignored at the class level.</i>
+     * </p>
+     *
+     * @return If this method logging will be skipped.
+     */
+    boolean skip() default false;
 }

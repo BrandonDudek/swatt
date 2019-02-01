@@ -78,7 +78,10 @@ public class LogMethodsAspectTests {
         ////////// Test Return Types //////////
         sampleClass.callPrivateMethods();
 
-        ////////// TODO: Test @LogMethods(arguments = false, returns = false) //////////
+        ////////// @LogMethods Argument Tests //////////
+        sampleClass.skipMethod();
+
+        // TODO: Test @LogMethods(arguments = false, returns = false)
 
         // TODO: Validate Enums.
 

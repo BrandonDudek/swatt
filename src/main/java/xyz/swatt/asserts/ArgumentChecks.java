@@ -18,6 +18,7 @@ import java.nio.file.Paths;
  *     If Test fails, it will throw an {@link IllegalArgumentException}!
  * </p>
  */
+@SuppressWarnings("Duplicates")
 public class ArgumentChecks {
 	
 	//========================= Static Enums ===================================
@@ -174,7 +175,6 @@ public class ArgumentChecks {
 		Path path;
 
 		//------------------------ Code ----------------------------------------
-		//noinspection Duplicates
 		if(_path == null) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path cannot be NULL!");
 		}
@@ -240,7 +240,6 @@ public class ArgumentChecks {
 		Path path;
 
 		//------------------------ Code ----------------------------------------
-		//noinspection Duplicates
 		if(_path == null) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path cannot be NULL!");
 		}

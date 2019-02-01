@@ -89,6 +89,7 @@ public class SoapClient {
         ArgumentChecks.urlIsValid(_url, "Endpoint");
 
         if(_user == null || _pass == null) {
+            //noinspection StringEquality
             if(_user != _pass) {
                 throw new IllegalArgumentException("Either both Username and Password have to be NULL or neither!");
             }

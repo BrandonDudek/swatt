@@ -1,8 +1,6 @@
 package xyz.swatt.selenium;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 
 /**
@@ -21,7 +19,6 @@ public class WebDriverTransitionalWrapper extends WebDriverWrapper {
     //========================= Static Enums ===================================
 
     //========================= STATIC CONSTANTS ===============================
-    private static final Logger LOGGER = LogManager.getLogger(WebDriverTransitionalWrapper.class);
 
     //========================= Static Variables ===============================
 

@@ -60,6 +60,14 @@ public class SampleClass {
         privateMethodWithReturnString();
     }
 
+    /**
+     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     */
+    @LogMethods(skip = true)
+    public void skipMethod() {
+        LOGGER.debug("\t\tInside skipMethod.");
+    }
+
     //========================= Methods for Internal Use =======================
 
     /**

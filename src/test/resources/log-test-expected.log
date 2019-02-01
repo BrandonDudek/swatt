@@ -22,3 +22,4 @@ DEBUG - privateMethodWithReturnString() [START]
 TRACE - 		Inside privateMethod.
 DEBUG - privateMethodWithReturnString() [END]: Walla Walla Walla
 INFO  - callPrivateMethods() [END]
+DEBUG - 		Inside skipMethod.

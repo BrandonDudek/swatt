@@ -53,7 +53,7 @@ public class LogMethodsAspect {
 
         //-------------------------Variables------------------------------------
         ///// Tier 1 /////
-        boolean logParams, logResults;
+        boolean logParams, logResults, skipLogging;
         int modifiers;
 
         Class<?> classObj = proceedingJoinPoint.getSignature().getDeclaringType(), // Target is null for static methods.
@@ -89,13 +89,6 @@ public class LogMethodsAspect {
             parameterNames = methodSignature.getParameterNames();
             methodReturnType = method.getReturnType();
 
-            // Early Exit Check //
-            if(constructorMethodName.startsWith("$SWITCH_TABLE$")) {
-                toRet = proceedingJoinPoint.proceed();
-                LOGGER.debug("around(ProceedingJoinPoint: {}) [END]: $SWITCH_TABLE$", proceedingJoinPoint.getKind());
-                return toRet;
-            }
-
             executable = method;
         }
         constructorMethodAnnotation = executable.getAnnotation(LogMethods.class);
@@ -104,6 +97,21 @@ public class LogMethodsAspect {
         ///// Get Annotation(s) Values /////
         logParams = constructorMethodAnnotation != null ? constructorMethodAnnotation.arguments() : classAnnotation.arguments();
         logResults = constructorMethodAnnotation != null ? constructorMethodAnnotation.returns() : classAnnotation.returns();
+        skipLogging = constructorMethodAnnotation != null && constructorMethodAnnotation.skip();
+
+        ////////// Early Exit Checks //////////
+
+        // Early Exit Check //
+        if(constructorMethodName.startsWith("$SWITCH_TABLE$")) {
+            toRet = proceedingJoinPoint.proceed();
+            LOGGER.debug("around(ProceedingJoinPoint: {}) [END]: $SWITCH_TABLE$", proceedingJoinPoint.getKind());
+            return toRet;
+        }
+        if(skipLogging) {
+            toRet = proceedingJoinPoint.proceed();
+            LOGGER.debug("around(ProceedingJoinPoint: {}) [END]: @LogMethods(skip=true)", proceedingJoinPoint.getKind());
+            return toRet;
+        }
 
         ////////// Log Method Start //////////
         ///// Construct Log String /////
@@ -166,6 +174,7 @@ public class LogMethodsAspect {
         LOGGER.debug("toLogString(_object: {}) [START]", _object.getClass().getTypeName());
 
         //------------------------ Pre-Checks ----------------------------------
+        //noinspection ConstantConditions
         if(_object == null) {
             LOGGER.trace("toLogString(_object: {}) [END]: (NULL)", _object.getClass().getTypeName());
             return "(NULL)";

@@ -521,6 +521,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
+	@SuppressWarnings("Duplicates")
 	public static void killPreviousBrowserDriverProcesses() {
 
 		LOGGER.info("killPreviousBrowserDriverProcesses() [START]");
@@ -571,6 +572,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
+	@SuppressWarnings("Duplicates")
 	public static void killUsedBrowserDriverProcesses() {
 
 		LOGGER.info("killUsedBrowserDriverProcesses() [START]");
@@ -791,12 +793,10 @@ public class WebDriverWrapper {
 						body.sendKeys(Keys.chord(CTRL_CMD_KEY, "-")); // 90% (Firefox); 90% (Chrome); 75% IE.
 						body.sendKeys(Keys.chord(CTRL_CMD_KEY, "-")); // 80% (Firefox); 80% (Chrome); 50% IE.
 
-                        //noinspection ConstantConditions
                         if(driverWrapper.DRIVER instanceof FirefoxDriver || driverWrapper.DRIVER instanceof ChromeDriver) {
 							body.sendKeys(Keys.chord(CTRL_CMD_KEY, "-")); // 67% (Firefox); 75% (Chrome).
 							body.sendKeys(Keys.chord(CTRL_CMD_KEY, "-")); // 50% (Firefox); 67% (Chrome).
 
-                            //noinspection ConstantConditions
 							if(driverWrapper.DRIVER instanceof ChromeDriver) {
 								body.sendKeys(Keys.chord(CTRL_CMD_KEY, "-")); // 50% (Chrome).
 							}
