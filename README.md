@@ -6,23 +6,36 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
   * Contains custom Assertions that can be commonly used.
 * Exceptions
   * Contains custom Runtime Exceptions used by the SWATT library.
-  * All of the Exception have a common ancestor, for easy catching. 
+  * All of the Exception have a common ancestor, for easy catching.
+* Log
+  * Contains the `@LogMethods` annotation for automatic logging.
+  * _Note:_ You must enable the AspectJ compiler on your project
+    * see: [Applying already compiled aspect JARs](https://www.mojohaus.org/aspectj-maven-plugin/examples/libraryJars.html)
+* POJO
+  * If your POJO Classes implement the `SqlPojo` interface, then it will make running compares on these classes much easier
+  * To get IntelliJ to generate these POJOs, use the [Generate SQL POJOs](https://github.com/BrandonDudek/swatt/blob/master/scripts/Generate%20SQL%20POJOs.groovy) groovy script
 * Selenium
   * These tools will help with testing Web Apps.
   * It is configured to work with the latest version of Chrome and Firefox version 59.0.1.
   * Has been tested on windows 7 and MacOS 10.13, but should work on similar systems.
-  * **Sample Project** [swatt-selenium-sample-project](https://github.com/BrandonDudek/swatt-selenium-sample-project)
+  * **Sample Project:** [swatt-selenium-sample-project](https://github.com/BrandonDudek/swatt-selenium-sample-project)
+* SOAP
+  * A helper class to make sending SOAP messages easy.
+  * **Sample Code:** see [SOAP Client Unit Tests](https://github.com/BrandonDudek/swatt/blob/master/src/test/java/xyz/swatt/tests/soap/SoapClientTests.java)
 * String
-  * A Helper class to preform common and/or complex String manipulations.
+  * A helper class to preform common and/or complex String manipulations.
   * Is **very** helpful for Whitespace manipulation and Character Sets.
-* TestGN / Reporters
+* TestGN and Reporters
   * Contains a Matrix style report that you can copy to an Excel sheet, for reporting purposes
   * Also allows you to report know bugs that you have put workarounds in place for.
 * XML
   * Contains Helper classes to preform common and/or complex XML parsing, writing, querying, and modifying.
 
-## Homepage & Javadoc API
-[SWATT.xyz](https://swatt.xyz)
+## Homepage
+* [swatt.xyz](https://swatt.xyz)
+
+## Javadoc
+* [brandondudek.github.io/swatt/docs](https://brandondudek.github.io/swatt/docs/)
 
 ## Version Comparability
 |SWATT|Selenium|Windows|MacOS|Chrome|Chrome Driver|Firefox|Gecko (FF) Driver|IE|IE Driver|
