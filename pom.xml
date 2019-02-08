@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.5.0</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -48,6 +48,9 @@
         <!-- Selenium -->
         <selenium.version>3.14.0</selenium.version>
         <htmlunit.version>2.31.0</htmlunit.version>
+
+        <!-- Spring -->
+        <spring.version>5.1.4.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
 
         <!-- TestNG -->
         <testng.version>6.14.3</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
@@ -152,6 +155,13 @@
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>htmlunit-driver</artifactId>
             <version>${htmlunit.version}</version>
+        </dependency>
+
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
         </dependency>
 
         <!-- TestNG -->

@@ -168,7 +168,7 @@ public class SoapClient {
             }
 
             SOAPBody soapBody = soapMessage.getSOAPPart().getEnvelope().getBody();
-            soapBody.addDocument(_xml);
+            soapBody.addDocument((Document) _xml.cloneNode(true));
 
             soapMessage.saveChanges();
 
