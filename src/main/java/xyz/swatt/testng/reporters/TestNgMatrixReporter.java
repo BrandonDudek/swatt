@@ -12,6 +12,9 @@ import java.util.regex.Pattern;
 
 /**
  * Will generate a Test Matrix Style report, with Pass Rates.
+ * <p>
+ *     <i>Note:</i> File name is set by {@link #reportFileName}.
+ * </p>
  */
 public class TestNgMatrixReporter implements IReporter {
 

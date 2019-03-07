@@ -1996,7 +1996,7 @@ public class WebDriverWrapper {
 		//------------------------ Code ----------------------------------------
 		synchronized(LOCK) {
 
-			DRIVER.get(_url);
+            DRIVER.navigate().to(_url); // Same thing as WebDriver.get(String).
 
 			alert = waitForPageLoadOrAlert();
 		}
