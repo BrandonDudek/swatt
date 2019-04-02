@@ -1,0 +1,20 @@
+# Committed but Unreleased Changes
+
+data_mapping, LogMethodsAspect, TestNgMatrixReporter, WebDriverWrapper, & POM
+
+data_mapping
+- Added the data_mapping package
+
+LogMethodsAspect
+- Fixed NullPointerException bug
+
+WebDriverWrapper
+- Now supports a Proxy for HtmlUnit
+
+TestNgMatrixReporter
+- Added Global Pass Rate @id
+
+POM
+- Updated TestNG to 7.0.0-beta3, to take advantage of bug fixes
+
+# Expected Release: v1.7.0

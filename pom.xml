@@ -26,9 +26,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!--===== Library Versions =====-->
-        <!-- Apache Common Collections -->
-        <apache.commons.collections.version>4.2
-        </apache.commons.collections.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
+        <!-- Apache Common Collections --> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
+        <apache.commons.collections.version>4.2</apache.commons.collections.version>
 
         <!-- AspectJ -->
         <aspectj.version>1.9.2</aspectj.version> <!-- Must keep in syc with spring-aop: https://mvnrepository.com/artifact/org.springframework/spring-aop -->
@@ -46,14 +45,14 @@
         <saxon.version>9.9.0-2</saxon.version> <!-- https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE -->
 
         <!-- Selenium -->
-        <selenium.version>3.14.0</selenium.version>
+        <selenium.version>3.14.0</selenium.version> <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
         <htmlunit.version>2.31.0</htmlunit.version>
 
         <!-- Spring -->
         <spring.version>5.1.4.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
 
         <!-- TestNG -->
-        <testng.version>6.14.3</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
+        <testng.version>7.0.0-beta3</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
 
     </properties>
 
