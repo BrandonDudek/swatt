@@ -1,5 +1,5 @@
 /*
- * Created on 2019-01-17 by Brandon Dudek &lt;bdudek@paychex.com&gt; for {swatt}.
+ * Created on 2019-01-17 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
 package xyz.swatt.tests.soap;
 
@@ -45,7 +45,7 @@ public class SoapClientTests {
      */
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @DataProvider
     public Object[][] soapActions() {
@@ -55,7 +55,7 @@ public class SoapClientTests {
         };
     }
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Test(dataProvider = "soapActions")
     public void soapActionTest(String _action, String _xmlMessage, String _expectedResponse) throws SOAPException {

@@ -151,10 +151,10 @@ public class LogMethodsAspect {
 
         ///// Perform Logging /////
         if(Modifier.isPublic(modifiers)) {
-            logger.info(logString.toString());
+            logger.debug(logString.toString());
         }
         else {
-            logger.debug(logString.toString());
+            logger.trace(logString.toString());
         }
 
         LOGGER.debug("around(ProceedingJoinPoint: {}) [END]: Object", proceedingJoinPoint.getKind());
@@ -163,20 +163,19 @@ public class LogMethodsAspect {
     }
 
     //========================= Methods for Internal Use =======================
-
     /**
      * @return The given {@code Object} as a formatted string, based on type.
      *
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     private String toLogString(Object _object) {
 
-        LOGGER.debug("toLogString(_object: {}) [START]", _object.getClass().getTypeName());
+        LOGGER.debug("toLogString(_object: {}) [START]", _object == null ? "(NULL)" : _object.getClass().getTypeName());
 
         //------------------------ Pre-Checks ----------------------------------
         //noinspection ConstantConditions
         if(_object == null) {
-            LOGGER.trace("toLogString(_object: {}) [END]: (NULL)", _object.getClass().getTypeName());
+            LOGGER.trace("toLogString(_object: (NULL)) [END]: (NULL)");
             return "(NULL)";
         }
 

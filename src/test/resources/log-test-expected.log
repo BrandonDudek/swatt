@@ -1,25 +1,25 @@
 DEBUG - Static Constructor
 INFO  - publicStaticVoidMethod() [START]
 DEBUG - 		Inside publicStaticVoidMethod.
-INFO  - publicStaticVoidMethod() [END]
+DEBUG - publicStaticVoidMethod() [END]
 DEBUG - SampleClass() [START]
 DEBUG - 		Inside Protected Constructor.
-DEBUG - SampleClass() [END]
+TRACE - SampleClass() [END]
 DEBUG - packagePrivateMethodWithPrimitiveArguments(_byte: 0, _boolean: false, _int: 12345, _double: 678.9, _char: a) [START]
 TRACE - 		Inside packagePrivateMethodWithPrimitiveArguments.
-DEBUG - packagePrivateMethodWithPrimitiveArguments(_byte: 0, _boolean: false, _int: 12345, _double: 678.9, _char: a) [END]
+TRACE - packagePrivateMethodWithPrimitiveArguments(_byte: 0, _boolean: false, _int: 12345, _double: 678.9, _char: a) [END]
 DEBUG - packagePrivateMethodWithObjectArguments(_string: Cheese Steak Jimmy, _file: C:\sample.file) [START]
 TRACE - 		Inside packagePrivateMethodWithObjectArguments.
-DEBUG - packagePrivateMethodWithObjectArguments(_string: Cheese Steak Jimmy, _file: C:\sample.file) [END]
+TRACE - packagePrivateMethodWithObjectArguments(_string: Cheese Steak Jimmy, _file: C:\sample.file) [END]
 DEBUG - packagePrivateMethodWithCollectionArguments(_primitiveArray: [1, 2, 3], _objectArray: [one, two, three], _list: [X, Y, Z], _map: {a=1, b=2, c=3}) [START]
 TRACE - 		Inside packagePrivateMethodWithCollectionArguments.
-DEBUG - packagePrivateMethodWithCollectionArguments(_primitiveArray: [1, 2, 3], _objectArray: [one, two, three], _list: [X, Y, Z], _map: {a=1, b=2, c=3}) [END]
+TRACE - packagePrivateMethodWithCollectionArguments(_primitiveArray: [1, 2, 3], _objectArray: [one, two, three], _list: [X, Y, Z], _map: {a=1, b=2, c=3}) [END]
 DEBUG - packagePrivateMethodWithMultidimensionalCollectionArguments(_primitiveDoubleArray: [[a, b, c], [x, y, z]], _objectDoubleArray: [[Walla1, Walla2, Walla3], [Cheese, Steak, Jimmy]]) [START]
 TRACE - 		Inside packagePrivateMethodWithMultidimensionalCollectionArguments.
-DEBUG - packagePrivateMethodWithMultidimensionalCollectionArguments(_primitiveDoubleArray: [[a, b, c], [x, y, z]], _objectDoubleArray: [[Walla1, Walla2, Walla3], [Cheese, Steak, Jimmy]]) [END]
+TRACE - packagePrivateMethodWithMultidimensionalCollectionArguments(_primitiveDoubleArray: [[a, b, c], [x, y, z]], _objectDoubleArray: [[Walla1, Walla2, Walla3], [Cheese, Steak, Jimmy]]) [END]
 INFO  - callPrivateMethods() [START]
 DEBUG - privateMethodWithReturnString() [START]
 TRACE - 		Inside privateMethod.
-DEBUG - privateMethodWithReturnString() [END]: Walla Walla Walla
-INFO  - callPrivateMethods() [END]
+TRACE - privateMethodWithReturnString() [END]: Walla Walla Walla
+DEBUG - callPrivateMethods() [END]
 DEBUG - 		Inside skipMethod.

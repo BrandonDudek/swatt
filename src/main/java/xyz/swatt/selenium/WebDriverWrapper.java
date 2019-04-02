@@ -1220,30 +1220,54 @@ public class WebDriverWrapper {
 	/**
 	 * Creates a {@link HtmlUnitDriver} browse based off of the given type.
 	 * <p>
-	 *     <b>Note:</b> Javascript is enabled.
+	 *     <b>Note:</b> Javascript is enabled and required for much of {@link WebDriverWrapper}'s &amp; {@link WebElementWrapper}'s functionality.
 	 * </p>
 	 *
-	 * @param _browserVersion
-	 * 		The type of browser that the {@link HtmlUnitDriver} will emulate.
+	 * @param _browserVersion The type of browser that the {@link HtmlUnitDriver} will emulate.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebDriverWrapper(BrowserVersion _browserVersion) {
+		this(_browserVersion, null);
+	}
 
-		LOGGER.info("WebDriverWrapper(_browserVersion: {}) [START]", _browserVersion);
+	/**
+	 * Creates a {@link HtmlUnitDriver} browse based off of the given type.
+	 * <p>
+	 * <b>Note:</b> Javascript is enabled and required for much of {@link WebDriverWrapper}'s &amp; {@link WebElementWrapper}'s functionality.
+	 * </p>
+	 *
+	 * @param _browserVersion
+	 *         The type of browser that the {@link HtmlUnitDriver} will emulate.
+	 * @param _proxy
+	 *         The Proxy settings for this browser to use; or {@code null}, to not use a proxy.
+	 *         <p><i>Note:</i> GUI Browsers already use the OS's proxy, but HtmlUnit needs it defined.</p>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper(BrowserVersion _browserVersion, Proxy _proxy) {
+
+		LOGGER.info("WebDriverWrapper(_browserVersion: {}, Proxy: {}) [START]", _browserVersion, (_proxy == null ? "(NULL" : _proxy.toString()));
 
 		//------------------------ Pre-Checks ----------------------------------
 
 		//-------------------------CONSTANTS------------------------------------
 
 		//-------------------------Variables------------------------------------
+		HtmlUnitDriver htmlUnitDriver;
 
 		//-------------------------Code-----------------------------------------
-		DRIVER = new HtmlUnitDriver(_browserVersion, true);
+		htmlUnitDriver = new HtmlUnitDriver(_browserVersion, true);
+
+		if(_proxy != null) {
+			htmlUnitDriver.setProxySettings(_proxy);
+		}
+
+		DRIVER = htmlUnitDriver;
 		BROWSER_TYPE = BrowserType.HTML_UNIT;
 		DRIVER_NAME = _browserVersion.toString();
 
-		LOGGER.debug("WebDriverWrapper(_browserVersion: {}) [END]", _browserVersion);
+		LOGGER.debug("WebDriverWrapper(_browserVersion: {}, Proxy: {}) [END]", _browserVersion, (_proxy == null ? "(NULL" : _proxy.toString()));
 	}
 
 	//========================= Methods ========================================
@@ -1416,11 +1440,34 @@ public class WebDriverWrapper {
 
 		//------------------------ Variables -----------------------------------
 		String title = DRIVER.getTitle();
-		
+
 		//------------------------ Code ----------------------------------------
-		LOGGER.debug("getPageTitle() [END]");
+		LOGGER.debug("getPageTitle() [END]: {}", title);
 
 		return title;
+	}
+
+	/**
+	 * @return The Source code of the current page.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @see WebDriver#getPageSource()
+	 */
+	public String getPageSource() {
+
+		LOGGER.info("getPageSource() [START]");
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		String toRet = DRIVER.getPageSource();
+
+		//------------------------ Code ----------------------------------------
+		LOGGER.debug("getPageSource() [END]");
+
+		return toRet;
 	}
 
 	//////////////////// Get Web Element Wrapper(s) Functions [START] ////////////////////

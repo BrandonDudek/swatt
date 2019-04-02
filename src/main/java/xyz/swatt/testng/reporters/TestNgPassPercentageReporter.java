@@ -17,6 +17,8 @@ import java.util.List;
  * <p>
  * <i>Note:</i> File name is set by {@link #reportFileName}.
  * </p>
+ *
+ * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
 public class TestNgPassPercentageReporter implements IReporter {

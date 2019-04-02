@@ -292,8 +292,10 @@ public class TestNgMatrixReporter implements IReporter {
             } // END LOOP - XML Test.
         } // END LOOP - XML Test Suite.
 
+        // TODO: List Total Tests, Pass, Fail, Skip numbers for all Test Suites.
+
         int allSuccessRate = Math.round(allPassedTestsCount / (float) allTestsCount * 1000) / 10;
-        pw.println("<br/><br/><table class='table table-bordered table-hover' style='margin-left: 2em; width:auto'><tr><th>Global Pass Rate:</th><th></th><th>"
+        pw.println("<br/><br/><table class='table table-bordered table-hover' style='margin-left: 2em; width:auto'><tr><th>Global Pass Rate:</th><th></th><th id='gpr'>"
                 + allSuccessRate + "%</th></tr></table><br/><br/>");
 
         if(!knownErrors.isEmpty()) {
@@ -316,6 +318,8 @@ public class TestNgMatrixReporter implements IReporter {
             pw.println("<tr><th></th><th></th><th></th><th>Totals:</th><th class='danger'>" + totals + "</th></tr>");
 
             pw.println("</table>");
+
+            // TODO: List Total Tests, Pass, Fail, Skip numbers for all Test Suites, with Known Errors.
 
             allSuccessRate = Math.round(allPassedTestsCount / (float) (allTestsCount + totals) * 1000) / 10;
             pw.println("<br/><table class='table table-bordered table-hover' style='margin-left: 2em; width:auto'><tr><th>Global Pass Rate (with Known Bugs):</th><th></th><th>"

@@ -39,7 +39,7 @@ public class LogMethodsAspectTests {
     //========================= Methods for External Use =======================
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Test
     public void generateLogs() {
@@ -89,7 +89,7 @@ public class LogMethodsAspectTests {
     }
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Test(dependsOnMethods = "generateLogs")
     public void validateLogs() throws URISyntaxException, IOException {

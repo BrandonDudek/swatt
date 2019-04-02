@@ -1,5 +1,5 @@
 /*
- * Created on 2019-02-05 by Brandon Dudek &lt;bdudek@paychex.com&gt; for {swatt}.
+ * Created on 2019-02-05 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
 package xyz.swatt.pojo;
 
@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * This interface defines a common structure for working with SQL DB POJOs.
  *
- * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+ * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 public interface SqlPojo<T> extends RowMapper<T> {
 
@@ -41,7 +41,7 @@ public interface SqlPojo<T> extends RowMapper<T> {
      *
      * @throws IllegalArgumentException
      *         If either of the given {@link SqlPojo} Collection are {@code null}!
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     public static List<String> determineDifferences(final Collection<SqlPojo> _sqlPojos1, final Collection<SqlPojo> _sqlPojos2, int... _ignoreColumnIndexes) {
 
@@ -110,7 +110,7 @@ public interface SqlPojo<T> extends RowMapper<T> {
      *
      * @return A Collection of differences, as descriptive {@link String}s or an empty collection, if there are no differences.
      *
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     public Set<String> determineDifferences(SqlPojo _otherObject, int... _ignoreColumnIndexes);
 
@@ -122,7 +122,7 @@ public interface SqlPojo<T> extends RowMapper<T> {
      *
      * @return The value of the desired column as an {@link Object}.
      *
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     public Object getColumn(int _columnIndex);
 

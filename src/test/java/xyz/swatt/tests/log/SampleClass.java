@@ -29,7 +29,7 @@ public class SampleClass {
     //========================= Static Methods =================================
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @LogMethods
     public static void publicStaticVoidMethod() {
@@ -43,7 +43,7 @@ public class SampleClass {
     //========================= Constructors ===================================
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @LogMethods(arguments = false, returns = false)
     protected SampleClass() {
@@ -53,7 +53,7 @@ public class SampleClass {
     //========================= Methods for External Use =======================
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @LogMethods
     public void callPrivateMethods() {
@@ -61,7 +61,7 @@ public class SampleClass {
     }
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @LogMethods(skip = true)
     public void skipMethod() {
@@ -71,35 +71,35 @@ public class SampleClass {
     //========================= Methods for Internal Use =======================
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     void packagePrivateMethodWithPrimitiveArguments(byte _byte, boolean _boolean, int _int, double _double, char _char) {
         LOGGER.trace("\t\tInside packagePrivateMethodWithPrimitiveArguments.");
     }
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     void packagePrivateMethodWithObjectArguments(String _string, File _file) {
         LOGGER.trace("\t\tInside packagePrivateMethodWithObjectArguments.");
     }
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     void packagePrivateMethodWithCollectionArguments(int[] _primitiveArray, String[] _objectArray, List _list, Map _map) {
         LOGGER.trace("\t\tInside packagePrivateMethodWithCollectionArguments.");
     }
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     void packagePrivateMethodWithMultidimensionalCollectionArguments(char[][] _primitiveDoubleArray, String[][] _objectDoubleArray) {
         LOGGER.trace("\t\tInside packagePrivateMethodWithMultidimensionalCollectionArguments.");
     }
 
     /**
-     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     //@LogMethods // Inherit from class.
     private String privateMethodWithReturnString() {
