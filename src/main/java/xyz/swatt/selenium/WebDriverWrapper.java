@@ -2781,8 +2781,30 @@ public class WebDriverWrapper implements Comparable {
 	////////// Helper Methods //////////
 	@Override
 	public int compareTo(Object o) {
-		String driverToString = DRIVER.toString();
-		return driverToString.compareTo(o.toString());
+
+		if(!(o instanceof WebDriverWrapper)) {
+			return -1;
+		}
+		WebDriverWrapper that = (WebDriverWrapper) o;
+		return DRIVER.toString().compareTo(that.DRIVER.toString());
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if(this == o) {
+			return true;
+		}
+		if(!(o instanceof WebDriverWrapper)) {
+			return false;
+		}
+		WebDriverWrapper that = (WebDriverWrapper) o;
+		return Objects.equals(DRIVER, that.DRIVER);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(DRIVER);
 	}
 
 	/**
