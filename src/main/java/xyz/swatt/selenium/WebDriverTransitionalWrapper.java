@@ -1,6 +1,5 @@
 package xyz.swatt.selenium;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
 import org.openqa.selenium.WebDriver;
 
 /**
@@ -42,10 +41,6 @@ public class WebDriverTransitionalWrapper extends WebDriverWrapper {
     }
 
     public WebDriverTransitionalWrapper(IEBrowser _browser) {
-        super(_browser);
-    }
-
-    public WebDriverTransitionalWrapper(BrowserVersion _browser) {
         super(_browser);
     }
 

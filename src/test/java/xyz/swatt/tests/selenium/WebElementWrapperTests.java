@@ -1,14 +1,13 @@
 package xyz.swatt.tests.selenium;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import xyz.swatt.selenium.WebDriverWrapper;
-import xyz.swatt.selenium.WebElementWrapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.Quotes;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import xyz.swatt.selenium.WebDriverWrapper;
+import xyz.swatt.selenium.WebElementWrapper;
 
 import java.io.File;
 import java.util.Objects;
@@ -21,7 +20,7 @@ import java.util.Objects;
 public class WebElementWrapperTests {
 
     //========================= STATIC CONSTANTS ===============================
-    private static final WebDriverWrapper DRIVER = new WebDriverWrapper(BrowserVersion.FIREFOX_52);
+    private static final WebDriverWrapper DRIVER = new WebDriverWrapper(WebDriverWrapper.ChromeBrowser.CHROME, true);
     private static final Logger LOGGER = LogManager.getLogger(WebElementWrapperTests.class);
 
     //========================= Static Variables ===============================

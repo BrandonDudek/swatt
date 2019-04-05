@@ -1,6 +1,5 @@
 package xyz.swatt.tests.selenium;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -29,7 +28,7 @@ public class WebDriverWrapperTests {
     private static final long MAX_ELEMENT_WAIT_TIME_MS = MIN_ELEMENT_WAIT_TIME_MS + WebDriverWrapper.POLLING_INTERVAL.toMillis() + 400;
 
     private static final Document HTML_AS_XML;
-    private static final WebDriverWrapper DRIVER = new WebDriverWrapper(BrowserVersion.FIREFOX_52);
+    private static final WebDriverWrapper DRIVER = new WebDriverWrapper(WebDriverWrapper.ChromeBrowser.CHROME, true);
     private static final Logger LOGGER = LogManager.getLogger(WebDriverWrapperTests.class);
 
     //========================= Static Variables ===============================

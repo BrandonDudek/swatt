@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.7.1-SNAPSHOT</version>
+    <version>1.8.0</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -16,7 +16,7 @@
 
     <properties>
 
-        <!--===== Maven Build =====-->
+        <!--########## Maven Build ##########-->
         <java.version>8</java.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
         <maven-javadoc-plugin.version>3.0.0</maven-javadoc-plugin.version>
@@ -25,34 +25,40 @@
         <maven-surefire-plugin.version>2.20.1</maven-surefire-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!--===== Library Versions =====-->
-        <!-- Apache Common Collections --> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
-        <apache.commons.collections.version>4.2</apache.commons.collections.version>
+        <!--########## Library Versions ##########-->
+        <!--===== Apache Common Collections =====-->
+        <apache.commons.collections.version>4.3
+        </apache.commons.collections.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
+        <apache.commons.io.version>2.6</apache.commons.io.version> <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+        <apache.commons.lang.version>3.8.1</apache.commons.lang.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
 
-        <!-- AspectJ -->
-        <aspectj.version>1.9.2</aspectj.version> <!-- Must keep in syc with spring-aop: https://mvnrepository.com/artifact/org.springframework/spring-aop -->
+        <!--===== AspectJ =====-->
+        <aspectj.version>1.9.2</aspectj.version> <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
+        <!-- Must keep in syc with spring-aop: https://mvnrepository.com/artifact/org.springframework/spring-aop -->
 
-        <!-- Jackson -->
+        <!--===== Jackson =====-->
         <jackson.version>2.9.8</jackson.version> <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 
-        <!-- JSoup -->
+        <!--===== JSoup =====-->
         <jsoup.version>1.11.3</jsoup.version> <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
 
-        <!-- Log4j2 -->
-        <log4j2.version>2.11.1</log4j2.version> <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+        <!--===== Log4j2 =====-->
+        <log4j2.version>2.11.2</log4j2.version> <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
 
-        <!-- Saxon -->
+        <!--===== Saxon (XPath) =====-->
         <saxon.version>9.9.0-2</saxon.version> <!-- https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE -->
 
-        <!-- Selenium -->
-        <selenium.version>3.14.0</selenium.version> <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
-        <htmlunit.version>2.31.0</htmlunit.version>
+        <!--===== Selenium =====--> <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
+        <selenium.version>3.141.59</selenium.version>
 
-        <!-- Spring -->
-        <spring.version>5.1.4.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
+        <!--===== Spring =====-->
+        <spring.version>5.1.6.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
 
-        <!-- TestNG -->
+        <!--===== TestNG =====-->
         <testng.version>7.0.0-beta3</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
+
+        <!-- ===== Xerces (XML) ===== -->
+        <xerces.version>2.12.0</xerces.version><!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
 
     </properties>
 
@@ -77,6 +83,16 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>${apache.commons.collections.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${apache.commons.io.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.8.1</version>
         </dependency>
 
         <!-- AspectJ -->
@@ -137,7 +153,7 @@
             <version>${log4j2.version}</version>
         </dependency>
 
-        <!-- Saxon -->
+        <!-- Saxon (XPath) -->
         <dependency>
             <groupId>net.sf.saxon</groupId> <!-- Used for XPath 3.1 support. -->
             <artifactId>Saxon-HE</artifactId>
@@ -150,11 +166,7 @@
             <artifactId>selenium-java</artifactId>
             <version>${selenium.version}</version>
         </dependency>
-        <dependency> <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/htmlunit-driver -->
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>htmlunit-driver</artifactId>
-            <version>${htmlunit.version}</version>
-        </dependency>
+
 
         <!-- Spring -->
         <dependency>
@@ -168,6 +180,13 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
+        </dependency>
+
+        <!-- Xerces (XML) -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>${xerces.version}</version>
         </dependency>
 
     </dependencies>

@@ -1,6 +1,5 @@
 package xyz.swatt.selenium;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
@@ -15,7 +14,6 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.ie.InternetExplorerOptions;
 import org.openqa.selenium.interactions.Actions;
@@ -37,7 +35,8 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 /**
@@ -53,7 +52,7 @@ import java.util.function.Function;
  *
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
-public class WebDriverWrapper {
+public class WebDriverWrapper implements Comparable {
 
 	//========================= Static Interfaces ==============================
 	/**
@@ -72,10 +71,6 @@ public class WebDriverWrapper {
 		CHROME("Chrome"),
 		FIREFOX("Firefox"),
 		IE("Internet Explorer"),
-		/**
-		 * An headless (GUI-less) browser. (see: <a href="http://htmlunit.sourceforge.net/">HtmlUnit</a>)
-		 */
-		HTML_UNIT("HtmlUnit"),
 		;
 
 		private final String VALUE;
@@ -331,12 +326,15 @@ public class WebDriverWrapper {
 	/**
 	 * Where screenshots are stored, relative to the Build Path.
 	 */
-	public static final String SCREENSHOT_LOCATION = "target/screenshots/";
+	public static final String SCREENSHOT_LOCATION = "test-output/screenshots/";
 
 	/**
 	 * &lt; Driver File Name, Driver File in Temp Directory &gt;
 	 */
 	private static final Map<String, File> DRIVER_FILES = new HashMap<>();
+
+	private static final AtomicBoolean NEEDS_RETILING = new AtomicBoolean(false);
+	private static final ConcurrentSkipListSet<WebDriverWrapper> KNOWN_WEB_DRIVER_WRAPPERS = new ConcurrentSkipListSet();
 
 	//-------------------- Tier 2 --------------------
 	/**
@@ -606,6 +604,38 @@ public class WebDriverWrapper {
 	}
 
 	/**
+	 * Will tile all of the windows of all of the {@link WebDriverWrapper}s that have been created and not quit. (If only 1 {@link WebDriverWrapper} is still
+	 * active, then it will be maximized.)
+	 * <p>
+	 * <b>Note:</b> For Chrome on a Mac, "maximise" may not fill the entire screen.
+	 * It just expand the window to as large as it needs to be, to not have scroll bars (up to the size of the available screen space).
+	 * </p>
+	 *
+	 * @param _zoomOut
+	 *         If true, the windows will get zoomed out to the percentage that they are resided.
+	 *         <p>
+	 *         <b>Note:</b> Firefox does not support the use of Control keys on the browser.
+	 *         (see: <a href="https://github.com/mozilla/geckodriver/issues/786">https://github.com/mozilla/geckodriver/issues/786</a>.)
+	 *         </p>
+	 *         <p>
+	 *         <b>Note:</b> Chrome does not support the use of Control keys on the browser.
+	 *         (see: <a href="https://bugs.chromium.org/p/chromedriver/issues/detail?id=2265">https://bugs.chromium.org/p/chromedriver/issues/detail?id=2265</a>.)
+	 *         </p>
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static void tileWindows(boolean _zoomOut) {
+		synchronized(KNOWN_WEB_DRIVER_WRAPPERS) {
+			if(NEEDS_RETILING.get()) {
+				NEEDS_RETILING.set(false);
+				if(!KNOWN_WEB_DRIVER_WRAPPERS.isEmpty()) {
+					tileWindows(KNOWN_WEB_DRIVER_WRAPPERS, _zoomOut);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Will tile all of the given {@link WebDriver}s' active windows.
 	 * <p>
 	 *     (If only 1 {@link WebDriver} is given, it will be maximized.)
@@ -617,7 +647,7 @@ public class WebDriverWrapper {
 	 * </p>
 	 *
 	 * @param _driverWrappers
-	 * 		The windows to tile (in a thread safe collection). [see: {@link CopyOnWriteArrayList}]
+	 * 		The windows to tile, in a thread safe, unique collection. (see: {@link ConcurrentSkipListSet})
 	 * 		
 	 * @param _zoomOut
 	 * 		If true, the windows will get zoomed out to the percentage that they are resided.
@@ -632,7 +662,7 @@ public class WebDriverWrapper {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static void tileWindows(CopyOnWriteArrayList<WebDriverWrapper> _driverWrappers, final boolean _zoomOut) {
+	public static void tileWindows(ConcurrentSkipListSet<WebDriverWrapper> _driverWrappers, boolean _zoomOut) {
 
 		LOGGER.info("tileWindows(_driverWrappers: ({}), _zoomOut: {}) [START]", (_driverWrappers == null ? "NULL" : _driverWrappers.size()), _zoomOut);
 
@@ -854,6 +884,26 @@ public class WebDriverWrapper {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebDriverWrapper(ChromeBrowser _browser) {
+		this(_browser, false);
+	}
+
+	/**
+	 * Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
+	 * <p>
+	 * <b>Note:</b> The Window will be maximized.
+	 * </p>
+	 *
+	 * @param _browser
+	 *         The Web {@link ChromeBrowser} to use.
+	 * @param _headless
+	 *         If {@code true} than a headless (GUI-less) version of Chrome will be used; otherwise the normal Chrome GUI will be used. (Needs Chrome version 59
+	 *         or higher.)
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given {@link ChromeBrowser} is {@code null}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper(ChromeBrowser _browser, boolean _headless) {
 
 		LOGGER.info("WebDriverWrapper(_browser: {}) [START]", _browser);
 
@@ -900,6 +950,8 @@ public class WebDriverWrapper {
 			//options.addArguments("--start-maximized"); // Doesn't work with Mac.
 			//noinspection SpellCheckingInspection
 			options.addArguments("disable-infobars");
+			options.setHeadless(_headless);
+
 			DRIVER = new ChromeDriver(options);
 			BROWSER_TYPE = BrowserType.CHROME;
 			DRIVER_NAME = _browser.toString();
@@ -909,6 +961,11 @@ public class WebDriverWrapper {
 		//( (RemoteWebDriver) DRIVER ).setLogLevel( Level.OFF );
 
 		maximize();
+
+		if(!_headless) {
+			KNOWN_WEB_DRIVER_WRAPPERS.add(this);
+			NEEDS_RETILING.set(true);
+		}
 
 		LOGGER.debug("WebDriverWrapper(_browser: {}) [END]", _browser);
 	}
@@ -1092,6 +1149,9 @@ public class WebDriverWrapper {
 			LOGGER.trace("Extensions were loaded.");
 		}
 
+		KNOWN_WEB_DRIVER_WRAPPERS.add(this);
+		NEEDS_RETILING.set(true);
+
 		LOGGER.debug("WebDriverWrapper(_browser: {}, _firefoxExtensionNames: ({}) ) [END]", _browser,
 				(_firefoxExtensionNames == null ? "NULL" : _firefoxExtensionNames.length) );
 	}
@@ -1101,6 +1161,10 @@ public class WebDriverWrapper {
 	 * <p>
 	 *     <b>Note:</b> IE requires that the "Enable Protected Mode" Security Settings be set to the same value for all Security Zones.
 	 *     (see: <a href='http://automate-apps.com/unexpected-error-launching-internet-explorer-protected-mode-settings-are-not-the-same-for-all-zones/'>http://automate-apps.com/unexpected-error-launching-internet-explorer-protected-mode-settings-are-not-the-same-for-all-zones/</a>)
+	 * </p>
+	 * <p>
+	 *     <b>Note:</b> IE requires that the "Pop-up Blocking Level" to be set to "Low", in order to use the {@link #openNewWindow(boolean)} functionality.
+	 *     (see: <a href='https://turbofuture.com/internet/How-to-Turn-Off-Pop-Up-Blocker-in-Internet-Explorer-10'>How to Turn Off Pop-Up Blocker in Internet Explorer </a>)
 	 * </p>
 	 * <p>
 	 *     <b>Note:</b> The window will be maximized.
@@ -1211,63 +1275,13 @@ public class WebDriverWrapper {
 		}
 
 		// Maximize and rest Zoom.
-		tileWindows(new CopyOnWriteArrayList<>(Collections.singleton(this)), true);
+		tileWindows(new ConcurrentSkipListSet<>(Collections.singleton(this)), true);
 		//maximize();
 
+		KNOWN_WEB_DRIVER_WRAPPERS.add(this);
+		NEEDS_RETILING.set(true);
+
 		LOGGER.debug("WebDriverWrapper(_browser: {}) [END]", _browser);
-	}
-
-	/**
-	 * Creates a {@link HtmlUnitDriver} browse based off of the given type.
-	 * <p>
-	 *     <b>Note:</b> Javascript is enabled and required for much of {@link WebDriverWrapper}'s &amp; {@link WebElementWrapper}'s functionality.
-	 * </p>
-	 *
-	 * @param _browserVersion The type of browser that the {@link HtmlUnitDriver} will emulate.
-	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 */
-	public WebDriverWrapper(BrowserVersion _browserVersion) {
-		this(_browserVersion, null);
-	}
-
-	/**
-	 * Creates a {@link HtmlUnitDriver} browse based off of the given type.
-	 * <p>
-	 * <b>Note:</b> Javascript is enabled and required for much of {@link WebDriverWrapper}'s &amp; {@link WebElementWrapper}'s functionality.
-	 * </p>
-	 *
-	 * @param _browserVersion
-	 *         The type of browser that the {@link HtmlUnitDriver} will emulate.
-	 * @param _proxy
-	 *         The Proxy settings for this browser to use; or {@code null}, to not use a proxy.
-	 *         <p><i>Note:</i> GUI Browsers already use the OS's proxy, but HtmlUnit needs it defined.</p>
-	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 */
-	public WebDriverWrapper(BrowserVersion _browserVersion, Proxy _proxy) {
-
-		LOGGER.info("WebDriverWrapper(_browserVersion: {}, Proxy: {}) [START]", _browserVersion, (_proxy == null ? "(NULL" : _proxy.toString()));
-
-		//------------------------ Pre-Checks ----------------------------------
-
-		//-------------------------CONSTANTS------------------------------------
-
-		//-------------------------Variables------------------------------------
-		HtmlUnitDriver htmlUnitDriver;
-
-		//-------------------------Code-----------------------------------------
-		htmlUnitDriver = new HtmlUnitDriver(_browserVersion, true);
-
-		if(_proxy != null) {
-			htmlUnitDriver.setProxySettings(_proxy);
-		}
-
-		DRIVER = htmlUnitDriver;
-		BROWSER_TYPE = BrowserType.HTML_UNIT;
-		DRIVER_NAME = _browserVersion.toString();
-
-		LOGGER.debug("WebDriverWrapper(_browserVersion: {}, Proxy: {}) [END]", _browserVersion, (_proxy == null ? "(NULL" : _proxy.toString()));
 	}
 
 	//========================= Methods ========================================
@@ -1289,11 +1303,23 @@ public class WebDriverWrapper {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		
-		//------------------------ Code ----------------------------------------
-		DRIVER.close();
 
-		switchToLastWindow();
+		//------------------------ Code ----------------------------------------
+		synchronized(LOCK) {
+
+			boolean isLastWindow = DRIVER.getWindowHandles().size() == 1;
+
+			if(isLastWindow) {
+				KNOWN_WEB_DRIVER_WRAPPERS.remove(this);
+				NEEDS_RETILING.set(true);
+			}
+
+			DRIVER.close();
+
+			if(!isLastWindow) {
+				switchToLastWindow();
+			}
+		}
 
 		LOGGER.debug("closeWindow() [END]");
 	}
@@ -2131,7 +2157,12 @@ public class WebDriverWrapper {
 	}
 
 	/**
-	 * Same as calling {@link #openNewWindow(boolean _closeOthers)} and passing {@code false} for {@code _closeOthers}.
+	 * Opens a new Window and switches the given Web Driver to point to it.
+	 * <p>
+	 *     <b>Note:</b> IE requires that the "Pop-up Blocking Level" to be set to "Low", in order for Selenium to open a new window.
+	 *     (see: <a href='https://turbofuture.com/internet/How-to-Turn-Off-Pop-Up-Blocker-in-Internet-Explorer-10'
+	 *     >How to Turn Off Pop-Up Blocker in Internet Explorer </a>)
+	 * </p>
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
@@ -2141,6 +2172,11 @@ public class WebDriverWrapper {
 
 	/**
 	 * Opens a new Window and switches the given Web Driver to point to it.
+	 * <p>
+	 *     <b>Note:</b> IE requires that the "Pop-up Blocking Level" to be set to "Low", in order for Selenium to open a new window.
+	 *     (see: <a href='https://turbofuture.com/internet/How-to-Turn-Off-Pop-Up-Blocker-in-Internet-Explorer-10'
+	 *     >How to Turn Off Pop-Up Blocker in Internet Explorer </a>)
+	 * </p>
 	 *
 	 * @param _closeOthers
 	 * 		If {@code true}, all other Windows will be closed.
@@ -2233,6 +2269,9 @@ public class WebDriverWrapper {
 
 		//------------------------ Code ----------------------------------------
 		synchronized(LOCK) {
+
+			KNOWN_WEB_DRIVER_WRAPPERS.remove(this);
+			NEEDS_RETILING.set(true);
 
 			DRIVER.quit();
 
@@ -2614,7 +2653,7 @@ public class WebDriverWrapper {
 	}
 
 	/**
-	 * Takes a screenshot of the current Window/Tab and saves it to {@link #SCREENSHOT_LOCATION} ({@value #SCREENSHOT_LOCATION}).
+	 * Takes a screenshot of the current Window/Tab and saves it to {@link #screenshotPath} ({@value #SCREENSHOT_LOCATION}).
 	 *
 	 * @return The screenshot File that was saved.
 	 *
@@ -2740,6 +2779,12 @@ public class WebDriverWrapper {
 	}
 
 	////////// Helper Methods //////////
+	@Override
+	public int compareTo(Object o) {
+		String driverToString = DRIVER.toString();
+		return driverToString.compareTo(o.toString());
+	}
+
 	/**
 	 * Waits for the page to finish loading.
 	 *

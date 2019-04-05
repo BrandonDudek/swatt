@@ -1,23 +1,18 @@
 package xyz.swatt.tests.selenium.compatibility;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.Quotes;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Factory;
-import org.testng.annotations.Test;
+import org.testng.ITestContext;
+import org.testng.annotations.*;
 import xyz.swatt.selenium.WebDriverWrapper;
 import xyz.swatt.selenium.WebDriverWrapper.ChromeBrowser;
 import xyz.swatt.selenium.WebDriverWrapper.FirefoxBrowser;
 import xyz.swatt.selenium.WebDriverWrapper.IEBrowser;
 import xyz.swatt.selenium.WebElementWrapper;
 
-import java.util.Arrays;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -51,7 +46,9 @@ public class SeleniumCompatibilityTests {
                     {ChromeBrowser.CHROME_MAC_64},
                     {FirefoxBrowser.FIREFOX},  // Automatically Chooses OS.
                     {FirefoxBrowser.FIREFOX_MAC},
-                    {BrowserVersion.FIREFOX_52}, // HTML Unit Driver. (UI-less)
+
+                    ///// HTML Unit Driver (GUI-less) /////
+                    {"CHROME_HEADLESS"},
             };
         }
         else { // Windows.
@@ -59,13 +56,15 @@ public class SeleniumCompatibilityTests {
                     {ChromeBrowser.CHROME}, // Automatically Chooses OS.
                     {ChromeBrowser.CHROME_WIN_32},
                     {FirefoxBrowser.FIREFOX}, // Automatically Chooses OS and 32/64 bit.
-                    {FirefoxBrowser.FIREFOX_WIN}, // Automatically Chooses 32/64 bit.
+                    {FirefoxBrowser.FIREFOX_WIN}, // Automatically Chooses 32/64 bit.*/
                     {FirefoxBrowser.FIREFOX_WIN_64},
                     {FirefoxBrowser.FIREFOX_WIN_32},
                     {IEBrowser.IE_WIN}, // Automatically Chooses 32/64 bit.
                     {IEBrowser.IE_WIN_32},
                     {IEBrowser.IE_WIN_64},
-                    {BrowserVersion.FIREFOX_52}, // HTML Unit Driver. (UI-less)
+
+                    ///// HTML Unit Driver (GUI-less) /////
+                    {"CHROME_HEADLESS"},
             };
         }
     }
@@ -98,11 +97,42 @@ public class SeleniumCompatibilityTests {
     }
 
     //========================= Methods ========================================
+    //-------------------- DataProviders --------------------
+
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @Test
-    public void startBrowser() {
+    @DataProvider
+    public Object[][] browserDriverNameData(ITestContext _iTestContext) {
+        return new Object[][]{
+                {BROWSER_TYPE.toString()},
+        };
+    }
+
+    //-------------------- Before --------------------
+
+    /**
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @BeforeSuite
+    public void closeOldDriverProcesses() {
+
+        //------------------------ Pre-Checks ----------------------------------
+
+        //------------------------ CONSTANTS -----------------------------------
+
+        //------------------------ Variables -----------------------------------
+
+        //------------------------ Code ----------------------------------------
+        WebDriverWrapper.killPreviousBrowserDriverProcesses();
+    }
+
+    //-------------------- Tests --------------------
+    /**
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Test(dataProvider = "browserDriverNameData")
+    public void startBrowser(String _browserDriverName) {
 
         LOGGER.info("startBrowser() - {} - [START]", BROWSER_TYPE);
 
@@ -116,8 +146,8 @@ public class SeleniumCompatibilityTests {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @Test(dependsOnMethods = {"startBrowser"})
-    public void loadPage() {
+    @Test(dataProvider = "browserDriverNameData", dependsOnMethods = {"startBrowser"})
+    public void loadPage(String _browserDriverName) {
 
         LOGGER.info("loadPage() [START]");
 
@@ -140,8 +170,8 @@ public class SeleniumCompatibilityTests {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @Test(dependsOnMethods = {"loadPage"})
-    public void sendKeys() {
+    @Test(dataProvider = "browserDriverNameData", dependsOnMethods = {"loadPage"})
+    public void sendKeys(String _browserDriverName) {
 
         LOGGER.info("sendKeys() [START] - {}", BROWSER_TYPE);
 
@@ -153,7 +183,7 @@ public class SeleniumCompatibilityTests {
         //------------------------ Variables -----------------------------------
 
         //------------------------ Code ----------------------------------------
-        WebElementWrapper input = driver.getWebElementWrapper(By.id("lst-ib"), true,
+        WebElementWrapper input = driver.getWebElementWrapper(By.cssSelector("input[name=q]"), true,
                 "Could not find Google's search input element!");
         input.sendKeys(keysToSend + Keys.ESCAPE);
 
@@ -169,8 +199,8 @@ public class SeleniumCompatibilityTests {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @Test(dependsOnMethods = {"sendKeys"})
-    public void click() {
+    @Test(dataProvider = "browserDriverNameData", dependsOnMethods = {"sendKeys"})
+    public void click(String _browserDriverName) {
 
         LOGGER.info("click() [START] - {}", BROWSER_TYPE);
 
@@ -194,15 +224,12 @@ public class SeleniumCompatibilityTests {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @Test(dependsOnMethods = {"click"})
-    public void tileWindows() {
+    @Test(dataProvider = "browserDriverNameData", dependsOnMethods = {"click"})
+    public void tileWindows(String _browserDriverName) {
 
         LOGGER.info("tileWindows() [START]");
 
         //------------------------ Pre-Checks ----------------------------------
-        if(BROWSER_TYPE instanceof BrowserVersion) {
-            return; // Cannot manipulate the window of a GUI-less browser.
-        }
 
         //------------------------ CONSTANTS -----------------------------------
 
@@ -210,8 +237,7 @@ public class SeleniumCompatibilityTests {
 
         //------------------------ Code ----------------------------------------
         WebDriverWrapper driver2 = loadBrowser();
-        CopyOnWriteArrayList<WebDriverWrapper> drivers = new CopyOnWriteArrayList<>(Arrays.asList(driver, driver2));
-        WebDriverWrapper.tileWindows(drivers, true);
+        WebDriverWrapper.tileWindows(true);
 
         // TODO: Validate window size, window positions, and zoom percent. (using visual inspection now)
         try {
@@ -220,8 +246,7 @@ public class SeleniumCompatibilityTests {
         catch(InterruptedException e) { /*Do Nothing*/ }
 
         driver2.quit();
-        drivers.remove(driver2);
-        WebDriverWrapper.tileWindows(drivers, true);
+        WebDriverWrapper.tileWindows(true);
 
         // TODO: Validate window size, window positions, and zoom percent. (using visual inspection now)
         try {
@@ -237,15 +262,12 @@ public class SeleniumCompatibilityTests {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @Test(dependsOnMethods = {"tileWindows"})
-    public void openCloseWindow() {
+    @Test(dataProvider = "browserDriverNameData", dependsOnMethods = {"tileWindows"})
+    public void openCloseWindow(String _browserDriverName) {
 
         LOGGER.info("openCloseTab() [START]");
 
         //------------------------ Pre-Checks ----------------------------------
-        if(BROWSER_TYPE instanceof BrowserVersion) {
-            return; // Cannot manipulate the window of a GUI-less browser.
-        }
 
         //------------------------ CONSTANTS -----------------------------------
 
@@ -265,7 +287,8 @@ public class SeleniumCompatibilityTests {
         driver.closeWindow();
         String oldWindowTitleAgain = driver.getPageTitle();
         if(!oldWindowTitleAgain.equals(oldWindowTitle)) {
-            throw new RuntimeException("Returned to old Window. Expecting " + Quotes.escape(oldWindowTitle) + " but found " + Quotes.escape(oldWindowTitleAgain) + "!");
+            throw new RuntimeException("Returned to old Window. Expecting " + Quotes.escape(oldWindowTitle) + " but found " +
+                    Quotes.escape(oldWindowTitleAgain) + "!");
         }
 
         // TODO: Validate Window Title and Count. (using visual inspection now)
@@ -273,7 +296,7 @@ public class SeleniumCompatibilityTests {
         LOGGER.debug("openCloseWindow() [END]");
     }
 
-    //////////////////// After ////////////////////
+    //-------------------- After --------------------
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
@@ -320,14 +343,11 @@ public class SeleniumCompatibilityTests {
         else if(BROWSER_TYPE instanceof FirefoxBrowser) {
             newDriver = new WebDriverWrapper((FirefoxBrowser) BROWSER_TYPE);
         }
-        else if(BROWSER_TYPE instanceof BrowserVersion) {
-            newDriver = new WebDriverWrapper((BrowserVersion) BROWSER_TYPE);
-        }
         else if(BROWSER_TYPE instanceof IEBrowser) {
             newDriver = new WebDriverWrapper((IEBrowser) BROWSER_TYPE);
         }
         else {
-            throw new RuntimeException("Unknown Browser Type: " + BROWSER_TYPE + "!");
+            newDriver = new WebDriverWrapper(ChromeBrowser.CHROME, true);
         }
 
         if(driver == null) {
