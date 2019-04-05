@@ -1,17 +1,5 @@
 # Committed but Unreleased Changes
 
-WebDriverWrapper, POM, & SQL-RowMapper-POJO-Generator.groovy
 
-WebDriverWrapper
-- Added Support for Chrome's headless browsing
-- Removed support for HTMLUnit, in favor of Chrome's headless browsing.
-- Added tileWindows functionality that keeps track of created a quit browsers for you.
-- Updated Tile Windows to use ConcurrentSkipListSet
 
-POM
-- Updated log4j2, saxon, selenium, & spring.
-
-SQL-RowMapper-POJO-Generator.groovy
-- Added Functionality to map from ResultSets with only some of the Table's Columns.
-
-# Expected Release: v1.8.0
+# Expected Release: v1.8.1-SNAPSHOT

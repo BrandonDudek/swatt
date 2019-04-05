@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.8.0</version>
+    <version>1.8.1-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
