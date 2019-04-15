@@ -1,5 +1,14 @@
 # Committed but Unreleased Changes
 
+WebDriverWrapper & POM
 
+WebDriverWrapper
+- Added waitForTitle(...) methods
+- Improved the Chrome Constructor's multi-threading speed
+- Added Linux support to Chrome and Firefox (untested)
 
-# Expected Release: v1.8.1-SNAPSHOT
+POM
+- Updated TestNG to 7.0.0-beta6.
+-- This added a fix for: https://github.com/cbeust/testng/issues/326
+
+# Expected Release: v1.9.0

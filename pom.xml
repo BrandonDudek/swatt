@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.8.1-SNAPSHOT</version>
+    <version>1.9.0</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -55,7 +55,7 @@
         <spring.version>5.1.6.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
 
         <!--===== TestNG =====-->
-        <testng.version>7.0.0-beta3</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
+        <testng.version>7.0.0-beta6</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
 
         <!-- ===== Xerces (XML) ===== -->
         <xerces.version>2.12.0</xerces.version><!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->

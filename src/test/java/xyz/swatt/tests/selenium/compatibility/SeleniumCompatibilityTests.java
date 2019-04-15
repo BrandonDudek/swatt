@@ -1,5 +1,6 @@
 package xyz.swatt.tests.selenium.compatibility;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -26,6 +27,7 @@ public class SeleniumCompatibilityTests {
 
     //========================= STATIC CONSTANTS ===============================
     private static final Logger LOGGER = LogManager.getLogger(SeleniumCompatibilityTests.class);
+    private static final String SEARCH_TERM = "Walla";
 
     //========================= Static Variables ===============================
 
@@ -39,7 +41,7 @@ public class SeleniumCompatibilityTests {
     @DataProvider
     public static Object[][] factoryDataProvider() {
 
-        if(WebDriverWrapper.IS_MAC) {
+        if(SystemUtils.IS_OS_MAC) {
 
             return new Object[][]{
                     {ChromeBrowser.CHROME},  // Automatically Chooses OS.
@@ -178,19 +180,18 @@ public class SeleniumCompatibilityTests {
         //------------------------ Pre-Checks ----------------------------------
 
         //------------------------ CONSTANTS -----------------------------------
-        final String keysToSend = "Walla";
 
         //------------------------ Variables -----------------------------------
 
         //------------------------ Code ----------------------------------------
         WebElementWrapper input = driver.getWebElementWrapper(By.cssSelector("input[name=q]"), true,
                 "Could not find Google's search input element!");
-        input.sendKeys(keysToSend + Keys.ESCAPE);
+        input.sendKeys(SEARCH_TERM + Keys.ESCAPE);
 
         ///// Validate /////
         String inputValue = input.getValue();
-        if(!inputValue.equals(keysToSend)) {
-            throw new RuntimeException(Quotes.escape(keysToSend) + " was sent to input, but " + Quotes.escape(inputValue) + " was found!");
+        if(!inputValue.equals(SEARCH_TERM)) {
+            throw new RuntimeException(Quotes.escape(SEARCH_TERM) + " was sent to input, but " + Quotes.escape(inputValue) + " was found!");
         }
 
         LOGGER.debug("sendKeys() [END]");
@@ -216,7 +217,12 @@ public class SeleniumCompatibilityTests {
         button.click(true);
 
         ///// Validate /////
-        // TODO.
+        driver.getWebElementWrapper(By.id("resultStats"), true, WebDriverWrapper.maxPageLoadTime,
+                "Search Results failed to load!");
+        String pageTitle = driver.getPageTitle();
+        if(!pageTitle.equals(SEARCH_TERM + " - Google Search")) {
+            throw new RuntimeException("Google failed to load! (\"" + pageTitle + "\" loaded instead.)");
+        }
 
         LOGGER.debug("click() [END]");
     }

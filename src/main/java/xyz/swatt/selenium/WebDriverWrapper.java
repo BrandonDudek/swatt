@@ -2,6 +2,7 @@ package xyz.swatt.selenium;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Dimension;
@@ -9,6 +10,7 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
@@ -35,6 +37,7 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -100,9 +103,10 @@ public class WebDriverWrapper implements Comparable {
     public enum ChromeBrowser implements SpecificBrowser {
 		
 		/**
-		 * Will attempt to pick Windows or Mac, based on your computer.
+		 * Will attempt to pick Windows, Mac, or Linux; based on your Operating System.
 		 */
 		CHROME("chrome"),
+		CHROME_LINUX_64("chrome-linux-64"),
 		CHROME_MAC_64("chrome-mac-64"),
 		CHROME_WIN_32("chrome-win-32.exe"),
 		;
@@ -152,9 +156,20 @@ public class WebDriverWrapper implements Comparable {
 		 * </p>
 		 */
 		FIREFOX("gecko", "gecko"),
-		FIREFOX_MAC("gecko-mac", "/Applications/Firefox.app/Contents/MacOS/firefox-bin"),
+
 		/**
-		 * Will attempt to use 64 bit windows, and fall back on 32 bit windows.
+		 * Have to specify the {@link #firefoxOverridePath}.
+		 */
+		FIREFOX_LINUX_32("gecko-linux-32", null),
+		/**
+		 * Have to specify the {@link #firefoxOverridePath}.
+		 */
+		FIREFOX_LINUX_64("gecko-linux-64", null),
+
+		FIREFOX_MAC("gecko-mac", "/Applications/Firefox.app/Contents/MacOS/firefox-bin"),
+
+		/**
+		 * Will attempt to use 64 bit Windows, and fall back on 32 bit Windows.
 		 * <p>
 		 *     (Cannot be used with {@link #firefoxOverridePath}.)
 		 * </p>
@@ -289,21 +304,11 @@ public class WebDriverWrapper implements Comparable {
 	}
 
 	//========================= STATIC CONSTANTS ===============================
-	//-------------------- Tier 1 --------------------
 	/**
-	 * Downloads go here by default.
-	 * <p>
-	 *     (Constant if for external users to use as path.)
-	 * </p>
+	 * Control Key, if on Windows.
+	 * Command Key, if on Mac.
 	 */
-	public static final String DEFAULT_DOWNLOAD_PATH = System.getProperty("user.home") + "/Downloads/";
-
-	/**
-	 * If this program is running on a Apple (Macintosh / Mac) Computer.
-	 */
-	public static final boolean IS_MAC = System.getProperty("os.name").toLowerCase().contains("mac");
-
-	private static final Logger LOGGER = LogManager.getLogger(WebDriverWrapper.class);
+	public static final Keys CTRL_CMD_KEY = SystemUtils.IS_OS_MAC ? Keys.COMMAND : Keys.CONTROL;
 
 	/**
 	 * This is the smallest amount of time it takes for a Web Browser to update the DOM.
@@ -317,11 +322,21 @@ public class WebDriverWrapper implements Comparable {
 	 */
 	public static final Duration RECOMMENDED_MIN_POLLING_TIME = POLLING_INTERVAL.multipliedBy(2);
 
+	private static final Logger LOGGER = LogManager.getLogger(WebDriverWrapper.class);
+
 	/**
 	 * Used to make sure that we only create/launch one browser at a time,
 	 * so that System Property "webdriver.x.driver" does not conflict between 32 and 64 bit versions.
 	 */
 	public static final Object CHROME_LOCK = new Object(), FIREFOX_LOCK = new Object(), IE_LOCK = new Object();
+
+	/**
+	 * Downloads go here by default.
+	 * <p>
+	 * (Constant if for external users to use as path.)
+	 * </p>
+	 */
+	public static final String DEFAULT_DOWNLOAD_PATH = System.getProperty("user.home") + "/Downloads/";
 
 	/**
 	 * Where screenshots are stored, relative to the Build Path.
@@ -331,17 +346,10 @@ public class WebDriverWrapper implements Comparable {
 	/**
 	 * &lt; Driver File Name, Driver File in Temp Directory &gt;
 	 */
-	private static final Map<String, File> DRIVER_FILES = new HashMap<>();
+	private static final ConcurrentHashMap<String, File> DRIVER_FILES = new ConcurrentHashMap<>();
 
 	private static final AtomicBoolean NEEDS_RETILING = new AtomicBoolean(false);
 	private static final ConcurrentSkipListSet<WebDriverWrapper> KNOWN_WEB_DRIVER_WRAPPERS = new ConcurrentSkipListSet();
-
-	//-------------------- Tier 2 --------------------
-	/**
-	 * Control Key, if on Windows.
-	 * Command Key, if on Mac.
-	 */
-	public static final Keys CTRL_CMD_KEY = IS_MAC ? Keys.COMMAND : Keys.CONTROL; // Has to be defined after "IS_MAC"
 
 	//========================= Static Variables ===============================
 	/**
@@ -364,8 +372,10 @@ public class WebDriverWrapper implements Comparable {
 
 	/**
 	 * A way to override the absolute path to Firefox app.
+	 * (Required for Linux.)
 	 */
 	public static String firefoxOverridePath = null;
+
 	/**
 	 * The Absolute Path where Screenshots are saved.
 	 * <p>Default: {@link #SCREENSHOT_LOCATION}.</p>
@@ -525,7 +535,7 @@ public class WebDriverWrapper implements Comparable {
 		LOGGER.info("killPreviousBrowserDriverProcesses() [START]");
 
 		//------------------------ Pre-Checks ----------------------------------
-		if(IS_MAC) {
+		if(SystemUtils.IS_OS_MAC) {
 			LOGGER.debug("killPreviousBrowserDriverProcesses() - IS_MACK - [END]");
 			return;
 		}
@@ -576,7 +586,7 @@ public class WebDriverWrapper implements Comparable {
 		LOGGER.info("killUsedBrowserDriverProcesses() [START]");
 
 		//------------------------ Pre-Checks ----------------------------------
-		if(IS_MAC) {
+		if(SystemUtils.IS_OS_MAC) {
 			LOGGER.debug("killUsedBrowserDriverProcesses() - IS_MACK - [END]");
 			return;
 		}
@@ -669,9 +679,13 @@ public class WebDriverWrapper implements Comparable {
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_driverWrappers, "WebDriver Collection");
 
-		//noinspection ConstantConditions
 		if(_driverWrappers.isEmpty()) {
-			throw new IllegalArgumentException("Given WebDrivers cannot be Empty!");
+
+			//throw new IllegalArgumentException("Given WebDrivers cannot be Empty!");
+
+			// Collection might have changes since call;
+
+			return;
 		}
 		
 		//------------------------ CONSTANTS -----------------------------------
@@ -901,6 +915,8 @@ public class WebDriverWrapper implements Comparable {
 	 *
 	 * @throws IllegalArgumentException
 	 *         If the given {@link ChromeBrowser} is {@code null}.
+	 * @throws WebDriverException If the current Operating System is unknown or unsupported.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebDriverWrapper(ChromeBrowser _browser, boolean _headless) {
@@ -916,53 +932,73 @@ public class WebDriverWrapper implements Comparable {
 
 		//------------------------ Code ----------------------------------------
 		if(_browser == ChromeBrowser.CHROME) {
-			if(IS_MAC) {
-				_browser = ChromeBrowser.CHROME_MAC_64;
-			}
-			else {
+			if(SystemUtils.IS_OS_WINDOWS) {
 				_browser = ChromeBrowser.CHROME_WIN_32;
 			}
+			else if(SystemUtils.IS_OS_MAC) {
+				_browser = ChromeBrowser.CHROME_MAC_64;
+			}
+			else if(SystemUtils.IS_OS_LINUX) {
+				_browser = ChromeBrowser.CHROME_LINUX_64;
+			}
+			else {
+				throw new WebDriverException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
+			}
 		}
 
-		synchronized(CHROME_LOCK) {
+		////////// Set System Property "webdriver.gecko.driver" ////////// Chrome must use a different Driver each time, to support multi-threading.
+		String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
+		File driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
+		InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chrome-drivers/" + _browser);
+		try {
+			FileUtils.copyToFile(resourceInStream, driverFile);
+		}
+		catch(IOException e) {
+			throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+		}
 
-			////////// Set System Property "webdriver.gecko.driver" ////////// Chrome must use a different Driver each time, so support multithreading.
-			String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
-			File driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
-			InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chrome-drivers/" + _browser);
+		// Validate Copy.
+		if(driverFile.length() <= 0) {
+			throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
+		}
+
+		DRIVER_FILES.put(_browser.DRIVER_NAME + System.currentTimeMillis(), driverFile); // Chrome must use a different Driver each time, to support multi-threading.
+
+		////////// Browser Options //////////
+		ChromeOptions options = new ChromeOptions();
+		//options.addArguments("--start-maximized"); // Doesn't work with Mac.
+		//noinspection SpellCheckingInspection
+		options.addArguments("disable-infobars");
+		options.setHeadless(_headless);
+
+		////////// Launch Browser //////////
+		// Using ChromeDriverService so we don't have to set the "webdriver.chrome.driver" System Property.
+		// - So that we can create multiple drives in parallel.
+		ChromeDriverService chromeDriverService = new ChromeDriverService.Builder().withVerbose(false).withSilent(true).usingDriverExecutable(driverFile).build();
+		ChromeDriver chromeDriver = null;
+		while(chromeDriver == null) {
 			try {
-				FileUtils.copyToFile(resourceInStream, driverFile);
+				chromeDriver = new ChromeDriver(chromeDriverService, options);
 			}
-			catch(IOException e) {
-				throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+			catch(WebDriverException e) { // Can happen when heavily multi-threading.
+				String errorMessage = e.getMessage().trim().toLowerCase();
+				if(!errorMessage.startsWith("timed out waiting for driver server to start.") &&
+						!errorMessage.startsWith("java.net.connectexception: failed to connect to localhost/0:0:0:0:0:0:0:1:")) {
+					throw e;
+				}
 			}
-
-			// Validate Copy.
-			if(driverFile.length() <= 0) {
-				throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
-			}
-
-			DRIVER_FILES.put(_browser.DRIVER_NAME, driverFile);
-			System.setProperty("webdriver.chrome.driver", driverFile.getAbsolutePath());
-
-			////////// Launch Browser //////////
-			ChromeOptions options = new ChromeOptions();
-			//options.addArguments("--start-maximized"); // Doesn't work with Mac.
-			//noinspection SpellCheckingInspection
-			options.addArguments("disable-infobars");
-			options.setHeadless(_headless);
-
-			DRIVER = new ChromeDriver(options);
-			BROWSER_TYPE = BrowserType.CHROME;
-			DRIVER_NAME = _browser.toString();
 		}
+		DRIVER = chromeDriver;
+		BROWSER_TYPE = BrowserType.CHROME;
+		DRIVER_NAME = _browser.toString();
 
 		// TODO: BUG: Makes all logs visible and gives them the level of what was padded in.
 		//( (RemoteWebDriver) DRIVER ).setLogLevel( Level.OFF );
 
-		maximize();
-
 		if(!_headless) {
+
+			maximize();
+
 			KNOWN_WEB_DRIVER_WRAPPERS.add(this);
 			NEEDS_RETILING.set(true);
 		}
@@ -986,11 +1022,12 @@ public class WebDriverWrapper implements Comparable {
 	 * @param _browser
 	 * 		The {@link FirefoxBrowser} to use.
 	 * @param _firefoxExtensionNames
-	 * 		A list of Firefox Add-On names. (Known names can be found in the {@link FirefoxExtension} enum.)
+	 * 		A list of Firefox Add-On names. (Known names can be found in the {@link FirefoxExtension} enum.) [Only works on Windows and Mac.]
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the given {@link FirefoxBrowser} is {@code null}.
-	 * 		<p>Or if {@link #firefoxOverridePath} is used with undefined {@link FirefoxBrowser}.</p>
+	 * 		<p>Or if {@link #firefoxOverridePath} is mismatched with given {@link FirefoxBrowser}.</p>
+	 * 		<p>Or if Extensions are provided when the given {@link FirefoxBrowser} is Linux.</p>
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
@@ -1006,6 +1043,14 @@ public class WebDriverWrapper implements Comparable {
 			throw new IllegalArgumentException("firefoxOverridePath cannot be used with FirefoxBrowser enum: " + _browser + "!");
 		}
 
+		if(firefoxOverridePath != null && (_browser == FirefoxBrowser.FIREFOX_LINUX_32 || _browser == FirefoxBrowser.FIREFOX_LINUX_64)) {
+			throw new IllegalArgumentException("firefoxOverridePath must be used with FirefoxBrowser enum: " + _browser + "!");
+		}
+
+		if(_firefoxExtensionNames != null && _firefoxExtensionNames.length > 0 && (_browser == FirefoxBrowser.FIREFOX_LINUX_32 || _browser == FirefoxBrowser.FIREFOX_LINUX_64)) {
+			throw new IllegalArgumentException("Firefox extensions are not currently supported with FirefoxBrowser enum: " + _browser + "!");
+		}
+
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
@@ -1013,7 +1058,7 @@ public class WebDriverWrapper implements Comparable {
 
 		String userHome = System.getProperty("user.home");
 		//noinspection SpellCheckingInspection
-		File firefoxUserProfileDirectory = new File(userHome + (IS_MAC ? "/Library/Application Support" : "/AppData/Roaming/Mozilla")
+		File firefoxUserProfileDirectory = new File(userHome + (SystemUtils.IS_OS_MAC ? "/Library/Application Support" : "/AppData/Roaming/Mozilla")
 				+ "/Firefox/Profiles/"); // (System.getenv( "USERPROFILE" ) only works on Windows.)
 		FirefoxOptions firefoxOptions = new FirefoxOptions();
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
@@ -1022,34 +1067,21 @@ public class WebDriverWrapper implements Comparable {
 
 		//------------------------ Code ----------------------------------------
 		////////// Determine Gecko Version and Browser Path //////////
-		if(_browser == FirefoxBrowser.FIREFOX) { // Has to be handled before the switch.
-			if(IS_MAC) {
-				_browser = FirefoxBrowser.FIREFOX_MAC;
-			}
-			else {
-				_browser = FirefoxBrowser.FIREFOX_WIN;
-			}
-		}
-		switch(_browser) {
-			//noinspection ConstantConditions
-			case FIREFOX: // Handled above.
-				break;
-			case FIREFOX_MAC:
-				break;
-			case FIREFOX_WIN:
+		if(_browser == FirefoxBrowser.FIREFOX) {
+			if(SystemUtils.IS_OS_WINDOWS){
 				if(new File(FirefoxBrowser.FIREFOX_WIN_64.BROWSER_PATH).exists()) {
 					_browser = FirefoxBrowser.FIREFOX_WIN_64;
 				}
 				else {
 					_browser = FirefoxBrowser.FIREFOX_WIN_32;
 				}
-				break;
-			case FIREFOX_WIN_32:
-				break;
-			case FIREFOX_WIN_64:
-				break;
-			default:
-				throw new IllegalArgumentException("Unknown Browser: " + _browser + "!");
+			}
+			else if(SystemUtils.IS_OS_MAC) {
+				_browser = FirefoxBrowser.FIREFOX_MAC;
+			}
+			else {
+				throw new WebDriverException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
+			}
 		}
 
 		synchronized(FIREFOX_LOCK) {
@@ -1579,13 +1611,13 @@ public class WebDriverWrapper implements Comparable {
 	 * @param _by
 	 *         How to search for the {@link WebElement}.
 	 * @param _noElementExceptionMessage
-	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
 	 *         If the given By object is {@code NULL}.
-	 * @throws org.openqa.selenium.NoSuchElementException
+	 * @throws NoSuchElementException
 	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
 	 *         If more than 1 {@link WebElement} is found.
@@ -1635,13 +1667,13 @@ public class WebDriverWrapper implements Comparable {
 	 * @param _visibility
 	 *         If {@code true} only returns a visible {@link WebElement}, else if {@code false}, only returns a hidden {@link WebElement}.
 	 * @param _noElementExceptionMessage
-	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
 	 *         If the given By object is {@code NULL}.
-	 * @throws org.openqa.selenium.NoSuchElementException
+	 * @throws NoSuchElementException
 	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
 	 *         If more than 1 {@link WebElement} is found.
@@ -1664,14 +1696,14 @@ public class WebDriverWrapper implements Comparable {
 	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
 	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 * @param _noElementExceptionMessage
-	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
 	 *         If the given By object is {@code null}.
 	 *         <p>Or if the given Wait Time is negative.</p>
-	 * @throws org.openqa.selenium.NoSuchElementException
+	 * @throws NoSuchElementException
 	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
 	 *         If more than 1 {@link WebElement} is found.
@@ -1696,14 +1728,14 @@ public class WebDriverWrapper implements Comparable {
 	 *         How long to wait for the {@link WebElement} to exists and contain the correct visibility.
 	 *         <p>Pass in {@code 0} to only try to get the Elements once.</p>
 	 * @param _noElementExceptionMessage
-	 *         If <b>not</b> {@code NULL}, a {@link org.openqa.selenium.NoSuchElementException} will be thrown with this message, if no Element is found.
+	 *         If <b>not</b> {@code NULL}, a {@link NoSuchElementException} will be thrown with this message, if no Element is found.
 	 *
 	 * @return The {@link WebElementWrapper}, if successful; or {@code NULL}, if not.
 	 *
 	 * @throws IllegalArgumentException
 	 *         If the given By object is {@code null}.
 	 *         <p>Or if the given Wait Time is negative.</p>
-	 * @throws org.openqa.selenium.NoSuchElementException
+	 * @throws NoSuchElementException
 	 *         If no {@link WebElement} is found, and if the {@code _noElementExceptionMessage} argument is <b>not</b> {@code NULL}.
 	 * @throws TooManyResultsException
 	 *         If more than 1 {@link WebElement} is found.
@@ -1737,7 +1769,7 @@ public class WebDriverWrapper implements Comparable {
 						catch(Exception e) {
 							screenshot = null;
 						}
-						throw new org.openqa.selenium.NoSuchElementException(_noElementExceptionMessage +
+						throw new NoSuchElementException(_noElementExceptionMessage +
 								(screenshot == null ? "" : "\n\nScreenshot: " + screenshot.getAbsolutePath()));
 					}
 					else {
@@ -1918,7 +1950,7 @@ public class WebDriverWrapper implements Comparable {
 			//------------------------ Code ----------------------------------------
 			// Fluent Wait Settings.
 			fluentWait.withTimeout(_waitTime).pollingEvery(POLLING_INTERVAL)
-					.ignoreAll(Arrays.asList(new Class[]{org.openqa.selenium.NoSuchElementException.class, ElementNotVisibleException.class,
+					.ignoreAll(Arrays.asList(new Class[]{NoSuchElementException.class, ElementNotVisibleException.class,
 							InvalidElementStateException.class}));
 
 			if(BROWSER_TYPE == BrowserType.IE) { // TODO: https://github.com/SeleniumHQ/selenium/issues/4555
@@ -1946,7 +1978,7 @@ public class WebDriverWrapper implements Comparable {
 					}
 
 					if(elements == null || elements.isEmpty()) {
-						throw new org.openqa.selenium.NoSuchElementException("No Element found " + _by + "!");
+						throw new NoSuchElementException("No Element found " + _by + "!");
 					}
 
 					LOGGER.trace("Found {} Elements.", elements.size());
@@ -2135,7 +2167,7 @@ public class WebDriverWrapper implements Comparable {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		if(IS_MAC && DRIVER instanceof ChromeDriver) { // Chrome on Mac don't maximize, just expand as far as needed.
+		if(SystemUtils.IS_OS_MAC && DRIVER instanceof ChromeDriver) { // Chrome on Mac don't maximize, just expand as far as needed.
 
 			// TODO: Walk through.
 
@@ -2273,7 +2305,18 @@ public class WebDriverWrapper implements Comparable {
 			KNOWN_WEB_DRIVER_WRAPPERS.remove(this);
 			NEEDS_RETILING.set(true);
 
-			DRIVER.quit();
+			while(true) {
+				try {
+					DRIVER.quit();
+					break;
+				}
+				catch(WebDriverException e) { // Can happen when heavily multi-threading.
+					String errorMessage = e.getMessage().trim().toLowerCase();
+					if(!errorMessage.startsWith("java.net.connectexception: failed to connect to localhost/0:0:0:0:0:0:0:1:")) {
+						throw e;
+					}
+				}
+			}
 
 			// IE Driver does not quit. (TODO)
 			/*if(DRIVER instanceof InternetExplorerDriver) {
@@ -2420,7 +2463,7 @@ public class WebDriverWrapper implements Comparable {
 	 *     Same as calling {@link #switchToFrame(By)} and sending {@code By.xpath( "//frame | //iframe" )}.
 	 * </p>
 	 *
-	 * @throws org.openqa.selenium.NoSuchElementException
+	 * @throws NoSuchElementException
 	 * 		If no Frame/IFrame is visible after {@link #maxPageLoadTime} seconds of waiting.
 	 * @throws TooManyResultsException
 	 * 		If multiple Frames/IFrames are visible.
@@ -2440,7 +2483,7 @@ public class WebDriverWrapper implements Comparable {
 	 * @param _by
 	 * 		How to search for the Frame/IFrame.
 	 *
-	 * @throws org.openqa.selenium.NoSuchElementException
+	 * @throws NoSuchElementException
 	 * 		If the Frame/IFrame cannot be found or is not visible after {@link #maxPageLoadTime} seconds of waiting.
 	 * @throws TooManyResultsException
 	 * 		If the search returns multiple, visible Frames/IFrames.
@@ -2672,7 +2715,18 @@ public class WebDriverWrapper implements Comparable {
 
 		//------------------------ Code ----------------------------------------
 		// Take Screenshot first. (We want go get it as soon as possible before something can change.)
-		File tempScreenshot = ((TakesScreenshot) DRIVER).getScreenshotAs(OutputType.FILE);
+		File tempScreenshot = null;
+		while(tempScreenshot == null) {
+			try {
+				tempScreenshot = ((TakesScreenshot) DRIVER).getScreenshotAs(OutputType.FILE);
+			}
+			catch(WebDriverException e) { // Can happen when heavily multi-threading.
+				String errorMessage = e.getMessage().trim().toLowerCase();
+				if(!errorMessage.startsWith("java.net.connectexception: failed to connect to localhost/0:0:0:0:0:0:0:1:")) {
+					throw e;
+				}
+			}
+		}
 
 		File screenshot = new File(rootPath + tempScreenshot.getName());
 
@@ -2776,6 +2830,129 @@ public class WebDriverWrapper implements Comparable {
 		}
 
 		LOGGER.debug("waitForPageLoad() [END]");
+	}
+
+	/**
+	 * This method will wait up to {@link #maxPageLoadTime}, for the Page's Title to equal the given value.
+	 * <p>
+	 * <i>(This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.)</i>
+	 * </p>
+	 * <p>
+	 * <b>Note:</b> The Tile and Expected values will be trimmed, and the case will be ignored.
+	 * </p>
+	 *
+	 * @param _value
+	 *         What the Page's Title should be.
+	 *
+	 * @throws TimeoutException
+	 *         If the Page's Title does not equal the given after {@link #maxPageLoadTime}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void waitForTitle(String _value) {
+		waitForTitle(_value, true, false, maxPageLoadTime);
+	}
+
+	/**
+	 * This method will wait up to {@link #maxPageLoadTime}, for the Page's Title to equal the given value.
+	 * <p>
+	 * <i>Note:</i> This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.
+	 * </p>
+	 *
+	 * @param _value
+	 *         What the Page's Title should be.
+	 * @param _trim
+	 *         {@code true}, to trim both values before comparing.
+	 * @param _caseMatters
+	 *         {@code false}, to ignore case.
+	 *
+	 * @throws TimeoutException
+	 *         If the Page's Title does not equal the given after {@link #maxPageLoadTime}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void waitForTitle(String _value, boolean _trim, boolean _caseMatters) {
+		waitForTitle(_value, _trim, _caseMatters, maxPageLoadTime);
+	}
+
+	/**
+	 * This method will wait for the given amount of time, for the Page's Title to equal the given value.
+	 * <p>
+	 * <i>(This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.)</i>
+	 * </p>
+	 * <p>
+	 * <b>Note:</b> The Tile and Expected values will be trimmed, and the case will be ignored.
+	 * </p>
+	 *
+	 * @param _value
+	 *         What the Page's Title should be.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given Wait Time is {@code null}.
+	 * @throws TimeoutException
+	 *         If the Page's Title does not equal the given after the given Wait Time.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void waitForTitle(String _value, Duration _maxWaitTime) {
+		waitForTitle(_value, true, false, _maxWaitTime);
+	}
+
+	/**
+	 * This method will wait for the given amount of time, for the Page's Title to equal the given value.
+	 * <p>
+	 * <i>Note:</i> This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.
+	 * </p>
+	 *
+	 * @param _value
+	 *         What the Page's Title should be.
+	 * @param _trim
+	 *         {@code true}, to trim both values before comparing.
+	 * @param _caseMatters
+	 *         {@code false}, to ignore case.
+	 * @param _maxWaitTime
+	 *         The maximum amount of time to wait for the Title to equal the given value.
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given Value or Wait Time are {@code null}.
+	 * @throws TimeoutException
+	 *         If the Page's Title does not equal the given after the given Wait Time.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void waitForTitle(String _value, boolean _trim, boolean _caseMatters, Duration _maxWaitTime) {
+
+		LOGGER.info("waitForTitle(_value: {}, _trim: {}, _caseMatters: {}, _maxWaitTime: {}) [START]", _value, _trim, _caseMatters,
+				(_maxWaitTime == null ? "(NULL)" : _maxWaitTime));
+
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_value, "Expected Page Title Value");
+		ArgumentChecks.notNull(_maxWaitTime, "Max Wait Time");
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		String expectedTitle = _trim ? _value.trim() : _value;
+
+		FluentWait<WebDriver> fluentWait;
+
+		//------------------------ Code ----------------------------------------
+		synchronized(LOCK) {
+
+			fluentWait = new FluentWait<>(DRIVER);
+
+			// Fluent Wait Settings..
+			fluentWait.withTimeout(_maxWaitTime).pollingEvery(POLLING_INTERVAL);
+
+			fluentWait.until(driver -> {
+				String currentTitle = _trim ? DRIVER.getTitle().trim() : DRIVER.getTitle();
+				if(_caseMatters) {
+					return currentTitle.equals(expectedTitle);
+				}
+				else {
+					return currentTitle.equalsIgnoreCase(expectedTitle);
+				}
+			});
+		}
+
+		LOGGER.debug("waitForTitle(_value: {}, _trim: {}, _caseMatters: {}, _maxWaitTime: {}) [END]", _value, _trim, _caseMatters,
+				(_maxWaitTime == null ? "(NULL)" : _maxWaitTime));
 	}
 
 	////////// Helper Methods //////////
