@@ -8,7 +8,8 @@ WebDriverWrapper
 - Added Linux support to Chrome and Firefox (untested)
 
 POM
-- Updated TestNG to 7.0.0-beta6.
+- Updated TestNG to 7.0.0-beta5.
 -- This added a fix for: https://github.com/cbeust/testng/issues/326
+- Added 2 Spring Repos (Plugins & Lib)
 
 # Expected Release: v1.9.0

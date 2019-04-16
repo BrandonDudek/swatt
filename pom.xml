@@ -55,15 +55,40 @@
         <spring.version>5.1.6.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
 
         <!--===== TestNG =====-->
-        <testng.version>7.0.0-beta6</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
+        <testng.version>7.0.0-beta5</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
 
         <!-- ===== Xerces (XML) ===== -->
         <xerces.version>2.12.0</xerces.version><!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
 
     </properties>
 
-    <!--<repositories> - This is where snapshots are sent to.
+    <repositories>
+
         <repository>
+            <id>spring-plugins</id>
+            <name>Spring Plugins Repository</name>
+            <url>http://repo.spring.io/plugins-release/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+
+        <repository>
+            <id>spring-lib</id>
+            <name>Spring Plugins Repository</name>
+            <url>http://repo.spring.io/libs-release/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+
+        <!--<repository> - This is where snapshots are sent to.
             <id>ossrh</id>
             <name>OSS Repository Hosting</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -73,8 +98,9 @@
             <releases>
                 <enabled>false</enabled>
             </releases>
-        </repository>
-    </repositories>-->
+        </repository>-->
+
+    </repositories>
 
     <dependencies>
 
