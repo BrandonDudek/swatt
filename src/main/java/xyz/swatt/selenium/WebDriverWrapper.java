@@ -2884,6 +2884,9 @@ public class WebDriverWrapper implements Comparable {
 	 *
 	 * @param _value
 	 *         What the Page's Title should be.
+	 * @param _maxWaitTime
+	 *         The maximum amount of time to wait for the Title to equal the given value.
+	 *
 	 *
 	 * @throws IllegalArgumentException
 	 *         If the given Wait Time is {@code null}.
