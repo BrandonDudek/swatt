@@ -319,23 +319,22 @@
                 </executions>
             </plugin>
 
-            <!-- Deploy to Nexus (TODO) -->
-            <!--<plugin>
+            <!-- Deploy to Nexus -->
+            <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <version>1.6.8</version>
                 <extensions>true</extensions>
                 <configuration>
-                    &lt;!&ndash; The Base URL of Nexus instance where we want to stage &ndash;&gt;
+                    <!-- The Base URL of Nexus instance where we want to stage -->
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    &lt;!&ndash; The server "id" element from settings to use authentication from &ndash;&gt;
+                    <!-- The server "id" element from settings to use authentication from -->
                     <serverId>ossrh</serverId>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <!--<autoReleaseAfterClose>true</autoReleaseAfterClose> &lt;!&ndash; Snapshots do not get staged. (TODO) &ndash;&gt;
                     <sslAllowAll>true</sslAllowAll>
-                    <sslInsecure>true</sslInsecure>
+                    <sslInsecure>true</sslInsecure>-->
                 </configuration>
-            </plugin>-->
+            </plugin>
 
         </plugins>
 
