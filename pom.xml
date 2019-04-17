@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.9.1-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -318,6 +318,24 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Deploy to Nexus (TODO) -->
+            <!--<plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    &lt;!&ndash; The Base URL of Nexus instance where we want to stage &ndash;&gt;
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    &lt;!&ndash; The server "id" element from settings to use authentication from &ndash;&gt;
+                    <serverId>ossrh</serverId>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <sslAllowAll>true</sslAllowAll>
+                    <sslInsecure>true</sslInsecure>
+                </configuration>
+            </plugin>-->
 
         </plugins>
 

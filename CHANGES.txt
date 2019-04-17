@@ -1,5 +1,7 @@
 # Committed but Unreleased Changes
 
+WebDriverWrapper
+-Added static chromeOverridePath variable, to specify custom Chrome install path
+-All Browser Constructors can now take in an optional Capabilities object, to send custom settings to the WebDriver
 
-
-# Expected Release: v1.9.1
+# Expected Release: v1.10.0

@@ -374,7 +374,12 @@ public class WebDriverWrapper implements Comparable {
 	 * A way to override the absolute path to Firefox app.
 	 * (Required for Linux.)
 	 */
-	public static String firefoxOverridePath = null;
+	public static String chromeOverridePath;
+
+	/**
+	 * A way to override the absolute path to Firefox app. (Required for Linux.)
+	 */
+	public static String firefoxOverridePath;
 
 	/**
 	 * The Absolute Path where Screenshots are saved.
@@ -884,10 +889,17 @@ public class WebDriverWrapper implements Comparable {
 
 	//========================= Constructors ===================================
 	/**
-	 * Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
 	 * <p>
-	 *     <b>Note:</b> The Window will be maximized.
+	 *     Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
 	 * </p>
+	 * <p>&nbsp;</p>
+	 * <p>
+	 *     <i>Notes:</i>
+	 * </p>
+	 * <ul>
+	 *     <li>The Window will be maximized</li>
+	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 * </ul>
 	 *
 	 * @param _browser
 	 * 		The Web {@link ChromeBrowser} to use.
@@ -898,30 +910,96 @@ public class WebDriverWrapper implements Comparable {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebDriverWrapper(ChromeBrowser _browser) {
-		this(_browser, false);
+		this(_browser, false, null);
 	}
 
 	/**
-	 * Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
 	 * <p>
-	 * <b>Note:</b> The Window will be maximized.
+	 *     Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
 	 * </p>
+	 * <p>&nbsp;</p>
+	 * <p>
+	 *     <i>Notes:</i>
+	 * </p>
+	 * <ul>
+	 *     <li>The Window will be maximized</li>
+	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 * </ul>
+	 *
+	 * @param _browser
+	 * 		The Web {@link ChromeBrowser} to use.
+	 * @param _headless
+	 *         If {@code true} than a headless (GUI-less) version of Chrome will be used; otherwise the normal Chrome GUI will be used. (Needs Chrome version 59
+	 *         or higher.)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given {@link ChromeBrowser} is {@code null}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper(ChromeBrowser _browser, boolean _headless) {
+		this(_browser, _headless, null);
+	}
+
+	/**
+	 * <p>
+	 * Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
+	 * </p>
+	 * <p>&nbsp;</p>
+	 * <p>
+	 * <i>Notes:</i>
+	 * </p>
+	 * <ul>
+	 * <li>The Window will be maximized</li>
+	 * <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 * </ul>
+	 *
+	 * @param _browser
+	 *         The Web {@link ChromeBrowser} to use.
+	 * @param _capabilities
+	 *         Allows you to send in custom Capabilities to the created {@link WebDriver}. (<b>Warning:</b> This will overwrite any default {@link
+	 *         WebDriverWrapper} settings.)
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given {@link ChromeBrowser} is {@code null}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper(ChromeBrowser _browser, Capabilities _capabilities) {
+		this(_browser, false, _capabilities);
+	}
+
+	/**
+	 * <p>
+	 * Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
+	 * </p>
+	 * <p>&nbsp;</p>
+	 * <p>
+	 * <i>Notes:</i>
+	 * </p>
+	 * <ul>
+	 * <li>The Window will be maximized</li>
+	 * <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 * </ul>
 	 *
 	 * @param _browser
 	 *         The Web {@link ChromeBrowser} to use.
 	 * @param _headless
 	 *         If {@code true} than a headless (GUI-less) version of Chrome will be used; otherwise the normal Chrome GUI will be used. (Needs Chrome version 59
 	 *         or higher.)
+	 * @param _capabilities
+	 *         Allows you to send in custom Capabilities to the created {@link WebDriver}. (<b>Warning:</b> This will overwrite any default {@link
+	 *         WebDriverWrapper} settings.)
 	 *
 	 * @throws IllegalArgumentException
 	 *         If the given {@link ChromeBrowser} is {@code null}.
-	 * @throws WebDriverException If the current Operating System is unknown or unsupported.
-	 *
+	 * @throws WebDriverException
+	 *         If the current Operating System is unknown or unsupported.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public WebDriverWrapper(ChromeBrowser _browser, boolean _headless) {
+	public WebDriverWrapper(ChromeBrowser _browser, boolean _headless, Capabilities _capabilities) {
 
-		LOGGER.info("WebDriverWrapper(_browser: {}) [START]", _browser);
+		LOGGER.info("WebDriverWrapper(_browser: {}, _headless: {}, _capabilities: {}) [START]", _browser, _headless,
+				(_capabilities == null ? "(NULL)" : _capabilities));
 
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_browser, "Browser");
@@ -970,6 +1048,13 @@ public class WebDriverWrapper implements Comparable {
 		//noinspection SpellCheckingInspection
 		options.addArguments("disable-infobars");
 		options.setHeadless(_headless);
+		if(chromeOverridePath != null) {
+			// TODO: Check that chromeOverridePath is a valid path.
+			options.setBinary(chromeOverridePath);
+		}
+		if(_capabilities != null) { // Merge has to happen after all other options are set.
+			options.merge(new ChromeOptions());
+		}
 
 		////////// Launch Browser //////////
 		// Using ChromeDriverService so we don't have to set the "webdriver.chrome.driver" System Property.
@@ -1003,7 +1088,9 @@ public class WebDriverWrapper implements Comparable {
 			NEEDS_RETILING.set(true);
 		}
 
-		LOGGER.debug("WebDriverWrapper(_browser: {}) [END]", _browser);
+
+		LOGGER.debug("WebDriverWrapper(_browser: {}, _headless: {}, _capabilities: {}) [END]", _browser, _headless,
+				(_capabilities == null ? "(NULL)" : _capabilities));
 	}
 
 	/**
@@ -1032,8 +1119,40 @@ public class WebDriverWrapper implements Comparable {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebDriverWrapper(FirefoxBrowser _browser, String... _firefoxExtensionNames) {
+		this(_browser, null, _firefoxExtensionNames);
+	}
 
-		LOGGER.info("WebDriverWrapper(_browser: {}, _firefoxExtensionNames: ({}) ) [START]", _browser,
+	/**
+	 * Instantiates this WebDriverWrapper to use the given {@link FirefoxBrowser}.
+	 * <p>
+	 * (Designed to work with <a href="https://ftp.mozilla.org/pub/firefox/releases/56.0.2/">Firefox version 56.0.2</a>.)
+	 * </p>
+	 * <p>
+	 * <b>Notes:</b>
+	 * </p>
+	 * <p>- Will look at the default install path for the Firefox app. (Can be overridden by setting {@link #firefoxOverridePath}.)</p>
+	 * <p>- The Window will be maximized.</p>
+	 * <p>- Downloads will automatically start and the files will be saved to FireFox's default download location.
+	 * (Stored in {@link #DEFAULT_DOWNLOAD_PATH}.)</p>
+	 *
+	 * @param _browser
+	 *         The {@link FirefoxBrowser} to use.
+	 * @param _capabilities
+	 *         Allows you to send in custom Capabilities to the created {@link WebDriver}. (<b>Warning:</b> This will overwrite any default {@link
+	 *         WebDriverWrapper} settings.)
+	 * @param _firefoxExtensionNames
+	 *         A list of Firefox Add-On names. (Known names can be found in the {@link FirefoxExtension} enum.) [Only works on Windows and Mac.]
+	 *
+	 * @throws IllegalArgumentException
+	 *         If the given {@link FirefoxBrowser} is {@code null}.
+	 *         <p>Or if {@link #firefoxOverridePath} is mismatched with given {@link FirefoxBrowser}.</p>
+	 *         <p>Or if Extensions are provided when the given {@link FirefoxBrowser} is Linux.</p>
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper(FirefoxBrowser _browser, Capabilities _capabilities, String... _firefoxExtensionNames) {
+
+		LOGGER.info("WebDriverWrapper(_browser: {}, _capabilities: {}, _firefoxExtensionNames: ({}) ) [START]", _browser,
+				(_capabilities == null ? "(NULL)" : _capabilities),
 				(_firefoxExtensionNames == null ? "NULL" : _firefoxExtensionNames.length) );
 
 		//------------------------ Pre-Checks ----------------------------------
@@ -1060,7 +1179,7 @@ public class WebDriverWrapper implements Comparable {
 		//noinspection SpellCheckingInspection
 		File firefoxUserProfileDirectory = new File(userHome + (SystemUtils.IS_OS_MAC ? "/Library/Application Support" : "/AppData/Roaming/Mozilla")
 				+ "/Firefox/Profiles/"); // (System.getenv( "USERPROFILE" ) only works on Windows.)
-		FirefoxOptions firefoxOptions = new FirefoxOptions();
+		FirefoxOptions options = new FirefoxOptions();
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
 
 		List<String> firefoxExtensionNames = _firefoxExtensionNames == null ? new ArrayList<>(0) : Arrays.asList(_firefoxExtensionNames);
@@ -1109,7 +1228,7 @@ public class WebDriverWrapper implements Comparable {
 			}
 			System.setProperty("webdriver.gecko.driver", driverFile.getAbsolutePath()); // Have to always set in case 32/64 version changed.
 
-			firefoxOptions.setBinary(firefoxOverridePath != null ? firefoxOverridePath : _browser.getBrowserPath());
+			options.setBinary(firefoxOverridePath != null ? firefoxOverridePath : _browser.getBrowserPath());
 
 			////////// Install Existing Extensions //////////
 			if(userHome.trim().matches("^[A-Z]:\\\\windows\\\\system32\\\\config\\\\systemprofile\\\\?$")) {
@@ -1158,16 +1277,20 @@ public class WebDriverWrapper implements Comparable {
 					// message, model, & multipart types have not been added because of their unknown usage.
 			);
 
-			firefoxOptions.setProfile(firefoxProfile);
+			options.setProfile(firefoxProfile);
 
 			////////// Launch Browser //////////
 			///// One of the 2 should work. (TODO)
 			// (There is an separate Extension Log bug.)
-			firefoxOptions.setCapability("log", "{\"level\": \"error\"}");
-			firefoxOptions.setLogLevel(FirefoxDriverLogLevel.WARN);
+			options.setCapability("log", "{\"level\": \"error\"}");
+			options.setLogLevel(FirefoxDriverLogLevel.WARN);
 			/////
 
-			DRIVER = new FirefoxDriver(firefoxOptions);
+			if(_capabilities != null) { // Merge has to happen after all other options are set.
+				options.merge(new ChromeOptions());
+			}
+
+			DRIVER = new FirefoxDriver(options);
 			BROWSER_TYPE = BrowserType.FIREFOX;
 			DRIVER_NAME = _browser.toString();
 		}
@@ -1184,7 +1307,8 @@ public class WebDriverWrapper implements Comparable {
 		KNOWN_WEB_DRIVER_WRAPPERS.add(this);
 		NEEDS_RETILING.set(true);
 
-		LOGGER.debug("WebDriverWrapper(_browser: {}, _firefoxExtensionNames: ({}) ) [END]", _browser,
+		LOGGER.debug("WebDriverWrapper(_browser: {}, _capabilities: {}, _firefoxExtensionNames: ({}) ) [END]", _browser,
+				(_capabilities == null ? "(NULL)" : _capabilities),
 				(_firefoxExtensionNames == null ? "NULL" : _firefoxExtensionNames.length) );
 	}
 
@@ -1215,8 +1339,41 @@ public class WebDriverWrapper implements Comparable {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public WebDriverWrapper(IEBrowser _browser) {
+		this(_browser, null);
+	}
 
-		LOGGER.info("WebDriverWrapper(_browser: {}) [START]", _browser);
+	/**
+	 * Instantiates this WebDriverWrapper to use the given {@link IEBrowser}.
+	 * <p>
+	 *     <b>Note:</b> IE requires that the "Enable Protected Mode" Security Settings be set to the same value for all Security Zones.
+	 *     (see: <a href='http://automate-apps.com/unexpected-error-launching-internet-explorer-protected-mode-settings-are-not-the-same-for-all-zones/'>http://automate-apps.com/unexpected-error-launching-internet-explorer-protected-mode-settings-are-not-the-same-for-all-zones/</a>)
+	 * </p>
+	 * <p>
+	 *     <b>Note:</b> IE requires that the "Pop-up Blocking Level" to be set to "Low", in order to use the {@link #openNewWindow(boolean)} functionality.
+	 *     (see: <a href='https://turbofuture.com/internet/How-to-Turn-Off-Pop-Up-Blocker-in-Internet-Explorer-10'>How to Turn Off Pop-Up Blocker in Internet Explorer </a>)
+	 * </p>
+	 * <p>
+	 *     <b>Note:</b> The window will be maximized.
+	 * </p>
+	 *
+	 * @param _browser
+	 * 		The Web {@link IEBrowser} to use.
+	 * 		<p>
+	 *     		<b>Note: </b> IE 64 bit has slow typing,
+	 *     		due to bug: <a href="https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/5116">Selenium Bug 5116</a>
+	 * 		</p>
+	 * @param _capabilities Allows you to send in custom Capabilities to the created {@link WebDriver}.
+	 *                      (<b>Warning:</b> This will overwrite any default {@link WebDriverWrapper} settings.)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given {@link IEBrowser} is {@code null}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper(IEBrowser _browser, Capabilities _capabilities) {
+
+		LOGGER.info("WebDriverWrapper(_browser: {}, _capabilities: {}) [START]", _browser,
+				(_capabilities == null ? "(NULL)" : _capabilities));
 
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_browser, "Browser");
@@ -1299,6 +1456,10 @@ public class WebDriverWrapper implements Comparable {
 
 			options.setCapability("logLevel", "ERROR"); // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#ie-specific
 
+			if(_capabilities != null) { // Merge has to happen after all other options are set.
+				options.merge(new ChromeOptions());
+			}
+
 			DRIVER = new InternetExplorerDriver(options);
 			BROWSER_TYPE = BrowserType.IE;
 			DRIVER_NAME = _browser.toString();
@@ -1313,7 +1474,8 @@ public class WebDriverWrapper implements Comparable {
 		KNOWN_WEB_DRIVER_WRAPPERS.add(this);
 		NEEDS_RETILING.set(true);
 
-		LOGGER.debug("WebDriverWrapper(_browser: {}) [END]", _browser);
+		LOGGER.debug("WebDriverWrapper(_browser: {}, _capabilities: {}) [END]", _browser,
+				(_capabilities == null ? "(NULL)" : _capabilities));
 	}
 
 	//========================= Methods ========================================
