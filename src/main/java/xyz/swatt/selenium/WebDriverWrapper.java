@@ -1082,7 +1082,7 @@ public class WebDriverWrapper implements Comparable {
 			options.setBinary(chromeBinaryOverridePath);
 		}
 		if(_capabilities != null) { // Merge has to happen after all other options are set.
-			options.merge(new ChromeOptions());
+            options.merge(_capabilities);
 		}
 
 		////////// Launch Browser //////////
@@ -1316,7 +1316,7 @@ public class WebDriverWrapper implements Comparable {
 			/////
 
 			if(_capabilities != null) { // Merge has to happen after all other options are set.
-				options.merge(new ChromeOptions());
+                options.merge(_capabilities);
 			}
 
 			DRIVER = new FirefoxDriver(options);
@@ -1486,7 +1486,7 @@ public class WebDriverWrapper implements Comparable {
 			options.setCapability("logLevel", "ERROR"); // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#ie-specific
 
 			if(_capabilities != null) { // Merge has to happen after all other options are set.
-				options.merge(new ChromeOptions());
+                options.merge(_capabilities);
 			}
 
 			DRIVER = new InternetExplorerDriver(options);

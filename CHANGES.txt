@@ -1,5 +1,6 @@
 # Committed but Unreleased Changes
 
-
+WebDriverWrapper
+- Fixed bug in constructors so that given Capabilities are actually merged
 
 # Expected Release: v1.10.1-SNAPSHOT
