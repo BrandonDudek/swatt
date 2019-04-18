@@ -1,7 +1,9 @@
 # Committed but Unreleased Changes
 
 WebDriverWrapper
--Added static chromeOverridePath variable, to specify custom Chrome install path
+-Added static chromeBinaryOverridePath variable, to specify custom Chrome install path
+-Added static chromeDriverOverridePath variable, to specify different ChromeDriver file path
 -All Browser Constructors can now take in an optional Capabilities object, to send custom settings to the WebDriver
+- Updated ChromeDriver to v73.0.3683.68
 
 # Expected Release: v1.10.0

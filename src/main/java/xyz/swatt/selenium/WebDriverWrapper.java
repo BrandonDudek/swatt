@@ -371,10 +371,14 @@ public class WebDriverWrapper implements Comparable {
 	public static Duration maxPageLoadTime = Duration.ofSeconds(3);
 
 	/**
-	 * A way to override the absolute path to Firefox app.
-	 * (Required for Linux.)
+	 * A way to override the absolute path to Chrome Browser executable.
 	 */
-	public static String chromeOverridePath;
+	public static String chromeBinaryOverridePath;
+
+	/**
+	 * A way to override the absolute path to ChromeDriver file.
+	 */
+	public static String chromeDriverOverridePath;
 
 	/**
 	 * A way to override the absolute path to Firefox app. (Required for Linux.)
@@ -898,7 +902,8 @@ public class WebDriverWrapper implements Comparable {
 	 * </p>
 	 * <ul>
 	 *     <li>The Window will be maximized</li>
-	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeBinaryOverridePath}</li>
+	 *	   <li>You can use a different ChromeDriver by first setting {@link #chromeDriverOverridePath}</li>
 	 * </ul>
 	 *
 	 * @param _browser
@@ -923,7 +928,8 @@ public class WebDriverWrapper implements Comparable {
 	 * </p>
 	 * <ul>
 	 *     <li>The Window will be maximized</li>
-	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeBinaryOverridePath}</li>
+	 *	   <li>You can use a different ChromeDriver by first setting {@link #chromeDriverOverridePath}</li>
 	 * </ul>
 	 *
 	 * @param _browser
@@ -950,8 +956,9 @@ public class WebDriverWrapper implements Comparable {
 	 * <i>Notes:</i>
 	 * </p>
 	 * <ul>
-	 * <li>The Window will be maximized</li>
-	 * <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 *     <li>The Window will be maximized</li>
+	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeBinaryOverridePath}</li>
+	 *	   <li>You can use a different ChromeDriver by first setting {@link #chromeDriverOverridePath}</li>
 	 * </ul>
 	 *
 	 * @param _browser
@@ -969,16 +976,15 @@ public class WebDriverWrapper implements Comparable {
 	}
 
 	/**
-	 * <p>
 	 * Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
-	 * </p>
 	 * <p>&nbsp;</p>
 	 * <p>
 	 * <i>Notes:</i>
 	 * </p>
 	 * <ul>
-	 * <li>The Window will be maximized</li>
-	 * <li>You can use a custom Chrome install patrh by first setting {@link #chromeOverridePath}</li>
+	 *     <li>The Window will be maximized</li>
+	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeBinaryOverridePath}</li>
+	 *	   <li>You can use a different ChromeDriver by first setting {@link #chromeDriverOverridePath}</li>
 	 * </ul>
 	 *
 	 * @param _browser
@@ -1004,40 +1010,63 @@ public class WebDriverWrapper implements Comparable {
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_browser, "Browser");
 
+		/* Not Needed, because we are doing a a FileExists test below.
+		if(chromeDriverOverridePath != null) {
+			ArgumentChecks.pathIsAbsoluteFile(chromeDriverOverridePath, "ChromeDriver");
+		}*/
+
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
+		File driverFile;
 
 		//------------------------ Code ----------------------------------------
-		if(_browser == ChromeBrowser.CHROME) {
-			if(SystemUtils.IS_OS_WINDOWS) {
-				_browser = ChromeBrowser.CHROME_WIN_32;
+		if(chromeDriverOverridePath == null) {
+			if(_browser == ChromeBrowser.CHROME) {
+				if(SystemUtils.IS_OS_WINDOWS) {
+					_browser = ChromeBrowser.CHROME_WIN_32;
+				}
+				else if(SystemUtils.IS_OS_MAC) {
+					_browser = ChromeBrowser.CHROME_MAC_64;
+				}
+				else if(SystemUtils.IS_OS_LINUX) {
+					_browser = ChromeBrowser.CHROME_LINUX_64;
+				}
+				else {
+					throw new WebDriverException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
+				}
 			}
-			else if(SystemUtils.IS_OS_MAC) {
-				_browser = ChromeBrowser.CHROME_MAC_64;
-			}
-			else if(SystemUtils.IS_OS_LINUX) {
-				_browser = ChromeBrowser.CHROME_LINUX_64;
-			}
-			else {
-				throw new WebDriverException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
-			}
-		}
 
-		////////// Set System Property "webdriver.gecko.driver" ////////// Chrome must use a different Driver each time, to support multi-threading.
-		String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
-		File driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
-		InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chrome-drivers/" + _browser);
-		try {
-			FileUtils.copyToFile(resourceInStream, driverFile);
-		}
-		catch(IOException e) {
-			throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
-		}
+			////////// Setup ChromeDriver ////////// Chrome must use a different Driver each time, to support multi-threading.
+			String[] driverNameParts = _browser.DRIVER_NAME.split("\\.");
+			driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
+			InputStream resourceInStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chrome-drivers/" + _browser);
+			try {
+				FileUtils.copyToFile(resourceInStream, driverFile);
+			}
+			catch(IOException e) {
+				throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+			}
 
-		// Validate Copy.
-		if(driverFile.length() <= 0) {
-			throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
+			// Validate Copy.
+			if(driverFile.length() <= 0) {
+				throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
+			}
+		}
+		else {
+			File givenDriverFile = new File(chromeDriverOverridePath);
+			ArgumentChecks.fileExists(givenDriverFile, "ChromeDriver");
+
+			////////// Setup ChromeDriver ////////// Chrome must use a different Driver each time, to support multi-threading.
+			String[] driverNameParts = givenDriverFile.getName().split("\\.");
+			driverFile = createDriverFile(driverNameParts[0], driverNameParts.length > 1 ? driverNameParts[1] : "");
+			try {
+				FileUtils.copyFile(givenDriverFile, driverFile);
+			}
+			catch(IOException e) {
+				throw new RuntimeException("Unable to copy given Driver File [" + givenDriverFile.getAbsolutePath() + "] to: " +
+						driverFile.getAbsolutePath() + "!", e);
+			}
 		}
 
 		DRIVER_FILES.put(_browser.DRIVER_NAME + System.currentTimeMillis(), driverFile); // Chrome must use a different Driver each time, to support multi-threading.
@@ -1048,9 +1077,9 @@ public class WebDriverWrapper implements Comparable {
 		//noinspection SpellCheckingInspection
 		options.addArguments("disable-infobars");
 		options.setHeadless(_headless);
-		if(chromeOverridePath != null) {
-			// TODO: Check that chromeOverridePath is a valid path.
-			options.setBinary(chromeOverridePath);
+		if(chromeBinaryOverridePath != null) {
+			// TODO: Check that chromeBinaryOverridePath is a valid path.
+			options.setBinary(chromeBinaryOverridePath);
 		}
 		if(_capabilities != null) { // Merge has to happen after all other options are set.
 			options.merge(new ChromeOptions());
