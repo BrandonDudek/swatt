@@ -80,7 +80,7 @@ public class SampleClass {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    void packagePrivateMethodWithObjectArguments(String _string, File _file) {
+    void packagePrivateMethodWithObjectArguments(String _string/* File _file - Cannot test File logs, because absolute path is different for each OS.*/) {
         LOGGER.trace("\t\tInside packagePrivateMethodWithObjectArguments.");
     }
 

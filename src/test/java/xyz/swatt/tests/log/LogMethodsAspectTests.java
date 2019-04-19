@@ -60,7 +60,9 @@ public class LogMethodsAspectTests {
         ////////// Test Argument Types //////////
         sampleClass.packagePrivateMethodWithPrimitiveArguments((byte) 0, false, 12345, 678.90, 'a');
 
-        sampleClass.packagePrivateMethodWithObjectArguments("Cheese Steak Jimmy", new File("C:\\sample.file")); // TODO: org.apache.xerces.dom.ElementNSImpl.
+        sampleClass.packagePrivateMethodWithObjectArguments("Cheese Steak Jimmy"
+                /*, new File("C:\\sample.file") - Cannot test File logs, because absolute path is different for each OS.*/);
+        // TODO: org.apache.xerces.dom.ElementNSImpl.
 
         Map<String, String> map = new HashMap<>();
         map.put("a", "1");

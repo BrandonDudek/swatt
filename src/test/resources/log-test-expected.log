@@ -8,9 +8,9 @@ TRACE - SampleClass() [END]
 DEBUG - packagePrivateMethodWithPrimitiveArguments(_byte: 0, _boolean: false, _int: 12345, _double: 678.9, _char: a) [START]
 TRACE - 		Inside packagePrivateMethodWithPrimitiveArguments.
 TRACE - packagePrivateMethodWithPrimitiveArguments(_byte: 0, _boolean: false, _int: 12345, _double: 678.9, _char: a) [END]
-DEBUG - packagePrivateMethodWithObjectArguments(_string: Cheese Steak Jimmy, _file: C:\sample.file) [START]
+DEBUG - packagePrivateMethodWithObjectArguments(_string: Cheese Steak Jimmy) [START]
 TRACE - 		Inside packagePrivateMethodWithObjectArguments.
-TRACE - packagePrivateMethodWithObjectArguments(_string: Cheese Steak Jimmy, _file: C:\sample.file) [END]
+TRACE - packagePrivateMethodWithObjectArguments(_string: Cheese Steak Jimmy) [END]
 DEBUG - packagePrivateMethodWithCollectionArguments(_primitiveArray: [1, 2, 3], _objectArray: [one, two, three], _list: [X, Y, Z], _map: {a=1, b=2, c=3}) [START]
 TRACE - 		Inside packagePrivateMethodWithCollectionArguments.
 TRACE - packagePrivateMethodWithCollectionArguments(_primitiveArray: [1, 2, 3], _objectArray: [one, two, three], _list: [X, Y, Z], _map: {a=1, b=2, c=3}) [END]
