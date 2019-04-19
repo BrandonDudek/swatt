@@ -1072,7 +1072,13 @@ public class WebDriverWrapper implements Comparable {
 		DRIVER_FILES.put(_browser.DRIVER_NAME + System.currentTimeMillis(), driverFile); // Chrome must use a different Driver each time, to support multi-threading.
 
 		////////// Browser Options //////////
-		ChromeOptions options = new ChromeOptions();
+        ChromeOptions options;
+        if(_capabilities != null && _capabilities instanceof ChromeOptions) { // ChromeOptions.merge(Capabilities), puts Arguments under Capabilities, and they are never read again.
+            options = (ChromeOptions) _capabilities; // TODO: Report or Find ChromeDriver bug.
+        }
+        else {
+            options = new ChromeOptions();
+        }
 		//options.addArguments("--start-maximized"); // Doesn't work with Mac.
 		//noinspection SpellCheckingInspection
 		options.addArguments("disable-infobars");
@@ -1081,8 +1087,8 @@ public class WebDriverWrapper implements Comparable {
 			// TODO: Check that chromeBinaryOverridePath is a valid path.
 			options.setBinary(chromeBinaryOverridePath);
 		}
-		if(_capabilities != null) { // Merge has to happen after all other options are set.
-            options.merge(_capabilities);
+        if(_capabilities != null && !(_capabilities instanceof ChromeOptions)) {
+            options.merge(_capabilities); // TODO: Extend ChromeOptions and fix their .merge(Capabilities) method, to copy Arguments to the correct place.
 		}
 
 		////////// Launch Browser //////////

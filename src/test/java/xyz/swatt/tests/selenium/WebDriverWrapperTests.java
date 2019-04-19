@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.Quotes;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
@@ -180,5 +181,20 @@ public class WebDriverWrapperTests {
         LOGGER.debug("waitForVisibility(_name: {}, _cssSelector: {}, _numShouldBeFound: {}) {{} ms} [END]", _name, _cssSelector, _numShouldBeFound, timeTakenInMs);
     }
 
+    /**
+     * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+     */
+    @AfterSuite
+    public void quitBrowser() {
+
+        //------------------------ Pre-Checks ----------------------------------
+
+        //------------------------ CONSTANTS -----------------------------------
+
+        //------------------------ Variables -----------------------------------
+
+        //------------------------ Code ----------------------------------------
+        DRIVER.quit();
+    }
     //========================= Classes ========================================
 }

@@ -178,6 +178,11 @@
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j2.version}</version>
         </dependency>
+        <dependency> <!-- java.util.logging to log4j2 (https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-jul) -->
+            <groupId>org.apache.logging.log4j</groupId> <!-- java.util.logging (JUL) is used by Selenium. -->
+            <artifactId>log4j-jul</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
 
         <!-- Saxon (XPath) -->
         <dependency>

@@ -2,5 +2,9 @@
 
 WebDriverWrapper
 - Fixed bug in constructors so that given Capabilities are actually merged
+- Added workaround for ChromeDriver.merge(Capabilities) Arguments bug
 
-# Expected Release: v1.10.1-SNAPSHOT
+POM
+- Added org.apache.logging.log4j:log4j-jul, to capture Selenium Logs
+
+# Expected Release: v1.10.1
