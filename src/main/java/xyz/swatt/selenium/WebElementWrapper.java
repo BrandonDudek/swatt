@@ -3333,7 +3333,7 @@ public class WebElementWrapper {
 
 				if(originalBy != null) {
 					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, originalBy,
-							WebDriverWrapper.maxElementLoadTime, 2, null);
+							WebDriverWrapper.RECOMMENDED_MIN_POLLING_TIME, 2, null);
 				}
 
 				if(reacquiredWebElementWrappers.size() != 1) {
@@ -3343,13 +3343,13 @@ public class WebElementWrapper {
 					}
 					if(!webElementToStringSelectorXpath.isEmpty()) { // We were able to figure something out.
 						reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(webElementToStringSelectorXpath),
-								WebDriverWrapper.maxElementLoadTime, 2, null);
+								WebDriverWrapper.RECOMMENDED_MIN_POLLING_TIME, 2, null);
 					}
 				}
 
 				if(reacquiredWebElementWrappers.size() != 1 && XPATH_IDS_SELECTOR != null) {
 					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(XPATH_IDS_SELECTOR),
-							WebDriverWrapper.maxElementLoadTime, 2, null);
+							WebDriverWrapper.RECOMMENDED_MIN_POLLING_TIME, 2, null);
 				}
 
 				if(reacquiredWebElementWrappers.size() == 1) {

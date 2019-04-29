@@ -1,5 +1,5 @@
 # Committed but Unreleased Changes
 
+Sped up WebElementWrapper's auto reacquire WebElement capability.
 
-
-# Expected Release: v1.10.1
+# Expected Release: v1.10.2
