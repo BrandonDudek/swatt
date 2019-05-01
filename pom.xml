@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.10.2</version>
+    <version>1.11.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -30,7 +30,8 @@
         <apache.commons.collections.version>4.3
         </apache.commons.collections.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
         <apache.commons.io.version>2.6</apache.commons.io.version> <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
-        <apache.commons.lang.version>3.8.1</apache.commons.lang.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+        <apache.commons.lang.version>3.9</apache.commons.lang.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+        <apache.commons.math.version>3.6.1</apache.commons.math.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
 
         <!--===== AspectJ =====-->
         <aspectj.version>1.9.2</aspectj.version> <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
@@ -46,10 +47,10 @@
         <log4j2.version>2.11.2</log4j2.version> <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
 
         <!--===== Saxon (XPath) =====-->
-        <saxon.version>9.9.0-2</saxon.version> <!-- https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE -->
+        <saxon.version>9.9.1-2</saxon.version> <!-- https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE -->
 
-        <!--===== Selenium =====--> <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
-        <selenium.version>3.141.59</selenium.version>
+        <!--===== Selenium =====-->
+        <selenium.version>3.141.59</selenium.version> <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
 
         <!--===== Spring =====-->
         <spring.version>5.1.6.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
@@ -118,8 +119,14 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.8.1</version>
+            <version>${apache.commons.lang.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>${apache.commons.math.version}</version>
+        </dependency>
+
 
         <!-- AspectJ -->
         <dependency> <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
