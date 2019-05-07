@@ -41,9 +41,22 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
   * Contains Helper classes to preform common and/or complex XML parsing, writing, querying, and modifying.
 
 ## Selenium/Browser Version Comparability
-|SWATT|Selenium|Windows|MacOS|Chrome|Chrome Driver|Firefox|Gecko (FF) Driver|IE|IE Driver|
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|1.8.0|3.141.59|10|10.13 (High Sierra)|73.0.3683.103|73.0.3683.68|60-66|0.24.0|11|3.141.5|
+|SWATT|Selenium|Windows|MacOS|Ubuntu|
+|:---:|:---:|:---:|:---:|:---:|
+|1.8.0|3.141.59|10|10.13 (High Sierra)|?|
+
+|Chrome Driver|Chrome|
+|:---:|:---:|
+|73.0.3683.68|73.0.3683.103|
+
+|Gecko Driver|Firefox|
+|:---:|:---:|
+|0.24.0|60-66|
+
+|IE Driver|IE|
+|:---:|:---:|
+|3.141.5|11|
+
 * For more details and known bugs, see: [swatt.xyz/selenium-driver-browser-version-compatibility](https://swatt.xyz/selenium-driver-browser-version-compatibility/)
 
 ## Class Types

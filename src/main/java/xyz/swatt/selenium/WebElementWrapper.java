@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.*;
 import org.openqa.selenium.By.ByXPath;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.json.JsonException;
 import org.openqa.selenium.support.ui.*;
 import org.w3c.dom.Document;
 import xyz.swatt.asserts.ArgumentChecks;
@@ -316,6 +317,8 @@ public class WebElementWrapper {
 				}
 			}
 		}
+
+		// User Wait/Think time does not happen here, because often a clear is followed by a send keys.
 		
 		LOGGER.debug("clearInput() [END]");
 		
@@ -460,9 +463,9 @@ public class WebElementWrapper {
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) { // Synchronizing Chained Actions.
 
 			waitForClickable(_waitTimeInSeconds);
-			click(_waitForRefresh);
+			click(_waitForRefresh); // User Wait/Think time happens here.
 		}
-		
+
 		LOGGER.debug("click(_waitTimeInSeconds: {}, _waitForRefresh: {}) [END]", _waitTimeInSeconds, _waitForRefresh);
 		
 		return this;
@@ -509,7 +512,7 @@ public class WebElementWrapper {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		click(false, false, _keys);
+		click(false, false, _keys); // User Wait/Think time happens here.
 
 		LOGGER.debug("keyClick(_keys: {}) [END]", _keys);
 
@@ -545,7 +548,9 @@ public class WebElementWrapper {
 			Select select = new Select(webElement);
 			select.deselectAll();
 		}
-		
+
+		// User Wait/Think time does not happen here, because often a deselect is followed by a select.
+
 		LOGGER.debug("deselectAll() [END]");
 		
 		return this;
@@ -575,6 +580,8 @@ public class WebElementWrapper {
 		actions.doubleClick(webElement);
 
 		performAction(actions);
+
+		WebDriverWrapper.waitForUserThinkTime();
 
 		LOGGER.debug("doubleClick() [END]");
 
@@ -609,6 +616,8 @@ public class WebElementWrapper {
 
 			performAction(actions);
 		}
+
+		WebDriverWrapper.waitForUserThinkTime();
 
 		LOGGER.debug("dragTo( _destinationElement: {} ) [END]", _destinationElement);
 
@@ -645,6 +654,8 @@ public class WebElementWrapper {
 
 			performAction(actions);
 		}
+
+		WebDriverWrapper.waitForUserThinkTime();
 
 		LOGGER.debug("dragTo(_offsetX: {}, _offsetY: {}) [END]", _offsetX, _offsetY);
 
@@ -1040,7 +1051,8 @@ public class WebElementWrapper {
 					descendant = descendants.get(0);
 					break;
 				default:
-					throw new TooManyResultsException("ERROR! Only 1 Descendant expected, but " + descendants.size() + " were found!\nBy: " + _by);
+					throw new TooManyResultsException("ERROR! Only 1 Descendant expected, but " + descendants.size() + " were found!\nBy: " + _by +
+							WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
 			}
 		}
 
@@ -1423,7 +1435,8 @@ public class WebElementWrapper {
 							value = new ObjectMapper().writeValueAsString(selectedOptions);
 						}
 						catch(IOException e) {
-							throw new RuntimeException("Could not convert List " + selectedOptions + "to JSON!", e);
+							throw new JsonException("Could not convert List " + selectedOptions + "to JSON!" +
+									WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart(), e);
 						}
 					}
 					break;
@@ -1509,6 +1522,8 @@ public class WebElementWrapper {
 
 			performAction(actions);
 		}
+
+		// User Wait/Think time does not happen here, because hover is used with a lot of action combinations.
 
 		LOGGER.debug("hoverOver() [END]");
 
@@ -1934,6 +1949,8 @@ public class WebElementWrapper {
 
 		performAction(actions);
 
+		WebDriverWrapper.waitForUserThinkTime();
+
 		LOGGER.debug("rightClick() [END]");
 	}
 
@@ -1978,6 +1995,8 @@ public class WebElementWrapper {
 		actions.sendKeys(Keys.ENTER);
 
 		performAction(actions); // Synchronize done inside.
+
+		WebDriverWrapper.waitForUserThinkTime();
 
 		LOGGER.debug("rightClickAndSelectContextMenuItem(_downCount: {}) [END]", _downCount);
 	}
@@ -2068,6 +2087,8 @@ public class WebElementWrapper {
 			// This even cannot be accomplished with JavaScript.
 			select.selectByVisibleText(_visibleText);
 		}
+
+		WebDriverWrapper.waitForUserThinkTime();
 
 		LOGGER.debug("select( visibleText: {}) [END]", _visibleText);
 
@@ -2200,7 +2221,7 @@ public class WebElementWrapper {
 			keysToSend.append(key.toString());
 		}
 
-		sendKeys(keysToSend.toString());
+		sendKeys(keysToSend.toString()); // User Wait/Think time happens here.
 
 		LOGGER.debug("sendKeys(_keys: ({})) [END]", _keys.length);
 
@@ -2274,6 +2295,8 @@ public class WebElementWrapper {
 			}
 		}
 
+		WebDriverWrapper.waitForUserThinkTime();
+
 		LOGGER.debug("sendKeys(_keys: {}) [END]", _keys);
 
 		return this;
@@ -2329,11 +2352,11 @@ public class WebElementWrapper {
 						return toString(_prettyPrint);
 					}
 					else {
-						throw new StaleElementReferenceException(webElement.toString());
+						throw new StaleElementReferenceException(webElement.toString() + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
 					}
 				}
 				else {
-					throw new JavascriptException(toString + "\n\t" + JAVASCRIPT_COMMAND);
+					throw new JavascriptException(toString + "\n\t" + JAVASCRIPT_COMMAND + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
 				}
 			}
 
@@ -2466,7 +2489,7 @@ public class WebElementWrapper {
 
 				throw new InvalidTypeException("ERROR! Only input Elements of type \"file\" can be used to upload files! This Element "
 						+ (!correctName ? "is a " + webElement.getTagName() + " Element." : "has a type of \""
-						+ (typeAttribute == null ? "NULL" : typeAttribute) + "\"."));
+						+ (typeAttribute == null ? "NULL" : typeAttribute) + "\".") + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
 			}
 
 			////////// Execute //////////
@@ -3267,7 +3290,8 @@ public class WebElementWrapper {
 
 							long currentTime = System.currentTimeMillis();
 							if(currentTime >= maxEndWaitTime) {
-								throw new TimeoutException("Web Element failed to appear after waiting " + _waitTime + " seconds!");
+								throw new TimeoutException("Web Element failed to appear after waiting " + _waitTime + " seconds!" +
+										WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
 							}
 							else if(reacquireWebElement()) {
 								break; // Successfully re-acquired.
@@ -3333,7 +3357,7 @@ public class WebElementWrapper {
 
 				if(originalBy != null) {
 					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, originalBy,
-							WebDriverWrapper.maxElementLoadTime, 2, null);
+							WebDriverWrapper.RECOMMENDED_MIN_POLLING_TIME, 2, null);
 				}
 
 				if(reacquiredWebElementWrappers.size() != 1) {
@@ -3343,13 +3367,13 @@ public class WebElementWrapper {
 					}
 					if(!webElementToStringSelectorXpath.isEmpty()) { // We were able to figure something out.
 						reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(webElementToStringSelectorXpath),
-								WebDriverWrapper.maxElementLoadTime, 2, null);
+								WebDriverWrapper.RECOMMENDED_MIN_POLLING_TIME, 2, null);
 					}
 				}
 
 				if(reacquiredWebElementWrappers.size() != 1 && XPATH_IDS_SELECTOR != null) {
 					reacquiredWebElementWrappers = WEB_DRIVER_WRAPPER.getWebElementWrappers(null, By.xpath(XPATH_IDS_SELECTOR),
-							WebDriverWrapper.maxElementLoadTime, 2, null);
+							WebDriverWrapper.RECOMMENDED_MIN_POLLING_TIME, 2, null);
 				}
 
 				if(reacquiredWebElementWrappers.size() == 1) {
@@ -3432,7 +3456,10 @@ public class WebElementWrapper {
 				waitForUnload(WebDriverWrapper.maxPageLoadTime);
 
 				// Page is loaded.
-				WEB_DRIVER_WRAPPER.waitForPageLoad();
+				WEB_DRIVER_WRAPPER.waitForPageLoad(); // User Wait/Think time happens here.
+			}
+			else { // User Wait/Think time will already happen on refresh.
+				WebDriverWrapper.waitForUserThinkTime();
 			}
 		}
 
@@ -3620,9 +3647,7 @@ public class WebElementWrapper {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		File screenshot = WEB_DRIVER_WRAPPER.takeScreenshot();
-		String path = screenshot.getAbsolutePath();
-		String errorMessage = _message + "\n\tScreenshot: " + path;
+		String errorMessage = _message + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart();
 
 		LOGGER.debug("throwNoSuchElementException(_message: {}) [END]", _message);
 

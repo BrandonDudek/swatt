@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.Quotes;
+import org.testng.Assert;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
@@ -12,6 +14,7 @@ import xyz.swatt.selenium.WebElementWrapper;
 import xyz.swatt.xml.XmlDocumentHelper;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -43,7 +46,34 @@ public class WebDriverWrapperTests {
     }
 
     //========================= Static Methods =================================
-    
+
+    /**
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Test(invocationCount = 50)
+    public static void userThinkingWaitTimeDeviationTest() {
+
+        //------------------------ Pre-Checks ----------------------------------
+        WebDriverWrapper.userThinkingWaitTime = WebDriverWrapper.RECOMMENDED_USER_THINKING_WAIT_TIME;
+        WebDriverWrapper.userThinkingWaitTimeDeviation = WebDriverWrapper.RECOMMENDED_USER_THINKING_WAIT_TIME_DEVIATION;
+
+        //------------------------ CONSTANTS -----------------------------------
+
+        //------------------------ Variables -----------------------------------
+        Duration minTime = WebDriverWrapper.userThinkingWaitTime.minus(WebDriverWrapper.userThinkingWaitTimeDeviation.multipliedBy(2));
+        Duration maxTime = WebDriverWrapper.userThinkingWaitTime.plus(WebDriverWrapper.userThinkingWaitTimeDeviation.multipliedBy(2));
+
+        //------------------------ Code ----------------------------------------
+        Duration timeWaited = WebDriverWrapper.waitForUserThinkTime();
+
+        if(timeWaited.toMillis() < minTime.toMillis()) {
+            Assert.fail("Generated Time " + timeWaited + " is less than Expected Min Time " + minTime + "!");
+        }
+        if(timeWaited.toMillis() > maxTime.toMillis()) {
+            Assert.fail("Generated Time " + timeWaited + " is greater than Expected Max Time " + maxTime + "!");
+        }
+    }
+
     //========================= CONSTANTS ======================================
 
     //========================= Variables ======================================
@@ -180,5 +210,20 @@ public class WebDriverWrapperTests {
         LOGGER.debug("waitForVisibility(_name: {}, _cssSelector: {}, _numShouldBeFound: {}) {{} ms} [END]", _name, _cssSelector, _numShouldBeFound, timeTakenInMs);
     }
 
+    /**
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @AfterSuite
+    public void quitBrowser() {
+
+        //------------------------ Pre-Checks ----------------------------------
+
+        //------------------------ CONSTANTS -----------------------------------
+
+        //------------------------ Variables -----------------------------------
+
+        //------------------------ Code ----------------------------------------
+        DRIVER.quit();
+    }
     //========================= Classes ========================================
 }

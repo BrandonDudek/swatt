@@ -3,6 +3,7 @@ package xyz.swatt.selenium;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Dimension;
@@ -26,7 +27,9 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Quotes;
 import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.exceptions.TooManyResultsException;
+import xyz.swatt.exceptions.WebDriverWrapperException;
 import xyz.swatt.exceptions.WebPageException;
+import xyz.swatt.log.LogMethods;
 import xyz.swatt.string.StringHelper;
 
 import java.awt.*;
@@ -304,11 +307,7 @@ public class WebDriverWrapper implements Comparable {
 	}
 
 	//========================= STATIC CONSTANTS ===============================
-	/**
-	 * Control Key, if on Windows.
-	 * Command Key, if on Mac.
-	 */
-	public static final Keys CTRL_CMD_KEY = SystemUtils.IS_OS_MAC ? Keys.COMMAND : Keys.CONTROL;
+	private static final AtomicBoolean NEEDS_RETILING = new AtomicBoolean(false);
 
 	/**
 	 * This is the smallest amount of time it takes for a Web Browser to update the DOM.
@@ -321,6 +320,29 @@ public class WebDriverWrapper implements Comparable {
 	 * (Twice the {@link #POLLING_INTERVAL}. [This will cause the wait to check 2 times for the requirement.])
 	 */
 	public static final Duration RECOMMENDED_MIN_POLLING_TIME = POLLING_INTERVAL.multipliedBy(2);
+
+	/**
+	 * This is the recommended value for the {@link #userThinkingWaitTime}.
+	 * <p>
+	 * It was calculated from a sampling of people running this
+	 * <a href='https://www.gskstemeducation.com/activities/reaction-test/index.html'>Reaction Test</a>.
+	 * </p>
+	 */
+	public static final Duration RECOMMENDED_USER_THINKING_WAIT_TIME = Duration.ofMillis(800);
+	/**
+	 * This is the recommended <a href='https://en.wikipedia.org/wiki/Standard_deviation'>Standard Deviation</a> for the {@link
+	 * #userThinkingWaitTimeDeviation}.
+	 * <p>
+	 * It was calculated from a sampling of people running this
+	 * <a href='https://www.gskstemeducation.com/activities/reaction-test/index.html'>Reaction Test</a>.
+	 * </p>
+	 */
+	public static final Duration RECOMMENDED_USER_THINKING_WAIT_TIME_DEVIATION = Duration.ofMillis(125);
+
+	/**
+	 * Control Key, if on Windows. Command Key, if on Mac.
+	 */
+	public static final Keys CTRL_CMD_KEY = SystemUtils.IS_OS_MAC ? Keys.COMMAND : Keys.CONTROL;
 
 	private static final Logger LOGGER = LogManager.getLogger(WebDriverWrapper.class);
 
@@ -348,10 +370,20 @@ public class WebDriverWrapper implements Comparable {
 	 */
 	private static final ConcurrentHashMap<String, File> DRIVER_FILES = new ConcurrentHashMap<>();
 
-	private static final AtomicBoolean NEEDS_RETILING = new AtomicBoolean(false);
 	private static final ConcurrentSkipListSet<WebDriverWrapper> KNOWN_WEB_DRIVER_WRAPPERS = new ConcurrentSkipListSet();
 
 	//========================= Static Variables ===============================
+	/**
+	 * If {@code true}, when an exception happens, a screenshot will automatically be taken and added to the Exception's Message.
+	 * <p><i>(default: {@code true})</i></p>
+	 */
+	public static boolean autoTakeScreenshotsOnErrors = true;
+
+	/**
+	 * If set to {@code true}, the the Browser Driver's logs will be turned on. (<i>Note:</i> Only working for the ChromeDriver, right now.)
+	 */
+	public static boolean enableDriverLogs = false;
+
 	/**
 	 * The default maximum amount of time to wait for a {@link WebElement} to appear, disappear, or change. (Default: {@code 0.5} seconds.)
 	 * <p>
@@ -369,6 +401,36 @@ public class WebDriverWrapper implements Comparable {
 	 * </p>
 	 */
 	public static Duration maxPageLoadTime = Duration.ofSeconds(3);
+
+	/**
+	 * Set this to simulate the time it would take an actual person, between actions. Delays will happen after these actions: Page Load, Changing Inputs,
+	 * Clicks, and Drags.
+	 * <p>&nbsp;</p>
+	 * <p>
+	 * <i>Default:</i> {@code 0 (null)}.
+	 * </p>
+	 * <p>
+	 * <i>Recommended:</i> {@link #RECOMMENDED_USER_THINKING_WAIT_TIME}.
+	 * </p>
+	 */
+	public static Duration userThinkingWaitTime = null;
+	/**
+	 * Set this to add a <a href='https://en.wikipedia.org/wiki/Normal_distribution'>Normal Distribution</a> to the {@link #userThinkingWaitTime}. (<i>Note:</i>
+	 * The distribution will be limited to {@code 2 * } {@link #userThinkingWaitTimeDeviation}, to prevent outliers.)
+	 * <p>&nbsp;</p>
+	 * <p>
+	 * <i>Default:</i> {@code 0 (null)}.
+	 * </p>
+	 * <p>
+	 * <i>Recommended:</i> {@link #RECOMMENDED_USER_THINKING_WAIT_TIME_DEVIATION}.
+	 * </p>
+	 */
+	public static Duration userThinkingWaitTimeDeviation = null;
+
+	/**
+	 * This is the default window size for the Chrome Headless Browser.
+	 */
+	public static Dimension chromeHeadlessDefaultWindowSize = new Dimension(1920, 1080);
 
 	/**
 	 * A way to override the absolute path to Chrome Browser executable.
@@ -400,85 +462,6 @@ public class WebDriverWrapper implements Comparable {
 	static { }
 
 	//========================= Static Methods =================================
-	/**
-	 * Will create an empty Driver File in the User's Temporary Directory.
-	 *
-	 * @param _prefix File Name Prefix.
-	 * @param _extension File Name Extension, <b>without</b> period.
-	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 */
-	private static File createDriverFile(String _prefix, String _extension) {
-
-	    LOGGER.debug("createDriverFile(_prefix: {}, _extension: {}) [START]", _prefix, _extension);
-
-	    //------------------------ Pre-Checks ----------------------------------
-
-	    //------------------------ CONSTANTS -----------------------------------
-
-	    //------------------------ Variables -----------------------------------
-		File toRet;
-
-	    //------------------------ Code ----------------------------------------
-		try {
-			toRet = File.createTempFile(_prefix + "-", "." + _extension);
-		}
-		catch(IOException e) {
-			throw new RuntimeException("Unable to create Temporary Driver File!", e);
-		}
-
-		toRet.deleteOnExit();
-		// deleteOnExit() WILL delete if:
-		// - The program ends on its own.
-		// deleteOnExit() will NOT delete if:
-		// - The program is terminated externally.
-		// -- TODO: Find a way to solve this.
-		// --- Possibly by using the same file name and path each time, and just overwriting.
-
-		if(!toRet.setExecutable(true, false)) { // Needed for Mac and Linux.
-			throw new RuntimeException("Could not set the driver file to executable!");
-		}
-
-	    LOGGER.trace("createDriverFile(_prefix: {}, _extension: {}) - {} - [END]", _prefix, _extension, toRet.getAbsolutePath());
-
-	    return toRet;
-	}
-
-	/**
-	 * @param _driver
-	 * 		The Browser to look in.
-	 *
-	 * @return The Body Element, or Null, if a "real" HTML Page is NOT loaded.
-	 *
-	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-	 */
-	private static WebElement getBodyElement(WebDriverWrapper _driver) {
-
-		LOGGER.debug("getBodyElement(WebDriverWrapper _driver) [START]");
-
-		//------------------------ Pre-Checks ----------------------------------
-
-		//------------------------ CONSTANTS -----------------------------------
-
-		//------------------------ Variables -----------------------------------
-		String url = _driver.getCurrentUrl();
-
-		//noinspection UnusedAssignment
-		WebElement body = null;
-
-		//------------------------ Code ----------------------------------------
-		if(url == null || url.trim().isEmpty() || url.trim().equalsIgnoreCase("about:blank")) { // No page loaded.
-			return null;
-		}
-		else {
-			body = _driver.DRIVER.findElement(By.xpath("/html/body"));
-		}
-		
-		LOGGER.debug("getBodyElement(WebDriverWrapper _driver) [END]");
-		
-		return body;
-	}
-
 	/**
 	 * Will create a Browser of the given Type, with defaults options, and return it.
 	 *
@@ -875,8 +858,137 @@ public class WebDriverWrapper implements Comparable {
 		} // END-Loop Through Web Drivers.
 		
 		previousTileWindows = new ArrayList<>(_driverWrappers);
-		
+
 		LOGGER.debug("tileWindows(_driverWrappers: ({}), _zoomOut: {}) [END]", _driverWrappers.size(), _zoomOut);
+	}
+
+	/**
+	 * Will wait for the User "Think" Time, if {@link #userThinkingWaitTime} is set and will add a Normal Deviation if {@link #userThinkingWaitTimeDeviation} is
+	 * set.
+	 *
+	 * @return How long it waited.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static Duration waitForUserThinkTime() {
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		long waitTimeMs = 0;
+
+		//------------------------ Code ----------------------------------------
+		if(userThinkingWaitTime != null && userThinkingWaitTime.toMillis() > 0) {
+			try {
+				if(userThinkingWaitTimeDeviation != null && !userThinkingWaitTime.equals(Duration.ZERO)) {
+
+					NormalDistribution normalDistributionGenerator = new NormalDistribution(userThinkingWaitTime.toMillis(),
+							userThinkingWaitTimeDeviation.toMillis());
+
+					do {
+						waitTimeMs = (long) normalDistributionGenerator.sample();
+					} while(waitTimeMs < (userThinkingWaitTime.toMillis() - userThinkingWaitTimeDeviation.multipliedBy(2).toMillis()) ||
+							waitTimeMs > (userThinkingWaitTime.toMillis() + userThinkingWaitTimeDeviation.multipliedBy(2).toMillis()));
+				}
+				else {
+					waitTimeMs = userThinkingWaitTime.toMillis();
+				}
+
+				Thread.sleep(waitTimeMs);
+			}
+			catch(InterruptedException e) {
+				LOGGER.warn("Filed to Wait for User \"Think\" time.", e);
+			}
+		}
+
+		return Duration.ofMillis(waitTimeMs);
+	}
+
+	//-------------------- Helper Methods --------------------
+
+	/**
+	 * Will create an empty Driver File in the User's Temporary Directory.
+	 *
+	 * @param _prefix
+	 *         File Name Prefix.
+	 * @param _extension
+	 *         File Name Extension, <b>without</b> period.
+	 *
+	 * @throws WebDriverWrapperException
+	 *         If the Temp File cannot be created or set as an executable.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	private static File createDriverFile(String _prefix, String _extension) {
+
+		LOGGER.debug("createDriverFile(_prefix: {}, _extension: {}) [START]", _prefix, _extension);
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		File toRet;
+
+		//------------------------ Code ----------------------------------------
+		try {
+			toRet = File.createTempFile(_prefix + "-", "." + _extension);
+		}
+		catch(IOException e) {
+			throw new WebDriverWrapperException("Unable to create Temporary Driver File!", e);
+		}
+
+		toRet.deleteOnExit();
+		// deleteOnExit() WILL delete if:
+		// - The program ends on its own.
+		// deleteOnExit() will NOT delete if:
+		// - The program is terminated externally.
+		// -- TODO: Find a way to solve this.
+		// --- Possibly by using the same file name and path each time, and just overwriting.
+
+		if(!toRet.setExecutable(true, false)) { // Needed for Mac and Linux.
+			throw new WebDriverWrapperException("Could not set the driver file to executable!");
+		}
+
+		LOGGER.trace("createDriverFile(_prefix: {}, _extension: {}) - {} - [END]", _prefix, _extension, toRet.getAbsolutePath());
+
+		return toRet;
+	}
+
+	/**
+	 * @param _driver
+	 *         The Browser to look in.
+	 *
+	 * @return The Body Element, or Null, if a "real" HTML Page is NOT loaded.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	private static WebElement getBodyElement(WebDriverWrapper _driver) {
+
+		LOGGER.debug("getBodyElement(WebDriverWrapper _driver) [START]");
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		String url = _driver.getCurrentUrl();
+
+		//noinspection UnusedAssignment
+		WebElement body = null;
+
+		//------------------------ Code ----------------------------------------
+		if(url == null || url.trim().isEmpty() || url.trim().equalsIgnoreCase("about:blank")) { // No page loaded.
+			return null;
+		}
+		else {
+			body = _driver.DRIVER.findElement(By.xpath("/html/body"));
+		}
+
+		LOGGER.debug("getBodyElement(WebDriverWrapper _driver) [END]");
+
+		return body;
 	}
 
 	//========================= CONSTANTS ======================================
@@ -891,7 +1003,7 @@ public class WebDriverWrapper implements Comparable {
 
 	//========================= Variables ======================================
 
-	//========================= Constructors ===================================
+	//========================= Constructors =================================== // TODO: Split WebDriverWrapper creation into it's own class.
 	/**
 	 * <p>
 	 *     Instantiates this WebDriverWrapper to use the given {@link ChromeBrowser}.
@@ -927,7 +1039,7 @@ public class WebDriverWrapper implements Comparable {
 	 *     <i>Notes:</i>
 	 * </p>
 	 * <ul>
-	 *     <li>The Window will be maximized</li>
+	 *     <li>The Window will be maximized (unless it is headless, then window size will be set to {@link #chromeHeadlessDefaultWindowSize})</li>
 	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeBinaryOverridePath}</li>
 	 *	   <li>You can use a different ChromeDriver by first setting {@link #chromeDriverOverridePath}</li>
 	 * </ul>
@@ -982,7 +1094,7 @@ public class WebDriverWrapper implements Comparable {
 	 * <i>Notes:</i>
 	 * </p>
 	 * <ul>
-	 *     <li>The Window will be maximized</li>
+	 *     <li>The Window will be maximized (unless it is headless, then window size will be set to {@link #chromeHeadlessDefaultWindowSize})</li>
 	 *     <li>You can use a custom Chrome install patrh by first setting {@link #chromeBinaryOverridePath}</li>
 	 *	   <li>You can use a different ChromeDriver by first setting {@link #chromeDriverOverridePath}</li>
 	 * </ul>
@@ -990,8 +1102,8 @@ public class WebDriverWrapper implements Comparable {
 	 * @param _browser
 	 *         The Web {@link ChromeBrowser} to use.
 	 * @param _headless
-	 *         If {@code true} than a headless (GUI-less) version of Chrome will be used; otherwise the normal Chrome GUI will be used. (Needs Chrome version 59
-	 *         or higher.)
+	 *         If {@code true} than a headless (GUI-less) version of Chrome will be used; otherwise the normal Chrome GUI will be used.
+	 *         (Needs Chrome version 59 or higher.)
 	 * @param _capabilities
 	 *         Allows you to send in custom Capabilities to the created {@link WebDriver}. (<b>Warning:</b> This will overwrite any default {@link
 	 *         WebDriverWrapper} settings.)
@@ -1033,7 +1145,7 @@ public class WebDriverWrapper implements Comparable {
 					_browser = ChromeBrowser.CHROME_LINUX_64;
 				}
 				else {
-					throw new WebDriverException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
+					throw new WebDriverWrapperException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
 				}
 			}
 
@@ -1045,12 +1157,12 @@ public class WebDriverWrapper implements Comparable {
 				FileUtils.copyToFile(resourceInStream, driverFile);
 			}
 			catch(IOException e) {
-				throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+				throw new WebDriverWrapperException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
 			}
 
 			// Validate Copy.
 			if(driverFile.length() <= 0) {
-				throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
+				throw new WebDriverWrapperException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
 			}
 		}
 		else {
@@ -1064,7 +1176,7 @@ public class WebDriverWrapper implements Comparable {
 				FileUtils.copyFile(givenDriverFile, driverFile);
 			}
 			catch(IOException e) {
-				throw new RuntimeException("Unable to copy given Driver File [" + givenDriverFile.getAbsolutePath() + "] to: " +
+				throw new WebDriverWrapperException("Unable to copy given Driver File [" + givenDriverFile.getAbsolutePath() + "] to: " +
 						driverFile.getAbsolutePath() + "!", e);
 			}
 		}
@@ -1072,7 +1184,13 @@ public class WebDriverWrapper implements Comparable {
 		DRIVER_FILES.put(_browser.DRIVER_NAME + System.currentTimeMillis(), driverFile); // Chrome must use a different Driver each time, to support multi-threading.
 
 		////////// Browser Options //////////
-		ChromeOptions options = new ChromeOptions();
+        ChromeOptions options;
+        if(_capabilities != null && _capabilities instanceof ChromeOptions) { // ChromeOptions.merge(Capabilities), puts Arguments under Capabilities, and they are never read again.
+            options = (ChromeOptions) _capabilities; // TODO: Report or Find ChromeDriver bug.
+        }
+        else {
+            options = new ChromeOptions();
+        }
 		//options.addArguments("--start-maximized"); // Doesn't work with Mac.
 		//noinspection SpellCheckingInspection
 		options.addArguments("disable-infobars");
@@ -1081,14 +1199,21 @@ public class WebDriverWrapper implements Comparable {
 			// TODO: Check that chromeBinaryOverridePath is a valid path.
 			options.setBinary(chromeBinaryOverridePath);
 		}
-		if(_capabilities != null) { // Merge has to happen after all other options are set.
-			options.merge(new ChromeOptions());
+        if(_capabilities != null && !(_capabilities instanceof ChromeOptions)) {
+            options.merge(_capabilities); // TODO: Extend ChromeOptions and fix their .merge(Capabilities) method, to copy Arguments to the correct place.
 		}
 
 		////////// Launch Browser //////////
 		// Using ChromeDriverService so we don't have to set the "webdriver.chrome.driver" System Property.
 		// - So that we can create multiple drives in parallel.
-		ChromeDriverService chromeDriverService = new ChromeDriverService.Builder().withVerbose(false).withSilent(true).usingDriverExecutable(driverFile).build();
+		ChromeDriverService.Builder chromeDriverServiceBuilder = new ChromeDriverService.Builder().usingDriverExecutable(driverFile);
+		if(enableDriverLogs) {
+			chromeDriverServiceBuilder.withVerbose(true).withSilent(false);
+		}
+        else {
+			chromeDriverServiceBuilder.withVerbose(false).withSilent(true);
+		}
+		ChromeDriverService chromeDriverService = chromeDriverServiceBuilder.build();
 		ChromeDriver chromeDriver = null;
 		while(chromeDriver == null) {
 			try {
@@ -1106,11 +1231,13 @@ public class WebDriverWrapper implements Comparable {
 		BROWSER_TYPE = BrowserType.CHROME;
 		DRIVER_NAME = _browser.toString();
 
-		// TODO: BUG: Makes all logs visible and gives them the level of what was padded in.
+		// TODO: BUG: Makes all logs visible and gives them the level of what was passed in.
 		//( (RemoteWebDriver) DRIVER ).setLogLevel( Level.OFF );
 
-		if(!_headless) {
-
+		if(_headless) {
+			setWindowSize(chromeHeadlessDefaultWindowSize);
+		}
+		else {
 			maximize();
 
 			KNOWN_WEB_DRIVER_WRAPPERS.add(this);
@@ -1228,7 +1355,7 @@ public class WebDriverWrapper implements Comparable {
 				_browser = FirefoxBrowser.FIREFOX_MAC;
 			}
 			else {
-				throw new WebDriverException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
+				throw new WebDriverWrapperException("Unknown or Unsupported Operating System: " + System.getProperty("os.name") + "!");
 			}
 		}
 
@@ -1245,12 +1372,12 @@ public class WebDriverWrapper implements Comparable {
 					FileUtils.copyToFile(resourceInStream, driverFile);
 				}
 				catch(IOException e) {
-					throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+					throw new WebDriverWrapperException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
 				}
 
 				// Validate Copy.
 				if(driverFile.length() <= 0) {
-					throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!\n\tFile size is 0!");
+					throw new WebDriverWrapperException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!\n\tFile size is 0!");
 				}
 
 				DRIVER_FILES.put(_browser.DRIVER_NAME, driverFile);
@@ -1272,7 +1399,7 @@ public class WebDriverWrapper implements Comparable {
 							(current, childName) -> new File(current, childName).isDirectory()))[0] + "/extensions/" + firefoxExtensionName);
 
 					if(!extension.exists()) {
-						throw new RuntimeException("Cannot find Extension " + Quotes.escape(firefoxExtensionName) + "!");
+						throw new WebDriverWrapperException("Cannot find Extension " + Quotes.escape(firefoxExtensionName) + "!");
 					}
 
 					try {
@@ -1280,7 +1407,7 @@ public class WebDriverWrapper implements Comparable {
 						extensionsWereLoaded = true;
 					}
 					catch(Exception e) {
-						throw new RuntimeException("Cannot find Extension " + Quotes.escape(firefoxExtensionName) + "!", e);
+						throw new WebDriverWrapperException("Cannot find Extension " + Quotes.escape(firefoxExtensionName) + "!", e);
 					}
 				} //END-Loop (Firefox Extensions.)
 			} // END-Else (Local Machine)
@@ -1316,7 +1443,7 @@ public class WebDriverWrapper implements Comparable {
 			/////
 
 			if(_capabilities != null) { // Merge has to happen after all other options are set.
-				options.merge(new ChromeOptions());
+                options.merge(_capabilities);
 			}
 
 			DRIVER = new FirefoxDriver(options);
@@ -1432,12 +1559,12 @@ public class WebDriverWrapper implements Comparable {
 				FileUtils.copyToFile(resourceInStream, driverFile);
 			}
 			catch(IOException e) {
-				throw new RuntimeException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
+				throw new WebDriverWrapperException("Unable to copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!", e);
 			}
 
 			// Validate Copy.
 			if(driverFile.length() <= 0) {
-				throw new RuntimeException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
+				throw new WebDriverWrapperException("Could not copy " + _browser + " to: " + driverFile.getAbsolutePath() + "!");
 			}
 
 			DRIVER_FILES.put(_browser.DRIVER_NAME, driverFile);
@@ -1486,7 +1613,7 @@ public class WebDriverWrapper implements Comparable {
 			options.setCapability("logLevel", "ERROR"); // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#ie-specific
 
 			if(_capabilities != null) { // Merge has to happen after all other options are set.
-				options.merge(new ChromeOptions());
+                options.merge(_capabilities);
 			}
 
 			DRIVER = new InternetExplorerDriver(options);
@@ -1582,7 +1709,7 @@ public class WebDriverWrapper implements Comparable {
 			toRet = null;
 		}
 		else if(!(jsReturnObject instanceof String)) {
-			throw new JavascriptException("Unknown Return Type: " + jsReturnObject.getClass().getName() + "!");
+			throw new JavascriptException("Unknown Return Type: " + jsReturnObject.getClass().getName() + "!" + getScreenshotExceptionMessagePart());
 		}
 		else {
 			toRet = (String) jsReturnObject;
@@ -1953,15 +2080,7 @@ public class WebDriverWrapper implements Comparable {
 			switch(webElementWrappers.size()) {
 				case 0:
 					if(_noElementExceptionMessage != null) {
-						File screenshot;
-						try {
-							screenshot = takeScreenshot();
-						}
-						catch(Exception e) {
-							screenshot = null;
-						}
-						throw new NoSuchElementException(_noElementExceptionMessage +
-								(screenshot == null ? "" : "\n\nScreenshot: " + screenshot.getAbsolutePath()));
+						throw new NoSuchElementException(_noElementExceptionMessage + getScreenshotExceptionMessagePart());
 					}
 					else {
 						break; // Return NULL.
@@ -1970,7 +2089,8 @@ public class WebDriverWrapper implements Comparable {
 					webElementWrapper = webElementWrappers.get(0);
 					break;
 				default:
-					throw new TooManyResultsException("ERROR! Only 1 WebElement expected, but " + webElementWrappers.size() + " were found!\n\tBy: " + _by);
+					throw new TooManyResultsException("ERROR! Only 1 WebElement expected, but " + webElementWrappers.size() + " were found!\n\tBy: " + _by +
+							getScreenshotExceptionMessagePart());
 			}
 		}
 
@@ -2165,7 +2285,7 @@ public class WebDriverWrapper implements Comparable {
 						elements = ((WebElement) object).findElements(_by);
 					}
 					else {
-						throw new RuntimeException("Unknown argument type " + object.getClass() + " expecting WebDriver or WebElement!");
+						throw new WebDriverWrapperException("Unknown argument type " + object.getClass() + " expecting WebDriver or WebElement!");
 					}
 
 					if(elements == null || elements.isEmpty()) {
@@ -2288,13 +2408,13 @@ public class WebDriverWrapper implements Comparable {
 
 		//------------------------ Variables -----------------------------------
 		Alert alert;
-		
+
 		//------------------------ Code ----------------------------------------
 		synchronized(LOCK) {
 
             DRIVER.navigate().to(_url); // Same thing as WebDriver.get(String).
 
-			alert = waitForPageLoadOrAlert();
+			alert = waitForPageLoadOrAlert(); // User Wait/Think time happens here.
 		}
 
 		LOGGER.debug("goToUrl(_url: {}) - ({}) - [END]", _url, (alert == null ? "NULL" : "Alert") );
@@ -2467,6 +2587,8 @@ public class WebDriverWrapper implements Comparable {
 
 		actions.sendKeys(Keys.chord(WebDriverWrapper.CTRL_CMD_KEY, "v")).perform();
 
+		WebDriverWrapper.waitForUserThinkTime();
+
 		LOGGER.debug("paste(_clipboard: {}) [END]", _clipboard);
 	}
 
@@ -2546,13 +2668,13 @@ public class WebDriverWrapper implements Comparable {
 
 		//------------------------ Variables -----------------------------------
 		Alert alert;
-		
+
 		//------------------------ Code ----------------------------------------
 		synchronized(LOCK) {
 
 			DRIVER.navigate().refresh();
 
-			alert = waitForPageLoadOrAlert();
+			alert = waitForPageLoadOrAlert(); // User Wait/Think time happens here.
 		}
 
 		LOGGER.debug("refresh() - {} - [END]", (alert == null ? "NULL" : "Alert") );
@@ -2601,12 +2723,73 @@ public class WebDriverWrapper implements Comparable {
 		}
 
 		if(element == null) {
-			throw new WebPageException("There is no page loaded in the browser!");
+			throw new WebDriverWrapperException("There is no page loaded in the browser!" + getScreenshotExceptionMessagePart());
 		}
 
-		element.sendKeys(_keys);
+		element.sendKeys(_keys); // User Wait/Think time happens here.
 
 		LOGGER.debug("sendKeys(_keys: {}) [END]", _keys);
+
+		return this;
+	}
+
+	/**
+	 * Will set the size of the Browser Window.
+	 *
+	 * @param _x
+	 *         Horizontal Size.
+	 * @param _y
+	 *         Vertical Size.
+	 *
+	 * @return A reference to {@code this} {@link WebElementWrapper}, for method call chaining purposes.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper setWindowSize(int _x, int _y) {
+
+		LOGGER.info("setWindowSize(_x: {}, _y: {}) [START]", _x, _y);
+
+		//------------------------ Pre-Checks ----------------------------------
+		if(_x < 0 || _y < 0) {
+			throw new IllegalArgumentException("Given coordinates (" + _x + ", " + _y + ") cannot be less than 0!");
+		}
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		setWindowSize(new Dimension(_x, _y));
+
+		LOGGER.debug("setWindowSize(_x: {}, _y: {}) [END]", _x, _y);
+
+		return this;
+	}
+
+	/**
+	 * Will set the size of the Browser Window.
+	 *
+	 * @param _dimension
+	 *         The Horizontal and Vertical Size, to set the window to.
+	 *
+	 * @return A reference to {@code this} {@link WebElementWrapper}, for method call chaining purposes.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public WebDriverWrapper setWindowSize(Dimension _dimension) {
+
+		LOGGER.info("setWindowSize(_dimension: {}) [START]", _dimension);
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+
+		//------------------------ Code ----------------------------------------
+		DRIVER.manage().window().setSize(_dimension);
+
+		LOGGER.debug("setWindowSize(_dimension: {}) [END]", _dimension);
 
 		return this;
 	}
@@ -2706,10 +2889,10 @@ public class WebDriverWrapper implements Comparable {
 			 * because they will switch to invisible Frames.
 			 */
 			if(frames.isEmpty()) {
-				throw new NoSuchElementException("ERROR! " + _by + " returns no visible Frame/IFrame!");
+				throw new NoSuchElementException("ERROR! " + _by + " returns no visible Frame/IFrame!" + getScreenshotExceptionMessagePart());
 			}
 			else if(frames.size() > 1) {
-				throw new TooManyResultsException("ERROR! " + _by + " returns more than one visible Frame/IFrame!");
+				throw new TooManyResultsException("ERROR! " + _by + " returns more than one visible Frame/IFrame!" + getScreenshotExceptionMessagePart());
 			}
 
 			DRIVER.switchTo().frame(frames.get(0).getWebElement());
@@ -2891,6 +3074,9 @@ public class WebDriverWrapper implements Comparable {
 	 *
 	 * @return The screenshot File that was saved.
 	 *
+	 * @throws WebDriverException If the Screenshot cannot be taken.
+	 * @throws WebDriverWrapperException If the taken Screenshot cannot be saved.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public File takeScreenshot() {
@@ -2925,7 +3111,7 @@ public class WebDriverWrapper implements Comparable {
 			FileUtils.copyFile(tempScreenshot, screenshot);
 		}
 		catch(IOException e) {
-			throw new RuntimeException("Unable to save Screenshot!", e);
+			throw new WebDriverWrapperException("Unable to save Screenshot!", e);
 		}
 
 		LOGGER.debug("takeScreenshot() [END]");
@@ -2935,6 +3121,9 @@ public class WebDriverWrapper implements Comparable {
 
 	/**
 	 * Will take a screenshot and throw a {@link WebPageException} with the given message and the screenshot's full path.
+     * <p>
+     *     <i>Note:/i> If there is an error taking the Screenshot, then the exception will just contain the given message.
+     * </p>
 	 *
 	 * @param _message
 	 *         The Error message for the {@link WebPageException}.
@@ -2954,9 +3143,7 @@ public class WebDriverWrapper implements Comparable {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		File screenshot = takeScreenshot();
-		String path = screenshot.getAbsolutePath();
-		String errorMessage = _message + "\n\tScreenshot: " + path;
+		String errorMessage = _message + getScreenshotExceptionMessagePart();
 
 		LOGGER.debug("throwWebPageException(_message: {}) [END]", _message);
 
@@ -3006,18 +3193,11 @@ public class WebDriverWrapper implements Comparable {
 				String documentReadyState = (String) ((JavascriptExecutor) DRIVER).executeScript("return document.readyState;");
 
 				if(!documentReadyState.equals(REQUIRED_DOCUMENT_READY_STATE)) {
-
-					e.addInfo("document.readyState", documentReadyState);
-
-					if(documentReadyState.equalsIgnoreCase("interactive")) {
-
-						File screenshot = takeScreenshot();
-						e.addInfo("screenshot", screenshot.getAbsolutePath());
-					}
-
-					throw new TimeoutException("document.readyState=" + documentReadyState, e);
+					throw new TimeoutException("document.readyState=" + documentReadyState + getScreenshotExceptionMessagePart(), e);
 				}
 			}
+
+			WebDriverWrapper.waitForUserThinkTime();
 		}
 
 		LOGGER.debug("waitForPageLoad() [END]");
@@ -3108,6 +3288,7 @@ public class WebDriverWrapper implements Comparable {
 	 *         If the given Value or Wait Time are {@code null}.
 	 * @throws TimeoutException
 	 *         If the Page's Title does not equal the given after the given Wait Time.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForTitle(String _value, boolean _trim, boolean _caseMatters, Duration _maxWaitTime) {
@@ -3134,22 +3315,29 @@ public class WebDriverWrapper implements Comparable {
 			// Fluent Wait Settings..
 			fluentWait.withTimeout(_maxWaitTime).pollingEvery(POLLING_INTERVAL);
 
-			fluentWait.until(driver -> {
-				String currentTitle = _trim ? DRIVER.getTitle().trim() : DRIVER.getTitle();
-				if(_caseMatters) {
-					return currentTitle.equals(expectedTitle);
-				}
-				else {
-					return currentTitle.equalsIgnoreCase(expectedTitle);
-				}
-			});
+			try {
+				fluentWait.until(driver -> {
+					String currentTitle = _trim ? DRIVER.getTitle().trim() : DRIVER.getTitle();
+					if(_caseMatters) {
+						return currentTitle.equals(expectedTitle);
+					}
+					else {
+						return currentTitle.equalsIgnoreCase(expectedTitle);
+					}
+				});
+			}
+			catch(TimeoutException e) {
+				String currentTitle = getPageTitle();
+				throw new TimeoutException("Page title never equaled expected!\n  Actual: " + currentTitle + "\nExpected: " + _value +
+						getScreenshotExceptionMessagePart(), e);
+			}
 		}
 
 		LOGGER.debug("waitForTitle(_value: {}, _trim: {}, _caseMatters: {}, _maxWaitTime: {}) [END]", _value, _trim, _caseMatters,
 				(_maxWaitTime == null ? "(NULL)" : _maxWaitTime));
 	}
 
-	////////// Helper Methods //////////
+	//-------------------- Override Methods --------------------
 	@Override
 	public int compareTo(Object o) {
 
@@ -3178,6 +3366,38 @@ public class WebDriverWrapper implements Comparable {
 		return Objects.hash(DRIVER);
 	}
 
+	//-------------------- Helper Methods --------------------
+
+	/**
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	@LogMethods
+	String getScreenshotExceptionMessagePart() {
+
+		//------------------------ Pre-Checks ----------------------------------
+
+		//------------------------ CONSTANTS -----------------------------------
+
+		//------------------------ Variables -----------------------------------
+		String screenshotExceptionMessagePart = "";
+
+		//------------------------ Code ----------------------------------------
+		if(!autoTakeScreenshotsOnErrors) {
+			return screenshotExceptionMessagePart;
+		}
+
+		try {
+			File screenshot = takeScreenshot();
+			screenshotExceptionMessagePart = "\n\tScreenshot: " + screenshot.getAbsolutePath();
+		}
+		catch(Exception e) {
+			screenshotExceptionMessagePart = ""; // Should already be an empty string.
+		}
+		finally {
+			return screenshotExceptionMessagePart;
+		}
+	}
+
 	/**
 	 * Waits for the page to finish loading.
 	 *
@@ -3202,7 +3422,7 @@ public class WebDriverWrapper implements Comparable {
 
 		if(alert == null) {
 			try { // Assume no Alert.
-				waitForPageLoad();
+				waitForPageLoad(); // User Wait/Think time happens here.
 			}
 			catch(UnhandledAlertException e2) { // Catch the alert that loaded late.
 				alert = DRIVER.switchTo().alert();
