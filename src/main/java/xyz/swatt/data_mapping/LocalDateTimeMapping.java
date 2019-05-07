@@ -569,7 +569,6 @@ public class LocalDateTimeMapping implements DataMapping {
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Override
-    @SuppressWarnings("Duplicates")
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------

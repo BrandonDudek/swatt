@@ -7,7 +7,6 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -39,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -425,6 +425,7 @@ public class WebDriverWrapper implements Comparable {
 	 * <i>Recommended:</i> {@link #RECOMMENDED_USER_THINKING_WAIT_TIME_DEVIATION}.
 	 * </p>
 	 */
+	@SuppressWarnings("JavaDoc")
 	public static Duration userThinkingWaitTimeDeviation = null;
 
 	/**
@@ -521,7 +522,6 @@ public class WebDriverWrapper implements Comparable {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	@SuppressWarnings("Duplicates")
 	public static void killPreviousBrowserDriverProcesses() {
 
 		LOGGER.info("killPreviousBrowserDriverProcesses() [START]");
@@ -572,7 +572,6 @@ public class WebDriverWrapper implements Comparable {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	@SuppressWarnings("Duplicates")
 	public static void killUsedBrowserDriverProcesses() {
 
 		LOGGER.info("killUsedBrowserDriverProcesses() [START]");
@@ -1185,7 +1184,7 @@ public class WebDriverWrapper implements Comparable {
 
 		////////// Browser Options //////////
         ChromeOptions options;
-        if(_capabilities != null && _capabilities instanceof ChromeOptions) { // ChromeOptions.merge(Capabilities), puts Arguments under Capabilities, and they are never read again.
+		if(_capabilities instanceof ChromeOptions) { // ChromeOptions.merge(Capabilities), puts Arguments under Capabilities, and they are never read again.
             options = (ChromeOptions) _capabilities; // TODO: Report or Find ChromeDriver bug.
         }
         else {
@@ -3122,7 +3121,7 @@ public class WebDriverWrapper implements Comparable {
 	/**
 	 * Will take a screenshot and throw a {@link WebPageException} with the given message and the screenshot's full path.
      * <p>
-     *     <i>Note:/i> If there is an error taking the Screenshot, then the exception will just contain the given message.
+	 *     <i>Note:</i> If there is an error taking the Screenshot, then the exception will just contain the given message.
      * </p>
 	 *
 	 * @param _message
@@ -3393,9 +3392,8 @@ public class WebDriverWrapper implements Comparable {
 		catch(Exception e) {
 			screenshotExceptionMessagePart = ""; // Should already be an empty string.
 		}
-		finally {
-			return screenshotExceptionMessagePart;
-		}
+
+		return screenshotExceptionMessagePart;
 	}
 
 	/**

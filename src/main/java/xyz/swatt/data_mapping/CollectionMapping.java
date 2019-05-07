@@ -21,7 +21,6 @@ import java.util.*;
 public class CollectionMapping<T> implements DataMapping {
 
     //========================= Static Enums ===================================
-
     /**
      * <p>
      * List of possible flags for a Data Mapping.
@@ -166,7 +165,6 @@ public class CollectionMapping<T> implements DataMapping {
 
     //========================= Public Methods =================================
     @Override
-    @SuppressWarnings("Duplicates")
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------

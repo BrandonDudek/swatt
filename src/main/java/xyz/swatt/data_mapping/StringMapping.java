@@ -194,7 +194,6 @@ public class StringMapping implements DataMapping {
 
     //========================= Public Methods =================================
     @Override
-    @SuppressWarnings("Duplicates")
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------

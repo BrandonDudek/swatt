@@ -173,7 +173,6 @@ public class LogMethodsAspect {
         LOGGER.debug("toLogString(_object: {}) [START]", _object == null ? "(NULL)" : _object.getClass().getTypeName());
 
         //------------------------ Pre-Checks ----------------------------------
-        //noinspection ConstantConditions
         if(_object == null) {
             LOGGER.trace("toLogString(_object: (NULL)) [END]: (NULL)");
             return "(NULL)";

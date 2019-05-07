@@ -89,7 +89,7 @@
             </releases>
         </repository>
 
-        <!--<repository> - This is where snapshots are sent to.
+        <!--<repository> &lt;!&ndash;This is where snapshots are sent to.&ndash;&gt;
             <id>ossrh</id>
             <name>OSS Repository Hosting</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>

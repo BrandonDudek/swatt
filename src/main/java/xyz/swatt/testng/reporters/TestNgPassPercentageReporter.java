@@ -26,6 +26,7 @@ public class TestNgPassPercentageReporter implements IReporter {
     //========================= Static Enums ===================================
 
     //========================= STATIC CONSTANTS ===============================
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LogManager.getLogger(TestNgPassPercentageReporter.class);
 
     //========================= Static Variables ===============================

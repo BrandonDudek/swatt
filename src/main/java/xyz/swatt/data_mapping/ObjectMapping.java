@@ -95,7 +95,6 @@ public class ObjectMapping<T> implements DataMapping {
 
     //========================= Public Methods =================================
     @Override
-    @SuppressWarnings("Duplicates")
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------

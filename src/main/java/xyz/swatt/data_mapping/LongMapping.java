@@ -124,7 +124,6 @@ public class LongMapping implements DataMapping {
 
     //========================= Public Methods =================================
     @Override
-    @SuppressWarnings("Duplicates")
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------
