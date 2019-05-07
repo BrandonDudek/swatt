@@ -52,8 +52,7 @@ public class SeleniumCompatibilityTests {
                     ///// HTML Unit Driver (GUI-less) /////
                     {"CHROME_HEADLESS"},
             };
-        }
-        else { // Windows.
+        } else if (SystemUtils.IS_OS_WINDOWS) { // Windows.
             return new Object[][]{
                     {ChromeBrowser.CHROME}, // Automatically Chooses OS.
                     {ChromeBrowser.CHROME_WIN_32},
@@ -68,6 +67,16 @@ public class SeleniumCompatibilityTests {
                     ///// HTML Unit Driver (GUI-less) /////
                     {"CHROME_HEADLESS"},
             };
+        } else if (SystemUtils.IS_OS_LINUX) { // Windows.
+            return new Object[][]{
+                    {ChromeBrowser.CHROME}, // Automatically Chooses OS.
+                    {ChromeBrowser.CHROME_LINUX_64},
+
+                    ///// HTML Unit Driver (GUI-less) /////
+                    {"CHROME_HEADLESS"},
+            };
+        } else {
+            throw new RuntimeException("OS could not be determined or is not supported!");
         }
     }
 

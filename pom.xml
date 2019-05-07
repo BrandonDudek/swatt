@@ -342,8 +342,8 @@
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <!-- The server "id" element from settings to use authentication from -->
                     <serverId>ossrh</serverId>
-                    <!--<autoReleaseAfterClose>true</autoReleaseAfterClose> &lt;!&ndash; Snapshots do not get staged. (TODO) &ndash;&gt;
-                    <sslAllowAll>true</sslAllowAll>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose> <!-- Snapshots do not get staged. (TODO) -->
+                    <!--<sslAllowAll>true</sslAllowAll>
                     <sslInsecure>true</sslInsecure>-->
                 </configuration>
             </plugin>
