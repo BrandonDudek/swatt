@@ -43,11 +43,11 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
 ## Selenium/Browser Version Comparability
 |SWATT|Selenium|Windows|MacOS|Ubuntu|
 |:---:|:---:|:---:|:---:|:---:|
-|1.8.0|3.141.59|10|10.13 (High Sierra)|?|
+|1.11.0|3.141.59|10|10.13 (High Sierra)|18.04.2|
 
 |Chrome Driver|Chrome|
 |:---:|:---:|
-|73.0.3683.68|73.0.3683.103|
+|74.0.3729.6|74.0.3729.131|
 
 |Gecko Driver|Firefox|
 |:---:|:---:|

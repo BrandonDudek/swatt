@@ -1,27 +1,5 @@
 # Committed but Unreleased Changes
 
-WebDriverWrapper, WebDriverWrapperException, WebElementWrapper, POM, & SeleniumCompatibilityTests
 
-WebDriverWrapper
-- Added the Ability to set a User "Thinking" Time and Deviation
-- Added the ability to set the default "Window Size" for the Chrome Headless Browser
-- Added the ability to turn on the Web Driver Logging, for Chrome
-- Added the ability to turn off the Auto Screenshot on Error feature
-- Updated Chrome Driver to version 74.0.3729.6
 
-WebDriverWrapperException
-- Added this generic exception type to be used by the WebDriverWrapper class
-
-WebElementWrapper
-- Added the Ability to set a User "Thinking" Time and Deviation
-- Sped up WebElementWrapper's auto reacquire WebElement capability.
-
-POM
-- 1.11.0-SNAPSHOT
-- Updated Dependency Versions: Apache Commons Lang (3.9), Saxon (9.9.1-2)
-- Added Dependency: Apache Commons Math (3.6.1)
-
-SeleniumCompatibilityTests
-- Added Selenium Unit Testing for Chrome on Linux.
-
-# Expected Release: v1.11.0
+# Expected Release: v1.11.1-SNAPSHOT
