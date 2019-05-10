@@ -775,7 +775,6 @@ public class WebElementWrapper {
 	}
 
 	//////////////////// Get Descendant(s) Functions [START] ////////////////////
-
 	/**
 	 * Waits {@link WebDriverWrapper#maxElementLoadTime} for a descendant {@link WebElement}, that match the given search query, to exist and contain the
 	 * correct visibility; then grabs that {@link WebElement} descendants.
@@ -2620,7 +2619,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element is not removed from the DOM in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForUnload(Duration _waitTime) {
 
@@ -2645,7 +2644,6 @@ public class WebElementWrapper {
 	}
 
 	//////////////////// Wait for Attribute Functions [START] ////////////////////
-
 	/**
 	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for a given Attribute to exist.
 	 *
@@ -2657,7 +2655,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForAttribute(String _name) {
 		waitForAttribute(_name, null, WebDriverWrapper.maxElementLoadTime, true, true);
@@ -2680,7 +2678,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForAttribute(String _name, Duration _waitTime) {
 		waitForAttribute(_name, null, _waitTime, true, true);
@@ -2702,7 +2700,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForAttribute(String _name, String _value) {
 		waitForAttribute(_name, _value, WebDriverWrapper.maxElementLoadTime, true, true);
@@ -2726,7 +2724,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForAttribute(String _name, String _value, boolean _caseSensitive) {
 		waitForAttribute(_name, _value, WebDriverWrapper.maxElementLoadTime, _caseSensitive, true);
@@ -2751,7 +2749,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForAttribute(String _name, String _value, Duration _waitTime) {
 		waitForAttribute(_name, _value, _waitTime, true, true);
@@ -2778,7 +2776,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForAttribute(String _name, String _value, Duration _waitTime, boolean _caseSensitive) {
 		waitForAttribute(_name, _value, _waitTime, _caseSensitive, true);
@@ -2807,7 +2805,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *         If this Web Element's Attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForAttribute(String _name, String _value, Duration _waitTime, boolean _caseSensitive, boolean _isEqualTo) {
 
@@ -2880,7 +2878,6 @@ public class WebElementWrapper {
 	//////////////////// Wait for Attribute Functions [END] ////////////////////
 
 	//////////////////// Wait for Class Functions [START] ////////////////////
-
 	/**
 	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Element's {@code @Class} attribute to contain a given value.
 	 *
@@ -2892,7 +2889,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForClass(String _token) {
 		waitForClass(_token, WebDriverWrapper.maxElementLoadTime, true);
@@ -2911,7 +2908,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForClass(String _token, boolean _isEqualTo) {
 		waitForClass(_token, WebDriverWrapper.maxElementLoadTime, _isEqualTo);
@@ -2931,7 +2928,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForClass(String _token, Duration _waitTime) {
 		waitForClass( _token, _waitTime, true);
@@ -2953,7 +2950,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's {@code @Class} attribute does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForClass(String _token, Duration _waitTime, boolean _isEqualTo) {
 
@@ -3002,7 +2999,7 @@ public class WebElementWrapper {
 	 *             If this Web Element is not click-able after
 	 *             {@code _waitTimeInSeconds}.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForClickable(double _waitTimeInSeconds) {
 
@@ -3043,7 +3040,6 @@ public class WebElementWrapper {
 	}
 
 	//////////////////// Wait for Value Functions [START] ////////////////////
-
 	/**
 	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Element's value to equal a given value.
 	 * <p>
@@ -3060,7 +3056,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForValue(String _value, boolean _caseSensitive) {
 		waitForValue(_value, WebDriverWrapper.maxElementLoadTime, _caseSensitive, true);
@@ -3083,7 +3079,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForValue(String _value, Duration _waitTime) {
 		waitForValue(_value, _waitTime, true, true);
@@ -3108,7 +3104,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForValue(String _value, Duration _waitTime, boolean _caseSensitive) {
 		waitForValue(_value, _waitTime, _caseSensitive, true);
@@ -3135,7 +3131,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Value does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForValue(String _value, Duration _waitTime, boolean _caseSensitive, boolean _isEqualTo) {
 
@@ -3182,7 +3178,6 @@ public class WebElementWrapper {
 	//////////////////// Wait for Value Functions [END] ////////////////////
 
 	//////////////////// Wait for Visibility Functions [START] ////////////////////
-
 	/**
 	 * Waits up to {@link WebDriverWrapper#maxElementLoadTime}, for this Web Element to become visible.
 	 * <p>
@@ -3192,7 +3187,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForVisibility() {
 		waitForVisibility(true, WebDriverWrapper.maxElementLoadTime);
@@ -3210,7 +3205,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForVisibility(boolean _visible) {
 		waitForVisibility(_visible, WebDriverWrapper.maxElementLoadTime);
@@ -3227,7 +3222,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForVisibility(Duration _waitTime) {
 		waitForVisibility( true, _waitTime);
@@ -3249,7 +3244,7 @@ public class WebElementWrapper {
 	 * @throws TimeoutException
 	 *             If this Web Element's Visibility does not change in the given amount of time.
 	 *
-	 * @author Brandon Dudek (u6026612) &lt;brandon.dudek@thomsonreuters.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void waitForVisibility(boolean _visible, Duration _waitTime) {
 

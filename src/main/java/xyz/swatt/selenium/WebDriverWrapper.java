@@ -380,7 +380,13 @@ public class WebDriverWrapper implements Comparable {
 	public static boolean autoTakeScreenshotsOnErrors = true;
 
 	/**
-	 * If set to {@code true}, the the Browser Driver's logs will be turned on. (<i>Note:</i> Only working for the ChromeDriver, right now.)
+	 * If set to {@code true}, the the Browser Driver's logs will be turned on.
+	 * <p>
+	 *     <i>Note:</i> Only working for the ChromeDriver, right now.
+	 * </p>
+	 * <p>
+	 *     <i>Note:</i> Logs go to the Console and cannot be redirected, without redirecting all of Console OUT/ERROR.
+	 * </p>
 	 */
 	public static boolean enableDriverLogs = false;
 
@@ -405,19 +411,20 @@ public class WebDriverWrapper implements Comparable {
 	/**
 	 * Set this to simulate the time it would take an actual person, between actions. Delays will happen after these actions: Page Load, Changing Inputs,
 	 * Clicks, and Drags.
-	 * <p>&nbsp;</p>
 	 * <p>
-	 * <i>Default:</i> {@code 0 (null)}.
+	 *     <i>Default:</i> {@code 0 (null)}.
 	 * </p>
 	 * <p>
-	 * <i>Recommended:</i> {@link #RECOMMENDED_USER_THINKING_WAIT_TIME}.
+	 *     <i>Recommended:</i> {@link #RECOMMENDED_USER_THINKING_WAIT_TIME}.
+	 * </p>
+	 * <p>
+	 *     See Also: {@link #userThinkingWaitTimeDeviation}.
 	 * </p>
 	 */
 	public static Duration userThinkingWaitTime = null;
 	/**
 	 * Set this to add a <a href='https://en.wikipedia.org/wiki/Normal_distribution'>Normal Distribution</a> to the {@link #userThinkingWaitTime}. (<i>Note:</i>
 	 * The distribution will be limited to {@code 2 * } {@link #userThinkingWaitTimeDeviation}, to prevent outliers.)
-	 * <p>&nbsp;</p>
 	 * <p>
 	 * <i>Default:</i> {@code 0 (null)}.
 	 * </p>
@@ -1208,6 +1215,7 @@ public class WebDriverWrapper implements Comparable {
 		ChromeDriverService.Builder chromeDriverServiceBuilder = new ChromeDriverService.Builder().usingDriverExecutable(driverFile);
 		if(enableDriverLogs) {
 			chromeDriverServiceBuilder.withVerbose(true).withSilent(false);
+			// TODO: Add Support for specifying Log File Location. (--log-path=chromedriver.log)
 		}
         else {
 			chromeDriverServiceBuilder.withVerbose(false).withSilent(true);
