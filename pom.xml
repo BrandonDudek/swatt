@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.11.0-SNAPSHOT</version>
+    <version>1.11.1-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -342,7 +342,7 @@
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <!-- The server "id" element from settings to use authentication from -->
                     <serverId>ossrh</serverId>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose> <!-- Snapshots do not get staged. (TODO) -->
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose> <!-- Snapshots do not get staged. -->
                     <!--<sslAllowAll>true</sslAllowAll>
                     <sslInsecure>true</sslInsecure>-->
                 </configuration>
