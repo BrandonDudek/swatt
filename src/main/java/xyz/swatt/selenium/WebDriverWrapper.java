@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.*;
@@ -876,6 +877,7 @@ public class WebDriverWrapper implements Comparable {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
+	@LogMethods
 	public static Duration waitForUserThinkTime() {
 
 		//------------------------ Pre-Checks ----------------------------------
@@ -905,7 +907,7 @@ public class WebDriverWrapper implements Comparable {
 				Thread.sleep(waitTimeMs);
 			}
 			catch(InterruptedException e) {
-				LOGGER.warn("Filed to Wait for User \"Think\" time.", e);
+				LOGGER.warn("Failed to Wait for User \"Think\" time.", e);
 			}
 		}
 
@@ -3128,33 +3130,57 @@ public class WebDriverWrapper implements Comparable {
 
 	/**
 	 * Will take a screenshot and throw a {@link WebPageException} with the given message and the screenshot's full path.
-     * <p>
+	 * <p>
 	 *     <i>Note:</i> If there is an error taking the Screenshot, then the exception will just contain the given message.
-     * </p>
+	 * </p>
 	 *
 	 * @param _message
 	 *         The Error message for the {@link WebPageException}.
 	 *
-     * @throws WebPageException With the given message.
-     *
+	 * @throws WebPageException With the given message.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public void throwWebPageException(String _message) throws WebPageException {
-
+		throwWebPageException(_message, null);
+	}
+	
+	/**
+	 * Will take a screenshot and throw a {@link WebPageException} with the given message and the screenshot's full path.
+	 * <p>
+	 * <i>Note:</i> If there is an error taking the Screenshot, then the exception will just contain the given message.
+	 * </p>
+	 *
+	 * @param _message
+	 * 		The Error message for the {@link WebPageException}.
+	 * @param _cause
+	 * 		What other Exception triggered this call.
+	 *
+	 * @throws WebPageException
+	 * 		With the given message.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public void throwWebPageException(String _message, Throwable _cause) throws WebPageException {
+		
 		LOGGER.info("throwWebPageException(_message: {}) [START]", _message);
-
+		
 		//------------------------ Pre-Checks ----------------------------------
-
+		
 		//------------------------ CONSTANTS -----------------------------------
-
+		
 		//------------------------ Variables -----------------------------------
-
+		
 		//------------------------ Code ----------------------------------------
 		String errorMessage = _message + getScreenshotExceptionMessagePart();
-
+		
 		LOGGER.debug("throwWebPageException(_message: {}) [END]", _message);
-
-		throw new WebPageException(errorMessage);
+		
+		if(_cause == null) {
+			throw new WebPageException(errorMessage);
+		}
+		else {
+			throw new WebPageException(errorMessage, _cause);
+		}
 	}
 
 	/**
@@ -3313,6 +3339,7 @@ public class WebDriverWrapper implements Comparable {
 		String expectedTitle = _trim ? _value.trim() : _value;
 
 		FluentWait<WebDriver> fluentWait;
+		LocalDateTime startTime, endTime;
 
 		//------------------------ Code ----------------------------------------
 		synchronized(LOCK) {
@@ -3321,7 +3348,9 @@ public class WebDriverWrapper implements Comparable {
 
 			// Fluent Wait Settings..
 			fluentWait.withTimeout(_maxWaitTime).pollingEvery(POLLING_INTERVAL);
-
+			
+			startTime = LocalDateTime.now();
+			
 			try {
 				fluentWait.until(driver -> {
 					String currentTitle = _trim ? DRIVER.getTitle().trim() : DRIVER.getTitle();
@@ -3334,9 +3363,11 @@ public class WebDriverWrapper implements Comparable {
 				});
 			}
 			catch(TimeoutException e) {
+				endTime = LocalDateTime.now();
+				Duration timeSpent = Duration.between(startTime, endTime);
 				String currentTitle = getPageTitle();
-				throw new TimeoutException("Page title never equaled expected!\n  Actual: " + currentTitle + "\nExpected: " + _value +
-						getScreenshotExceptionMessagePart(), e);
+				throw new TimeoutException("Page title never equaled expected!\n\t\t  Actual: " + currentTitle + "\n\t\tExpected: " + _value +
+						"\n\tReal Time Waited: " + timeSpent + getScreenshotExceptionMessagePart(), e);
 			}
 		}
 

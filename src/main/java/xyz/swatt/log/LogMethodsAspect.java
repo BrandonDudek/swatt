@@ -15,6 +15,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 /**
@@ -53,12 +55,13 @@ public class LogMethodsAspect {
 
         //-------------------------Variables------------------------------------
         ///// Tier 1 /////
-        boolean logParams, logResults, skipLogging;
+        boolean logArguments, logDuration, logResults, skipLogging;
         int modifiers;
 
         Class<?> classObj = proceedingJoinPoint.getSignature().getDeclaringType(), // Target is null for static methods.
                 methodReturnType;
         Executable executable;
+        LocalDateTime startTime, endTime;
         LogMethods classAnnotation, constructorMethodAnnotation;
         Signature signature = proceedingJoinPoint.getSignature();
         Object toRet;
@@ -95,7 +98,8 @@ public class LogMethodsAspect {
         modifiers = executable.getModifiers();
 
         ///// Get Annotation(s) Values /////
-        logParams = constructorMethodAnnotation != null ? constructorMethodAnnotation.arguments() : classAnnotation.arguments();
+        logArguments = constructorMethodAnnotation != null ? constructorMethodAnnotation.arguments() : classAnnotation.arguments();
+        logDuration = constructorMethodAnnotation != null ? constructorMethodAnnotation.duration() : classAnnotation.duration();
         logResults = constructorMethodAnnotation != null ? constructorMethodAnnotation.returns() : classAnnotation.returns();
         skipLogging = constructorMethodAnnotation != null && constructorMethodAnnotation.skip();
 
@@ -119,7 +123,7 @@ public class LogMethodsAspect {
         for(int i = 0; i < proceedingJoinPoint.getArgs().length; i++) {
 
             logString.append(parameterNames[i]);
-            if(logParams) {
+            if(logArguments) {
                 logString.append(": ").append(toLogString(proceedingJoinPoint.getArgs()[i])); // Log Value.
             }
             else {
@@ -140,13 +144,19 @@ public class LogMethodsAspect {
         }
 
         ////////// Run Method //////////
+        startTime = LocalDateTime.now();
         toRet = proceedingJoinPoint.proceed();
+        endTime = LocalDateTime.now();
 
         ////////// Log Method End //////////
-        ///// Construct Log String /////
         logString.append("[END]");
+        if(logDuration) {
+            Duration timeSpent = Duration.between(startTime, endTime);
+            logString.append(" {").append(timeSpent).append("}");
+        }
+        ///// Construct Log String /////
         if(methodReturnType != null && methodReturnType != Void.TYPE && logResults) {
-            logString.append(": ").append(toLogString(toRet));
+            logString.append(" => ").append(toLogString(toRet));
         }
 
         ///// Perform Logging /////

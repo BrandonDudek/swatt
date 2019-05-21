@@ -7,7 +7,7 @@
 
     <groupId>xyz.swatt</groupId>
     <artifactId>swatt</artifactId>
-    <version>1.11.1-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>SWATT</name>
@@ -34,7 +34,7 @@
         <apache.commons.math.version>3.6.1</apache.commons.math.version> <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
 
         <!--===== AspectJ =====-->
-        <aspectj.version>1.9.2</aspectj.version> <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
+        <aspectj.version>1.9.3</aspectj.version> <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt -->
         <!-- Must keep in syc with spring-aop: https://mvnrepository.com/artifact/org.springframework/spring-aop -->
 
         <!--===== Jackson =====-->
@@ -53,7 +53,7 @@
         <selenium.version>3.141.59</selenium.version> <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
 
         <!--===== Spring =====-->
-        <spring.version>5.1.6.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
+        <spring.version>5.1.7.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
 
         <!--===== TestNG =====-->
         <testng.version>7.0.0-beta5</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->

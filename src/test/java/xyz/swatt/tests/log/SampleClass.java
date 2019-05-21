@@ -4,14 +4,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.swatt.log.LogMethods;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 /**
  *
  */
-@LogMethods
+@LogMethods(duration = false)
 public class SampleClass {
 
     //========================= Static Enums ===================================
@@ -31,7 +30,7 @@ public class SampleClass {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @LogMethods
+    @LogMethods(duration = false)
     public static void publicStaticVoidMethod() {
         LOGGER.debug("\t\tInside publicStaticVoidMethod.");
     }
@@ -45,7 +44,7 @@ public class SampleClass {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @LogMethods(arguments = false, returns = false)
+    @LogMethods(arguments = false, duration = false, returns = false)
     protected SampleClass() {
         LOGGER.debug("\t\tInside Protected Constructor.");
     }
@@ -55,7 +54,7 @@ public class SampleClass {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    @LogMethods
+    @LogMethods(duration = false)
     public void callPrivateMethods() {
         privateMethodWithReturnString();
     }
@@ -101,7 +100,7 @@ public class SampleClass {
     /**
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    //@LogMethods // Inherit from class.
+    //@LogMethods(duration = false) // Inherit from class.
     private String privateMethodWithReturnString() {
         LOGGER.trace("\t\tInside privateMethod.");
         return "Walla Walla Walla";

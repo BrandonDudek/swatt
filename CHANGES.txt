@@ -1,5 +1,26 @@
 # Committed but Unreleased Changes
 
+LogMethods, SqlPojo, WebDriverWrapper, POM, & Scripts
 
+LogMethods
+- Added Duration to the logs and a flag to turn it off
+- Updated Unit Tests
 
-# Expected Release: v1.11.1-SNAPSHOT
+SqlPojo
+- Added Enum Interface
+- Added getFullTableName method
+- Renamed getColumn(int) method to getColumnValue(int)
+- Updated SQL-RowMapper-POJO-Generator.groovy script to match
+
+WebDriverWrapper
+- Added throwWebPageException(String _message, Throwable _cause)
+- Updated Logs & Exceptions
+
+POM
+- Updated Sprint do 5.1.7.RELEASE
+- Updated AspectJ to 1.9.3
+
+Scripts
+- Updated SQL-RowMapper-POJO-Generator.groovy
+
+# Expected Release: v1.12.0

@@ -44,6 +44,14 @@ public @interface LogMethods {
      * @return If method argument values will be logged.
      */
     boolean arguments() default true;
+    
+    /**
+     * If {@code false}, method duration will not be logged.
+     * <p>(default = {@code true})</p>
+     *
+     * @return If method duration will be logged.
+     */
+    boolean duration() default true;
 
     /**
      * If {@code false}, method returned values will not be logged.
@@ -52,7 +60,7 @@ public @interface LogMethods {
      * @return If method returned values will be logged.
      */
     boolean returns() default true;
-
+    
     /**
      * If {@code true}, then this method will not be logged.
      * <p>(default = {@code false})</p>

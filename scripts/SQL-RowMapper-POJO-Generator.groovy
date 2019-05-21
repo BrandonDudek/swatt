@@ -16,9 +16,8 @@ typeMapping = [
         (~/(?i)float|double|decimal|real|number/) : "BigDecimal",
 
         ///// Date/Time /////
-        (~/(?i)date/)                             : "LocalDate",
+        (~/(?i)date|datetime/)                    : "LocalDateTime", // SQL Date also contains Time in Oracle Databases.
         (~/(?i)time/)                             : "LocalTime",
-        (~/(?i)datetime/)                         : "LocalDateTime",
         (~/(?i)timestamp/)                        : "Timestamp",
 
         ///// Objects /////
@@ -60,6 +59,8 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "import oracle.spatial.geometry.JGeometry;"
   out.println "import org.apache.logging.log4j.LogManager;"
   out.println "import org.apache.logging.log4j.Logger;"
+  out.println "import org.springframework.jdbc.core.JdbcTemplate;"
+  out.println "import xyz.swatt.exceptions.TooManyResultsException;"
   out.println "import xyz.swatt.pojo.SqlPojo;"
   out.println ""
   out.println "import java.math.BigDecimal;"
@@ -67,7 +68,6 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "import java.sql.ResultSetMetaData;"
   out.println "import java.sql.SQLException;"
   out.println "import java.sql.Timestamp;"
-  out.println "import java.time.LocalDate;"
   out.println "import java.time.LocalDateTime;"
   out.println "import java.time.LocalTime;"
   out.println "import java.util.*;"
@@ -77,7 +77,7 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "public class $className implements SqlPojo<$className>, Cloneable {"
   out.println ""
   out.println "\t//========================= Enums ========================================="
-  out.println "\tpublic static enum Column {"
+  out.println "\tpublic static enum Column implements SqlPojo.RowMapperColumnEnum {"
   fields.eachWithIndex() { it, index ->
     out.println "\t\t${it.colname}($index, \"${it.colname}\"),"
   }
@@ -100,6 +100,16 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "\t\t\tCOLUMN_NAME = _name;"
   out.println "\t\t}"
   out.println "\t\t"
+  out.println "\t\t@Override"
+  out.println "\t\tpublic String getColumnName() {"
+  out.println "\t\t\treturn COLUMN_NAME;"
+  out.println "\t\t}"
+  out.println "\t\t"
+  out.println "\t\t@Override"
+  out.println "\t\tpublic int getColumnIndex() {"
+  out.println "\t\t\treturn COLUMN_INDEX;"
+  out.println "\t\t}"
+  out.println "\t\t"
   out.println "\t\t/**"
   out.println "\t\t * @return The Column Name."
   out.println "\t\t */"
@@ -115,6 +125,99 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "\tpublic static final String TABLE_NAME = \"$tableName\";"
   out.println "\tpublic static final String SCHEMA_NAME = \"$schemaName\";"
   out.println "\tpublic static final String FULL_TABLE_NAME = SCHEMA_NAME + \".\" + TABLE_NAME;"
+  out.println ""
+  out.println "\t//========================= Static Methods ==============================="
+  out.println "/**\n" +
+          "     * @param _jdbcTemplate The DB Connection to use.\n" +
+          "     *\n" +
+          "     * @return All of the {@link $className} rows in the given Database.\n" +
+          "     */\n" +
+          "    public static List<$className> queryForAllRows(JdbcTemplate _jdbcTemplate) {\n" +
+          "        return _jdbcTemplate.query(\"select * from \" + FULL_TABLE_NAME, new $className());\n" +
+          "    }"
+  out.println ""
+  out.println "/**\n" +
+          "     * Will query a given Database (DB) for rows that match the given Column Values.\n" +
+          "     *\n" +
+          "     * @param _jdbcTemplate\n" +
+          "     *         The DB Connection to use.\n" +
+          "     * @param _queryData\n" +
+          "     *         This Object's values will be used as criteria, for the select query.\n" +
+          "     * @param _columns\n" +
+          "     *         If provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
+          "     *         values will be used.\n" +
+          "     *\n" +
+          "     * @return The {@link $className} rows found.\n" +
+          "     */\n" +
+          "    public static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, $className _queryData, Column... _columns) {\n" +
+          "\n" +
+          "        //------------------------ Pre-Checks ----------------------------------\n" +
+          "\n" +
+          "        //------------------------ CONSTANTS -----------------------------------\n" +
+          "\n" +
+          "        //------------------------ Variables -----------------------------------\n" +
+          "        boolean firstColumnWithData = true, ignoreNull = _columns == null || _columns.length < 1;\n" +
+          "        String queryString = \"select * from \" + FULL_TABLE_NAME + \" where \";\n" +
+          "        Column[] columnsToParse = ignoreNull ? Column.values() : _columns;\n" +
+          "        List<Object> args = new ArrayList(columnsToParse.length);\n" +
+          "        List<$className> rows;\n" +
+          "\n" +
+          "        //------------------------ Code ----------------------------------------\n" +
+          "        for(Column column : columnsToParse) {\n" +
+          "            Object value = _queryData.getColumnValue(column);\n" +
+          "            if(value != null || !ignoreNull) {\n" +
+          "                if(firstColumnWithData) {\n" +
+          "                    firstColumnWithData = false;\n" +
+          "                }\n" +
+          "                else {\n" +
+          "                    queryString += \" and \";\n" +
+          "                }\n" +
+          "                queryString += column.getColumnName() + \"=?\";\n" +
+          "                args.add(value);\n" +
+          "            }\n" +
+          "        }\n" +
+          "\n" +
+          "        rows = _jdbcTemplate.query(queryString, args.toArray(), _queryData);\n" +
+          "\n" +
+          "        return rows;\n" +
+          "    }"
+  out.println ""
+  out.println "/**\n" +
+          "     * Will query a given Database (DB) for the row that match the given Column Values.\n" +
+          "     *\n" +
+          "     * @param _jdbcTemplate The DB Connection to use.\n" +
+          "     * @param _queryData This Object's values will be used as criteria, for the select query.\n" +
+          "     * @param _columns If provided, these will be the only columns that will be used as selection criteria;\n" +
+          "     *                 otherwise, all of the {@code _queryData} Object's non-null values will be used.\n" +
+          "     *\n" +
+          "     * @return The {@link $className} row found, or {@code null} if no row was found.\n" +
+          "     *\n" +
+          "     * @throws TooManyResultsException If more then 1 row is found by this query.\n" +
+          "     */\n" +
+          "    public static $className queryForRow(JdbcTemplate _jdbcTemplate, $className _queryData, Column... _columns) {\n" +
+          "\n" +
+          "        //------------------------ Pre-Checks ----------------------------------\n" +
+          "\n" +
+          "        //------------------------ CONSTANTS -----------------------------------\n" +
+          "\n" +
+          "        //------------------------ Variables -----------------------------------\n" +
+          "        $className row;\n" +
+          "        List<$className> rows = queryForRows(_jdbcTemplate, _queryData, _columns);\n" +
+          "\n" +
+          "        //------------------------ Code ----------------------------------------\n" +
+          "        switch(rows.size()) {\n" +
+          "            case 0:\n" +
+          "                row = null;\n" +
+          "                break;\n" +
+          "            case 1:\n" +
+          "                row = rows.get(0);\n" +
+          "                break;\n" +
+          "            default:\n" +
+          "                throw new TooManyResultsException(\"Expected 1 row but found \" + rows.size() + \"!\");\n" +
+          "        }\n" +
+          "\n" +
+          "        return row;\n" +
+          "    }"
   out.println ""
   out.println "\t//========================= Variables ======================================"
   fields.each() {
@@ -161,7 +264,7 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println ""
   out.println "\t//========================= Getters & Setters =============================="
   out.println "\t@Override"
-  out.println "\tpublic Object getColumn(int _columnIndex) {"
+  out.println "\tpublic Object getColumnValue(int _columnIndex) {"
   out.println "\t\tswitch(_columnIndex) {"
   fields.eachWithIndex() { elem, index ->
     out.println "\t\t\tcase ${index}:"
@@ -171,8 +274,14 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "\t\t\t\tthrow new RuntimeException(\"Unknown Column Index: \" + _columnIndex + \"!\");"
   out.println "\t\t}"
   out.println "\t}"
+  out.println "\t"
+  out.println "\t@Override"
+  out.println "\tpublic String getFullTableName() {"
+  out.println "\t\treturn FULL_TABLE_NAME;"
+  out.println "\t}"
+  out.println ""
+  out.println "\t//-------------------- Columns --------------------"
   fields.each() {
-    out.println ""
     out.println "\tpublic ${it.type} get${it.name.capitalize()}() {"
     out.println "\t\treturn ${it.name};"
     out.println "\t}"
@@ -186,8 +295,8 @@ def generate(out, schemaName, tableName, className, fields) {
       out.println "\t\treturn this;"
       out.println "\t}"
     }
+    out.println ""
   }
-  out.println ""
   out.println "\t//========================= Comparators ===================================="
   out.println "\t@Override"
   out.println "\tpublic Set<String> determineDifferences(SqlPojo _otherObject, int... _ignoreColumnIndexes) {"
@@ -253,7 +362,36 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "\t\t'}';"
   out.println "\t}"
   out.println ""
-  out.println "\t//========================= Other Methods =================================="
+  out.println "\t//========================= Queries ========================================"
+  out.println "/**\n" +
+          "     * Will query a given Database (DB) for rows that match this Object's values.\n" +
+          "     *\n" +
+          "     * @param _jdbcTemplate The DB Connection to use.\n" +
+          "     * @param _columns If provided, these will be the only columns that will be used as selection criteria;\n" +
+          "     *                 otherwise, all of this Object's non-null values will be used.\n" +
+          "     *\n" +
+          "     * @return The {@link $className} rows found.\n" +
+          "     */\n" +
+          "    public List<$className> queryForRows(JdbcTemplate _jdbcTemplate, Column _columns) {\n" +
+          "        return queryForRows(_jdbcTemplate, this, _columns);\n" +
+          "    }"
+  out.println ""
+  out.println "/**\n" +
+          "     * Will query a given Database (DB) for the row that match this Object's values.\n" +
+          "     *\n" +
+          "     * @param _jdbcTemplate The DB Connection to use.\n" +
+          "     * @param _columns If provided, these will be the only columns that will be used as selection criteria;\n" +
+          "     *                 otherwise, all of this Object's non-null values will be used.\n" +
+          "     *\n" +
+          "     * @return The {@link $className} row found, or {@code null} if no row was found.\n" +
+          "     *\n" +
+          "     * @throws TooManyResultsException If more then 1 row is found by this query.\n" +
+          "     */\n" +
+          "    public $className queryForRow(JdbcTemplate _jdbcTemplate, Column... _columns) {\n" +
+          "        return queryForRow(_jdbcTemplate, this, _columns);\n" +
+          "    }"
+  out.println ""
+  out.println "\t//========================= Cloneable ======================================"
   out.println "\t@Override"
   out.println "\tpublic $className clone() {"
   out.println "\t\ttry { return ($className) super.clone(); }"

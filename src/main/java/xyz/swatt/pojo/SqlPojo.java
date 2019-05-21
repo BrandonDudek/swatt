@@ -18,6 +18,15 @@ import java.util.*;
 public interface SqlPojo<T> extends RowMapper<T> {
 
     //========================= Static Enums ===================================
+	
+	/**
+	 * Every Implementing Class should have a "Column" enum than implements this interface.
+	 */
+	public static interface RowMapperColumnEnum {
+		public String getColumnName();
+		
+		public int getColumnIndex();
+	}
 
     //========================= STATIC CONSTANTS ===============================
 
@@ -26,7 +35,7 @@ public interface SqlPojo<T> extends RowMapper<T> {
     //========================= Static Constructor =============================
 
     //========================= Static Methods =================================
-
+	//-------------------- Comparators --------------------
     /**
      * Will compare two {@link SqlPojo} Collections and determine the differences between them.
      *
@@ -99,7 +108,6 @@ public interface SqlPojo<T> extends RowMapper<T> {
     //========================= Constructors ===================================
 
     //========================= Public Methods =================================
-
     /**
      * Will compare this object to two another {@link SqlPojo} objects and determine the differences between them.
      *
@@ -124,7 +132,37 @@ public interface SqlPojo<T> extends RowMapper<T> {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public Object getColumn(int _columnIndex);
+    public Object getColumnValue(int _columnIndex);
+	
+	/**
+	 * Will return the column value for the given column.
+	 *
+	 * @param _column
+	 * 		The desired column.
+	 *
+	 * @return The value of the desired column as an {@link Object}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	default Object getColumnValue(RowMapperColumnEnum _column) {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_column, "Column");
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		
+		//------------------------ Code ----------------------------------------
+		return getColumnValue(_column.getColumnIndex());
+	}
+	
+	/**
+	 * @return This Tables Name with the Schema Prefix.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public String getFullTableName();
 
     //========================= Helper Methods =================================
 

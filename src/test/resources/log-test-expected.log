@@ -20,6 +20,6 @@ TRACE - packagePrivateMethodWithMultidimensionalCollectionArguments(_primitiveDo
 INFO  - callPrivateMethods() [START]
 DEBUG - privateMethodWithReturnString() [START]
 TRACE - 		Inside privateMethod.
-TRACE - privateMethodWithReturnString() [END]: Walla Walla Walla
+TRACE - privateMethodWithReturnString() [END] => Walla Walla Walla
 DEBUG - callPrivateMethods() [END]
 DEBUG - 		Inside skipMethod.
