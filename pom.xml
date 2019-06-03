@@ -38,7 +38,7 @@
         <!-- Must keep in syc with spring-aop: https://mvnrepository.com/artifact/org.springframework/spring-aop -->
 
         <!--===== Jackson =====-->
-        <jackson.version>2.9.8</jackson.version> <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+        <jackson.version>2.9.9</jackson.version> <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 
         <!--===== JSoup =====-->
         <jsoup.version>1.11.3</jsoup.version> <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->

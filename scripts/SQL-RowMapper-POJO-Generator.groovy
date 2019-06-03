@@ -61,6 +61,7 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "import org.apache.logging.log4j.Logger;"
   out.println "import org.springframework.jdbc.core.JdbcTemplate;"
   out.println "import xyz.swatt.exceptions.TooManyResultsException;"
+  out.println "import xyz.swatt.log.LogMethods;"
   out.println "import xyz.swatt.pojo.SqlPojo;"
   out.println ""
   out.println "import java.math.BigDecimal;"
@@ -73,6 +74,7 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "import java.util.*;"
   out.println "import java.util.stream.Collectors;"
   out.println ""
+  out.println "@LogMethods"
   out.println "@SuppressWarnings(\"Duplicates\")"
   out.println "public class $className implements SqlPojo<$className>, Cloneable {"
   out.println ""
@@ -132,9 +134,32 @@ def generate(out, schemaName, tableName, className, fields) {
           "     *\n" +
           "     * @return All of the {@link $className} rows in the given Database.\n" +
           "     */\n" +
-          "    public static List<$className> queryForAllRows(JdbcTemplate _jdbcTemplate) {\n" +
+          "    public static List<$className> queryForRows(JdbcTemplate _jdbcTemplate) {\n" +
           "        return _jdbcTemplate.query(\"select * from \" + FULL_TABLE_NAME, new $className());\n" +
           "    }"
+  out.println ""
+  out.println "/**\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _limit The maximum number of rows to return.\n" +
+          "\t *\n" +
+          "\t * @return All of the {@link $className} rows in the given Database.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit) {\n" +
+          "\t\t\n" +
+          "\t\tint maxRows = _jdbcTemplate.getMaxRows();\n" +
+          "\t\tList<$className> rows;\n" +
+          "\t\tsynchronized(_jdbcTemplate) { // Max Rows may not get reset in time, if another thread accesses this JDBC Template, without lock.\n" +
+          "\t\t\ttry {\n" +
+          "\t\t\t\t_jdbcTemplate.setMaxRows(_limit);\n" +
+          "\t\t\t\trows = queryForRows(_jdbcTemplate);\n" +
+          "\t\t\t}\n" +
+          "\t\t\tfinally {\n" +
+          "\t\t\t\t_jdbcTemplate.setMaxRows(maxRows);\n" +
+          "\t\t\t}\n" +
+          "\t\t}\n" +
+          "\t\treturn rows;\n" +
+          "\t}"
   out.println ""
   out.println "/**\n" +
           "     * Will query a given Database (DB) for rows that match the given Column Values.\n" +

@@ -35,6 +35,7 @@ public interface SqlPojo<T> extends RowMapper<T> {
     //========================= Static Constructor =============================
 
     //========================= Static Methods =================================
+	
 	//-------------------- Comparators --------------------
     /**
      * Will compare two {@link SqlPojo} Collections and determine the differences between them.

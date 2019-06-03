@@ -1,5 +1,11 @@
 # Committed but Unreleased Changes
 
+POM & Scripts
 
+POM
+- Upgraded JACKSON to v2.9.9, to get latest security fix
 
-# Expected Release: v1.12.1-SNAPSHOT
+Scripts
+- Updated SQL-RowMapper-POJO-Generator.groovy
+
+# Expected Release: v1.12.1
