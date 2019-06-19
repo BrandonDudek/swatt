@@ -5,6 +5,7 @@ package xyz.swatt.data_mapping;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import xyz.swatt.log.LogMethods;
 import xyz.swatt.string.StringHelper;
 
 import java.util.*;
@@ -17,7 +18,7 @@ import java.util.*;
  *
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
-//@LogMethods
+@LogMethods
 public class CollectionMapping<T> implements DataMapping {
 
     //========================= Static Enums ===================================
@@ -34,7 +35,7 @@ public class CollectionMapping<T> implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public static enum MappingFlag {
+    public static enum MappingFlag implements DataMappingFlagEnum {
 
         /**
          * If Source and Destination lists should be made {@code distinct} before comparing them.
@@ -106,14 +107,13 @@ public class CollectionMapping<T> implements DataMapping {
     //========================= Variables ======================================
 
     //========================= Constructors ===================================
-
     /**
      * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
      *
      * @param _sourceValues
-     *         The value from the Source Data.
+     *         The values from the Source Data.
      * @param _destinationValues
-     *         The mapped value found in the Destination Data.
+     *         The mapped values found in the Destination Data.
      * @param _flags
      *         Any {@link MappingFlag}s that should be applied to this {@link CollectionMapping}.
      *
@@ -129,9 +129,9 @@ public class CollectionMapping<T> implements DataMapping {
      * @param _mappingName
      *         An optional, unique name to give this {@link CollectionMapping}.
      * @param _sourceValues
-     *         The value from the Source Data.
+     *         The values from the Source Data.
      * @param _destinationValues
-     *         The mapped value found in the Destination Data.
+     *         The mapped values found in the Destination Data.
      * @param _flags
      *         Any {@link MappingFlag}s that should be applied to this {@link CollectionMapping}.
      *

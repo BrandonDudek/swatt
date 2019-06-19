@@ -1,11 +1,23 @@
 # Committed but Unreleased Changes
 
-POM & Scripts
+DataMapping, SqlPojoMapping, SqlPojoMapping, POM, JavaDoc, & Scripts
+
+DataMapping
+- Added DataMapping Flag Enum Interface
+
+SqlPojoCollectionMapping
+- Added Class
+
+SqlPojoMapping
+- Added Class
 
 POM
 - Upgraded JACKSON to v2.9.9, to get latest security fix
 
+JavaDoc
+- Updated
+
 Scripts
 - Updated SQL-RowMapper-POJO-Generator.groovy
 
-# Expected Release: v1.12.1
+# Expected Release: v1.13.0

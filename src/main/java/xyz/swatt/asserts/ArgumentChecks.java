@@ -306,6 +306,7 @@ public class ArgumentChecks {
 		else if(_string.trim().isEmpty()) {
 			throw new IllegalArgumentException("Given " + _argumentName + "String cannot be a Whitespace Only String!");
 		}
+		// Same effect as: StringUtils.isBlank(CharSequence).
 
 		LOGGER.debug("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [END]", Quotes.escape(_string), _argumentName);
 	}

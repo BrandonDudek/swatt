@@ -6,13 +6,18 @@ package xyz.swatt.data_mapping;
 public interface DataMapping {
 
     //========================= Static Enums ===================================
+	
+	/**
+	 * Every Implementing Class should have a "Column" enum than implements this interface.
+	 */
+	public static interface DataMappingFlagEnum {
+	}
 
     //========================= STATIC CONSTANTS ===============================
 
     //========================= Static Variables ===============================
 
     //========================= Static Methods =================================
-
     /**
      * Will Create a formatted Error {@link String} for a given set of values, to be used if the validation fails.
      *

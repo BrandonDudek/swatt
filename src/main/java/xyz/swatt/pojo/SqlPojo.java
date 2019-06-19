@@ -18,13 +18,11 @@ import java.util.*;
 public interface SqlPojo<T> extends RowMapper<T> {
 
     //========================= Static Enums ===================================
-	
 	/**
 	 * Every Implementing Class should have a "Column" enum than implements this interface.
 	 */
 	public static interface RowMapperColumnEnum {
 		public String getColumnName();
-		
 		public int getColumnIndex();
 	}
 

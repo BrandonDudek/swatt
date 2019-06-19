@@ -27,7 +27,6 @@ import java.util.Set;
 public class StringMapping implements DataMapping {
 
     //========================= Static Enums ===================================
-
     /**
      * <p>
      * List of possible flags for a Data Mapping.
@@ -41,7 +40,7 @@ public class StringMapping implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public static enum MappingFlag {
+    public static enum MappingFlag implements DataMappingFlagEnum {
 
         /**
          * Will compare values ignoring the case.
@@ -94,7 +93,6 @@ public class StringMapping implements DataMapping {
     static {}
 
     //========================= Static Methods =================================
-
     /**
      * @param _str
      *         The string to escape.
@@ -140,7 +138,6 @@ public class StringMapping implements DataMapping {
     //========================= Variables ======================================
 
     //========================= Constructors ===================================
-
     /**
      * Creates a new {@link String}-to-{@link String} {@link DataMapping} object.
      *

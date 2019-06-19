@@ -42,7 +42,7 @@ public class BigDecimalMapping implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public static enum MappingFlag {
+    public static enum MappingFlag implements DataMappingFlagEnum {
 
         /**
          * Will ignoring trailing 0s after the decimal place.

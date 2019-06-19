@@ -44,7 +44,6 @@ import java.util.Set;
 public class LocalDateTimeMapping implements DataMapping {
 
     //========================= Static Enums ===================================
-
     /**
      * <p>
      * List of possible flags for a Data Mapping.
@@ -58,7 +57,7 @@ public class LocalDateTimeMapping implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public static enum MappingFlag {
+    public static enum MappingFlag implements DataMappingFlagEnum {
 
         /**
          * Will only validate the values' Times.
@@ -113,7 +112,6 @@ public class LocalDateTimeMapping implements DataMapping {
     public LocalTime sourceTimeValue, destinationTimeValue; // LocalTime is immutable.
 
     //========================= Constructors ===================================
-
     /**
      * Creates a new blank {@link LocalDateTime}-to-{@link LocalDateTime} {@link DataMapping} object.
      * <p>
@@ -170,7 +168,6 @@ public class LocalDateTimeMapping implements DataMapping {
 
     //========================= Public Methods =================================
     ////////// Setters //////////
-
     /**
      * Set's the Source Value to the given argument.
      *
