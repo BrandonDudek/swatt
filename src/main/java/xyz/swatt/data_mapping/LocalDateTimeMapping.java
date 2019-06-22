@@ -167,6 +167,18 @@ public class LocalDateTimeMapping implements DataMapping {
     }
 
     //========================= Public Methods =================================
+    ////////// Getters //////////
+    
+    /**
+     * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Override
+    public String getMappingName() {
+        return MAPPING_NAME;
+    }
+    
     ////////// Setters //////////
     /**
      * Set's the Source Value to the given argument.

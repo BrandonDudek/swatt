@@ -3,6 +3,7 @@
  */
 package xyz.swatt.data_mapping;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.swatt.log.LogMethods;
@@ -405,8 +406,9 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		//------------------------ Code ----------------------------------------
 		///// Name /////
 		if(_mappingName == null) {
-			if(_sourceTables == null) {
-				if(_sourceValues.size() == 1) {
+			
+			if(CollectionUtils.isEmpty(_sourceTables)) {
+				if(CollectionUtils.size(_sourceValues) == 1) {
 					mappingName += "\"" + _sourceValues.iterator().next() + "\"";
 				}
 				else {
@@ -423,8 +425,8 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 			
 			mappingName += " -> ";
 			
-			if(_destinationTables == null) {
-				if(_destinationValues.size() == 1) {
+			if(CollectionUtils.isEmpty(_destinationTables)) {
+				if(CollectionUtils.size(_destinationValues) == 1) {
 					mappingName += "\"" + _destinationValues.iterator().next() + "\"";
 				}
 				else {
@@ -476,6 +478,17 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	}
 	
 	//========================= Public Methods =================================
+	
+	/**
+	 * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	@Override
+	public String getMappingName() {
+		return MAPPING_NAME;
+	}
+	
 	@Override
 	public String validate() {
 		

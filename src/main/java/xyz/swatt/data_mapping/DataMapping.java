@@ -72,7 +72,14 @@ public interface DataMapping {
     }
 
     //========================= Methods ========================================
-
+	
+	/**
+	 * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public String getMappingName();
+	
     /**
      * This method compares the two, previously set, values.
      *

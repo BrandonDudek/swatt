@@ -190,6 +190,17 @@ public class StringMapping implements DataMapping {
     }
 
     //========================= Public Methods =================================
+    
+    /**
+     * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Override
+    public String getMappingName() {
+        return MAPPING_NAME;
+    }
+    
     @Override
     public String validate() {
 

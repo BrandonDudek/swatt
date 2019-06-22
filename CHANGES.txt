@@ -1,5 +1,11 @@
 # Committed but Unreleased Changes
 
+DataMapping & SqlPojoCollectionMapping
 
+DataMapping
+- Added getMappingName() method
 
-# Expected Release: v1.13.1-SNAPSHOT
+SqlPojoCollectionMapping
+- Fixed bug in Name generation
+
+# Expected Release: v1.13.1
