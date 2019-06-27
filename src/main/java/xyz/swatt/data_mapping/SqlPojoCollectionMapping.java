@@ -45,14 +45,6 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	//========================= Static Methods =================================
 	
 	//========================= CONSTANTS ======================================
-	/**
-	 * The name that was given to this mapping.
-	 * <p>
-	 * <i>Note:</i> This name is optional and may be {@code null}.
-	 * </p>
-	 */
-	public final String MAPPING_NAME;
-	
 	public T tTypeObject;
 	
 	/**
@@ -71,9 +63,15 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	public final Set<CollectionMapping.MappingFlag> MAPPING_FLAGS;
 	
 	//========================= Variables ======================================
+	/**
+	 * The name that was given to this mapping.
+	 * <p>
+	 * <i>Note:</i> This name is optional and may be {@code null}.
+	 * </p>
+	 */
+	public String mappingName;
 	
 	//========================= Constructors ===================================
-	
 	/**
 	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
 	 *
@@ -441,10 +439,10 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 				mappingName += "#" + _destinationColumn;
 			}
 			
-			MAPPING_NAME = mappingName;
+			this.mappingName = mappingName;
 		}
 		else {
-			MAPPING_NAME = StringHelper.trim(_mappingName); // Allowing empty string, because when NULL is passes in, default name generation is used.
+			this.mappingName = StringHelper.trim(_mappingName); // Allowing empty string, because when NULL is passes in, default name generation is used.
 		}
 		
 		///// Values /////
@@ -473,12 +471,11 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		// Check for Mapping Flag Conflicts. (Done in CollectionMapping.)
 		
 		///// Backer /////
-		COLLECTION_MAPPING_BACKER = new CollectionMapping(MAPPING_NAME, SOURCE_VALUES, DESTINATION_VALUES,
+		COLLECTION_MAPPING_BACKER = new CollectionMapping(this.mappingName, SOURCE_VALUES, DESTINATION_VALUES,
 				MAPPING_FLAGS.toArray(new CollectionMapping.MappingFlag[] {}));
 	}
 	
 	//========================= Public Methods =================================
-	
 	/**
 	 * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
 	 *
@@ -486,7 +483,26 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 */
 	@Override
 	public String getMappingName() {
-		return MAPPING_NAME;
+		return mappingName;
+	}
+	
+	/**
+	 * @param _name
+	 * 		The Name to set, for this Mapping.
+	 *
+	 * @return A reference to self is returned for method call chaining.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	@Override
+	public SqlPojoCollectionMapping<T> setMappingName(String _name) {
+		mappingName = _name;
+		return this;
+	}
+	
+	@Override
+	public String toString() {
+		return mappingName != null ? mappingName : super.toString();
 	}
 	
 	@Override
@@ -500,11 +516,6 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		
 		//------------------------ Code ----------------------------------------
 		return COLLECTION_MAPPING_BACKER.validate();
-	}
-	
-	@Override
-	public String toString() {
-		return MAPPING_NAME != null ? MAPPING_NAME : super.toString();
 	}
 	
 	//========================= Helper Methods =================================

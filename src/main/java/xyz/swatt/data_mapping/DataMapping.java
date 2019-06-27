@@ -72,7 +72,6 @@ public interface DataMapping {
     }
 
     //========================= Methods ========================================
-	
 	/**
 	 * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
 	 *
@@ -80,7 +79,17 @@ public interface DataMapping {
 	 */
 	public String getMappingName();
 	
-    /**
+	/**
+	 * @param _name
+	 * 		The Name to set, for this Mapping.
+	 *
+	 * @return A reference to self is returned for method call chaining.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public DataMapping setMappingName(String _name);
+	
+	/**
      * This method compares the two, previously set, values.
      *
      * @return A String with any differences found, or {@code NULL}, if there were no differences.

@@ -69,14 +69,6 @@ public class BigDecimalMapping implements DataMapping {
 
     //========================= CONSTANTS ======================================
     /**
-     * The name that was given to this mapping.
-     * <p>
-     * <i>Note:</i> This name is optional and may be {@code null}.
-     * </p>
-     */
-    public final String MAPPING_NAME;
-
-    /**
      * The values being compared.
      */
     public final BigDecimal SOURCE_VALUE, DESTINATION_VALUE;
@@ -87,7 +79,14 @@ public class BigDecimalMapping implements DataMapping {
     public final Set<MappingFlag> MAPPING_FLAGS;
 
     //========================= Variables ======================================
-
+    /**
+     * The name that was given to this mapping.
+     * <p>
+     * <i>Note:</i> This name is optional and may be {@code null}.
+     * </p>
+     */
+    public String mappingName;
+    
     //========================= Constructors ===================================
 
     /**
@@ -130,7 +129,7 @@ public class BigDecimalMapping implements DataMapping {
         EnumSet<MappingFlag> flags = EnumSet.noneOf(MappingFlag.class);
 
         //------------------------ Code ----------------------------------------
-        MAPPING_NAME = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
         SOURCE_VALUE = _sourceValue;
         DESTINATION_VALUE = _destinationValue;
 
@@ -142,7 +141,6 @@ public class BigDecimalMapping implements DataMapping {
     }
 
     //========================= Public Methods =================================
-    
     /**
      * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
      *
@@ -150,7 +148,21 @@ public class BigDecimalMapping implements DataMapping {
      */
     @Override
     public String getMappingName() {
-        return MAPPING_NAME;
+        return mappingName;
+    }
+    
+    /**
+     * @param _name
+     * 		The Name to set, for this Mapping.
+     *
+     * @return A reference to self is returned for method call chaining.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Override
+    public BigDecimalMapping setMappingName(String _name) {
+        mappingName = _name;
+        return this;
     }
     
     @Override
@@ -197,7 +209,7 @@ public class BigDecimalMapping implements DataMapping {
 
     @Override
     public String toString() {
-        return MAPPING_NAME != null ? MAPPING_NAME : super.toString();
+        return mappingName != null ? mappingName : super.toString();
     }
 
     //========================= Helper Methods =================================

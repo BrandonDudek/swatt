@@ -94,20 +94,20 @@ public class LocalDateTimeMapping implements DataMapping {
 
     //========================= CONSTANTS ======================================
     /**
+     * The {@link MappingFlag}s that are applied to this {@link LocalDateTimeMapping} object.
+     */
+    public final Set<MappingFlag> MAPPING_FLAGS;
+    
+    //========================= Variables ======================================
+    public boolean sourceWasSet = false, destinationWasSet = false;
+    
+    /**
      * The name that was given to this mapping.
      * <p>
      * <i>Note:</i> This name is optional and may be {@code null}.
      * </p>
      */
-    public final String MAPPING_NAME;
-
-    /**
-     * The {@link MappingFlag}s that are applied to this {@link LocalDateTimeMapping} object.
-     */
-    public final Set<MappingFlag> MAPPING_FLAGS;
-
-    //========================= Variables ======================================
-    public boolean sourceWasSet = false, destinationWasSet = false;
+    public String mappingName;
     public LocalDate sourceDateValue, destinationDateValue; // LocalDate is immutable.
     public LocalTime sourceTimeValue, destinationTimeValue; // LocalTime is immutable.
 
@@ -152,7 +152,7 @@ public class LocalDateTimeMapping implements DataMapping {
         EnumSet<MappingFlag> flags = EnumSet.noneOf(MappingFlag.class);
 
         //------------------------ Code ----------------------------------------
-        MAPPING_NAME = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
 
         flags.addAll(GLOBAL_MAPPING_FLAGS);
         if(_flags != null && _flags.length > 0) {
@@ -167,8 +167,7 @@ public class LocalDateTimeMapping implements DataMapping {
     }
 
     //========================= Public Methods =================================
-    ////////// Getters //////////
-    
+    ////////// Name //////////
     /**
      * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
      *
@@ -176,10 +175,24 @@ public class LocalDateTimeMapping implements DataMapping {
      */
     @Override
     public String getMappingName() {
-        return MAPPING_NAME;
+        return mappingName;
     }
     
-    ////////// Setters //////////
+    /**
+     * @param _name
+     * 		The Name to set, for this Mapping.
+     *
+     * @return A reference to self is returned for method call chaining.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Override
+    public LocalDateTimeMapping setMappingName(String _name) {
+        mappingName = _name;
+        return this;
+    }
+    
+    ////////// Source / Destination Setters //////////
     /**
      * Set's the Source Value to the given argument.
      *
@@ -567,7 +580,6 @@ public class LocalDateTimeMapping implements DataMapping {
     }
 
     ////////// Validate //////////
-
     /**
      * This method compares the two, previously set, values.
      *
@@ -640,10 +652,11 @@ public class LocalDateTimeMapping implements DataMapping {
             return ERROR_MESSAGE;
         }
     }
-
+    
+    ////////// toString //////////
     @Override
     public String toString() {
-        return MAPPING_NAME != null ? MAPPING_NAME : super.toString();
+        return mappingName != null ? mappingName : super.toString();
     }
 
     //========================= Helper Methods =================================

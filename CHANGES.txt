@@ -4,8 +4,9 @@ DataMapping & SqlPojoCollectionMapping
 
 DataMapping
 - Added getMappingName() method
+- Added setMappingName() method
 
 SqlPojoCollectionMapping
 - Fixed bug in Name generation
 
-# Expected Release: v1.13.1
+# Expected Release: v1.14.0

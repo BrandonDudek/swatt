@@ -36,22 +36,20 @@ public class LongMapping implements DataMapping {
 
     //========================= CONSTANTS ======================================
     /**
+     * The values being compared.
+     */
+    public final Long SOURCE_VALUE, DESTINATION_VALUE;
+    
+    //========================= Variables ======================================
+    /**
      * The name that was given to this mapping.
      * <p>
      * <i>Note:</i> This name is optional and may be {@code null}.
      * </p>
      */
-    public final String MAPPING_NAME;
-
-    /**
-     * The values being compared.
-     */
-    public final Long SOURCE_VALUE, DESTINATION_VALUE;
-
-    //========================= Variables ======================================
-
+    public String mappingName;
+    
     //========================= Constructors ===================================
-
     /**
      * Creates a new {@link long}-to-{@link long} {@link DataMapping} object.
      *
@@ -117,13 +115,12 @@ public class LongMapping implements DataMapping {
         //------------------------ Variables -----------------------------------
 
         //------------------------ Code ----------------------------------------
-        MAPPING_NAME = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
         SOURCE_VALUE = _sourceValue;
         DESTINATION_VALUE = _destinationValue;
     }
 
     //========================= Public Methods =================================
-    
     /**
      * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
      *
@@ -131,7 +128,26 @@ public class LongMapping implements DataMapping {
      */
     @Override
     public String getMappingName() {
-        return MAPPING_NAME;
+        return mappingName;
+    }
+    
+    /**
+     * @param _name
+     * 		The Name to set, for this Mapping.
+     *
+     * @return A reference to self is returned for method call chaining.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Override
+    public LongMapping setMappingName(String _name) {
+        mappingName = _name;
+        return this;
+    }
+    
+    @Override
+    public String toString() {
+        return mappingName != null ? mappingName : super.toString();
     }
     
     @Override
@@ -166,11 +182,6 @@ public class LongMapping implements DataMapping {
         else {
             return ERROR_MESSAGE;
         }
-    }
-
-    @Override
-    public String toString() {
-        return MAPPING_NAME != null ? MAPPING_NAME : super.toString();
     }
 
     //========================= Helper Methods =================================

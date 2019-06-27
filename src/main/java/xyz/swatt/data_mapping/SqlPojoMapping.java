@@ -56,14 +56,6 @@ public class SqlPojoMapping<T extends DataMapping> implements DataMapping {
 	
 	//========================= CONSTANTS ======================================
 	/**
-	 * The name that was given to this mapping.
-	 * <p>
-	 * <i>Note:</i> This name is optional and may be {@code null}.
-	 * </p>
-	 */
-	public final String MAPPING_NAME;
-	
-	/**
 	 * The Tables being compared.
 	 */
 	public final SqlPojo SOURCE_TABLE, DESTINATION_TABLE;
@@ -86,13 +78,20 @@ public class SqlPojoMapping<T extends DataMapping> implements DataMapping {
 	private Class<T> DATA_MAPPING_CLASS;
 	
 	//========================= Variables ======================================
+	/**
+	 * The name that was given to this mapping.
+	 * <p>
+	 * <i>Note:</i> This name is optional and may be {@code null}.
+	 * </p>
+	 */
+	public String mappingName;
 	
 	//========================= Constructors ===================================
 	
 	/**
 	 * Creates a new {@link SqlPojo}-to-{@link SqlPojo} {@link DataMapping} object.
 	 * <p>
-	 * <i>Note:</i> {@link #MAPPING_NAME} is generated automatically.
+	 * <i>Note:</i> {@link #mappingName} is generated automatically.
 	 * </p>
 	 *
 	 * @param _sourceTable
@@ -156,10 +155,10 @@ public class SqlPojoMapping<T extends DataMapping> implements DataMapping {
 		DESTINATION_COLUMN = _destinationColumn;
 		
 		if(_mappingName == null) {
-			MAPPING_NAME = _sourceTable.getFullTableName() + "#" + _sourceColumn + " -> " + _destinationTable.getFullTableName() + "#" + _destinationColumn;
+			mappingName = _sourceTable.getFullTableName() + "#" + _sourceColumn + " -> " + _destinationTable.getFullTableName() + "#" + _destinationColumn;
 		}
 		else {
-			MAPPING_NAME = StringHelper.trim(_mappingName); // Allowing empty string, because when NULL is passes in, default name generation is used.
+			mappingName = StringHelper.trim(_mappingName); // Allowing empty string, because when NULL is passes in, default name generation is used.
 		}
 		
 		
@@ -172,12 +171,12 @@ public class SqlPojoMapping<T extends DataMapping> implements DataMapping {
 		destinationValueObject = _destinationTable.getColumnValue(_destinationColumn);
 		
 		if(DATA_MAPPING_CLASS == BigDecimalMapping.class) {
-			DATA_MAPPING_BACKER = (T) new BigDecimalMapping(MAPPING_NAME, (BigDecimal) sourceValueObject, (BigDecimal) destinationValueObject,
+			DATA_MAPPING_BACKER = (T) new BigDecimalMapping(mappingName, (BigDecimal) sourceValueObject, (BigDecimal) destinationValueObject,
 					MAPPING_FLAGS.toArray(new BigDecimalMapping.MappingFlag[] {}));
 		}
 		else if(DATA_MAPPING_CLASS == LocalDateTimeMapping.class) {
 			
-			DATA_MAPPING_BACKER = (T) new LocalDateTimeMapping(MAPPING_NAME,
+			DATA_MAPPING_BACKER = (T) new LocalDateTimeMapping(mappingName,
 					MAPPING_FLAGS.toArray(new LocalDateTimeMapping.MappingFlag[] {}));
 			
 			if(sourceValueObject instanceof LocalDateTime) {
@@ -201,16 +200,16 @@ public class SqlPojoMapping<T extends DataMapping> implements DataMapping {
 			}
 		}
 		else if(DATA_MAPPING_CLASS == LongMapping.class) {
-			DATA_MAPPING_BACKER = (T) new LongMapping(MAPPING_NAME, (Long) sourceValueObject, (Long) destinationValueObject);
+			DATA_MAPPING_BACKER = (T) new LongMapping(mappingName, (Long) sourceValueObject, (Long) destinationValueObject);
 		}
 		else if(DATA_MAPPING_CLASS == StringMapping.class) {
 			String sourceValueString = sourceValueObject == null ? null : sourceValueObject.toString(),
 					destinationValueString = destinationValueObject == null ? null : destinationValueObject.toString();
-			DATA_MAPPING_BACKER = (T) new StringMapping(MAPPING_NAME, sourceValueString, destinationValueString,
+			DATA_MAPPING_BACKER = (T) new StringMapping(mappingName, sourceValueString, destinationValueString,
 					MAPPING_FLAGS.toArray(new StringMapping.MappingFlag[] {}));
 		}
 		else if(DATA_MAPPING_CLASS == ObjectMapping.class) {
-			DATA_MAPPING_BACKER = (T) new ObjectMapping(MAPPING_NAME, sourceValueObject, destinationValueObject);
+			DATA_MAPPING_BACKER = (T) new ObjectMapping(mappingName, sourceValueObject, destinationValueObject);
 		}
 		else {
 			throw new RuntimeException("Unknown DataMapping type Provided: " + DATA_MAPPING_CLASS + "!");
@@ -218,7 +217,6 @@ public class SqlPojoMapping<T extends DataMapping> implements DataMapping {
 	}
 	
 	//========================= Public Methods =================================
-	
 	/**
 	 * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
 	 *
@@ -226,17 +224,31 @@ public class SqlPojoMapping<T extends DataMapping> implements DataMapping {
 	 */
 	@Override
 	public String getMappingName() {
-		return MAPPING_NAME;
+		return mappingName;
+	}
+	
+	/**
+	 * @param _name
+	 * 		The Name to set, for this Mapping.
+	 *
+	 * @return A reference to self is returned for method call chaining.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	@Override
+	public SqlPojoMapping<T> setMappingName(String _name) {
+		mappingName = _name;
+		return this;
+	}
+	
+	@Override
+	public String toString() {
+		return mappingName;
 	}
 	
 	@Override
 	public String validate() {
 		return DATA_MAPPING_BACKER.validate();
-	}
-	
-	@Override
-	public String toString() {
-		return MAPPING_NAME;
 	}
 	
 	//========================= Helper Methods =================================

@@ -87,14 +87,6 @@ public class CollectionMapping<T> implements DataMapping {
 
     //========================= CONSTANTS ======================================
     /**
-     * The name that was given to this mapping.
-     * <p>
-     * <i>Note:</i> This name is optional and may be {@code null}.
-     * </p>
-     */
-    public final String MAPPING_NAME;
-
-    /**
      * The values being compared.
      */
     public final Collection<T> SOURCE_VALUES, DESTINATION_VALUES;
@@ -105,7 +97,14 @@ public class CollectionMapping<T> implements DataMapping {
     public final Set<MappingFlag> MAPPING_FLAGS;
 
     //========================= Variables ======================================
-
+    /**
+     * The name that was given to this mapping.
+     * <p>
+     * <i>Note:</i> This name is optional and may be {@code null}.
+     * </p>
+     */
+    public String mappingName;
+    
     //========================= Constructors ===================================
     /**
      * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
@@ -147,7 +146,7 @@ public class CollectionMapping<T> implements DataMapping {
         EnumSet<MappingFlag> flags = EnumSet.noneOf(MappingFlag.class);
 
         //------------------------ Code ----------------------------------------
-        MAPPING_NAME = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
         SOURCE_VALUES = _sourceValues;
         DESTINATION_VALUES = _destinationValues;
 
@@ -164,7 +163,6 @@ public class CollectionMapping<T> implements DataMapping {
     }
 
     //========================= Public Methods =================================
-    
     /**
      * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
      *
@@ -172,7 +170,26 @@ public class CollectionMapping<T> implements DataMapping {
      */
     @Override
     public String getMappingName() {
-        return MAPPING_NAME;
+        return mappingName;
+    }
+    
+    /**
+     * @param _name
+     * 		The Name to set, for this Mapping.
+     *
+     * @return A reference to self is returned for method call chaining.
+     *
+     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+     */
+    @Override
+    public CollectionMapping<T> setMappingName(String _name) {
+        mappingName = _name;
+        return this;
+    }
+    
+    @Override
+    public String toString() {
+        return mappingName != null ? mappingName : super.toString();
     }
     
     @Override
@@ -277,11 +294,6 @@ public class CollectionMapping<T> implements DataMapping {
         else {
             return String.join("\n", errors);
         }
-    }
-
-    @Override
-    public String toString() {
-        return MAPPING_NAME != null ? MAPPING_NAME : super.toString();
     }
 
     //========================= Helper Methods =================================
