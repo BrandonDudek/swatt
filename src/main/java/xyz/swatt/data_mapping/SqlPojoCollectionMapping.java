@@ -55,7 +55,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	/**
 	 * The values being compared.
 	 */
-	public final List<T> SOURCE_VALUES, DESTINATION_VALUES;
+	public final List SOURCE_VALUES, DESTINATION_VALUES;
 	
 	/**
 	 * The {@link CollectionMapping.MappingFlag}s that are applied to this {@link SqlPojoCollectionMapping} object. (read only)
@@ -452,7 +452,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 				_sourceValues.add((T) sourceRow.getColumnValue(_sourceColumn));
 			}
 		}
-		SOURCE_VALUES = Collections.unmodifiableList(new ArrayList(_sourceValues));
+		SOURCE_VALUES = new ArrayList(_sourceValues); // Copying values to a new Collection, so that changes made to the passed in collection, will be seen.
 		
 		if(_destinationValues == null) {
 			_destinationValues = new ArrayList(_destinationTables.size());
@@ -460,7 +460,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 				_destinationValues.add((T) destinationRow.getColumnValue(_destinationColumn));
 			}
 		}
-		DESTINATION_VALUES = Collections.unmodifiableList(new ArrayList(_destinationValues));
+		DESTINATION_VALUES = new ArrayList(_destinationValues); // Copying values to a new Collection, so that changes made to the passed in collection, will be seen.
 		
 		///// Flages /////
 		flags.addAll(GLOBAL_MAPPING_FLAGS);
@@ -476,6 +476,53 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	}
 	
 	//========================= Public Methods =================================
+	
+	/**
+	 * Will convert all of the Source Values to {@code String}s.
+	 *
+	 * @return A reference to this object, for method call caining.
+	 *
+	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 */
+	public SqlPojoCollectionMapping convertSourceValuesToString() {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		
+		//------------------------ Code ----------------------------------------
+		for(int i = 0; i < SOURCE_VALUES.size(); i++) {
+			SOURCE_VALUES.set(i, String.valueOf(SOURCE_VALUES.get(i)));
+		}
+		
+		return this;
+	}
+	
+	/**
+	 * Will convert all of the Destination Values to {@code String}s.
+	 *
+	 * @return A reference to this object, for method call caining.
+	 *
+	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 */
+	public SqlPojoCollectionMapping convertDestinationValuesToString() {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		
+		//------------------------ Code ----------------------------------------
+		for(int i = 0; i < DESTINATION_VALUES.size(); i++) {
+			DESTINATION_VALUES.set(i, String.valueOf(DESTINATION_VALUES.get(i)));
+		}
+		
+		return this;
+	}
+	
 	/**
 	 * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
 	 *
