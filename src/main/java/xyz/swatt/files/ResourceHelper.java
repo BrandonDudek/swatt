@@ -11,14 +11,15 @@ import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.log.LogMethods;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.CodeSource;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -147,9 +148,8 @@ public class ResourceHelper {
 	// TODO: public static String getResourceAsFile(String _path) // Returns a copy of the file, in the temp directory.
 	
 	//-------------------- Files --------------------
-	
 	/**
-	 * Gets a collection of Resource files, as {@link InputStream}s, from a given Resource folder Path.
+	 * Gets a concurrent collection of Resource files, as {@link InputStream}s, from a given Resource folder Path.
 	 * <p>
 	 * <i>Note:</i> This will only return files that are diretly under the given Resource folder, but <b>no</b> files in subfolders.
 	 * </p>
@@ -162,11 +162,12 @@ public class ResourceHelper {
 	 * 		<p>(<i>Note:</i> the passed in path will be trimmed, prefixed/suffixed with a forward slash if needed,
 	 * 		and all backslashes will be replaced with forward slashes.)</p>
 	 *
-	 * @return All files directly under the given Resource folder, as a collection of {@link InputStream}s (because the resource my be in a Jar);
+	 * @return All files directly under the given Resource folder, as a concurrent collection of {@link InputStream}s (because the resource my be in a Jar);
 	 * or {@code null}, if the Resource folder was not found, or an empty collection, if the Resource folder had no files.
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the given Path is blank.
+	 *
 	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
 	 */
 	public static Set<InputStream> getResources(String _path) {
@@ -176,7 +177,105 @@ public class ResourceHelper {
 		//------------------------ CONSTANTS -----------------------------------
 		
 		//------------------------ Variables -----------------------------------
-		Set<InputStream> streams = null;
+		Set<Path> paths = getResourcesAsPaths(_path); // Validation done here.
+		Set<InputStream> streams;
+		
+		//------------------------ Code ----------------------------------------
+		if(paths == null) {
+			streams = null;
+		}
+		else {
+			streams = new ConcurrentHashMap<>().newKeySet(paths.size());
+			
+			paths.parallelStream().forEach(path -> {
+				streams.add(getResource(path.toString()));
+			});
+		}
+		
+		return streams;
+	}
+	
+	/**
+	 * Gets a concurrent collection of Resource files, as {@link String}s, from a given Resource folder Path.
+	 * <p>
+	 * <i>Note:</i> This will only return files that are diretly under the given Resource folder, but <b>no</b> files in subfolders.
+	 * </p>
+	 *
+	 * @param _path
+	 * 		The path to a Resource folder, to parse for files.
+	 * 		<p>(The path must start at the Resource folder [exclusive], use only forward slashes, and be prefixed ans suffixed with a forward slash.)</p>
+	 * 		<p>(i.e. If the resource is <i>src\main\resources\resource_folder</i>,
+	 * 		then you will pass in "/resource_folder/".)</p>
+	 * 		<p>(<i>Note:</i> the passed in path will be trimmed, prefixed/suffixed with a forward slash if needed,
+	 * 		and all backslashes will be replaced with forward slashes.)</p>
+	 * @param _charset
+	 * 		The encoding if the file to return, as a string.
+	 *
+	 * @return All files directly under the given Resource folder, as a concurrent collection of {@link String}s;
+	 * or {@code null}, if the Resource folder was not found, or an empty collection, if the Resource folder had no files.
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given Path is blank or if the given Charset is {@code null}.
+	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 */
+	public static Set<String> getResourcesAsStrings(String _path, Charset _charset) {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		Set<InputStream> streams = getResources(_path); // Validation done here.
+		Set<String> strings;
+		
+		//------------------------ Code ----------------------------------------
+		if(streams == null) {
+			strings = null;
+		}
+		else {
+			strings = new ConcurrentHashMap<>().newKeySet(streams.size());
+			
+			streams.parallelStream().forEach(stream -> {
+				
+				String str = streamToString(stream, _charset); // Validation done here.
+				strings.add(str);
+			});
+		}
+		
+		return strings;
+	}
+	
+	// TODO: public static Set<Files> getResourcesAsFiles(String _path) // Returns a copy of the files, from a folder in the temp directory.
+	
+	/**
+	 * Gets a concurrent collection of Resource file {@link Path}s, from a given Resource folder Path.
+	 * <p>
+	 * <i>Note:</i> This will only return files that are diretly under the given Resource folder, but <b>no</b> files in subfolders.
+	 * </p>
+	 *
+	 * @param _path
+	 * 		The path to a Resource folder, to parse for files.
+	 * 		<p>(The path must start at the Resource folder [exclusive], use only forward slashes, and be prefixed ans suffixed with a forward slash.)</p>
+	 * 		<p>(i.e. If the resource is <i>src\main\resources\resource_folder</i>,
+	 * 		then you will pass in "/resource_folder/".)</p>
+	 * 		<p>(<i>Note:</i> the passed in path will be trimmed, prefixed/suffixed with a forward slash if needed,
+	 * 		and all backslashes will be replaced with forward slashes.)</p>
+	 *
+	 * @return All files directly under the given Resource folder, as a concurrent collection of {@link Path}s;
+	 * or {@code null}, if the Resource folder was not found, or an empty collection, if the Resource folder had no files.
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given Path is blank.
+	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 */
+	public static Set<Path> getResourcesAsPaths(String _path) {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		Set<Path> paths = null;
 		
 		//------------------------ Code ----------------------------------------
 		_path = fixPath(_path, true); // Validation done here.
@@ -217,12 +316,12 @@ public class ResourceHelper {
 					
 					String fileName = name.substring((pathBase + _path).length());
 					if(fileName.isEmpty()) { // Folder found.
-						streams = new HashSet<>();
+						paths = new ConcurrentHashMap<>().newKeySet();
 					}
 					else if(!fileName.contains(PATH_SEPARATOR)) {
 						
-						InputStream is = getResource(name.substring(pathBase.length()));
-						streams.add(is);
+						String path = name.substring(pathBase.length());
+						paths.add(Paths.get(path));
 					} // Else, entry is a sub-folder or file in a sub-folder.
 				}
 			}
@@ -232,73 +331,16 @@ public class ResourceHelper {
 			if(folder.exists()) {
 				
 				File[] files = folder.listFiles();
-				streams = new HashSet<>(files.length);
+				paths = new ConcurrentHashMap<>().newKeySet(files.length);
 				
 				for(File file : files) {
-					try {
-						streams.add(new FileInputStream(file));
-					}
-					catch(IOException e) {
-						throw new RuntimeException("Could not open file: " + file.getAbsolutePath(), e);
-					}
+					paths.add(Paths.get(_path, file.getName()));
 				}
 			}
 		}
 		
-		return streams;
+		return paths;
 	}
-	
-	/**
-	 * Gets a collection of Resource files, as {@link String}s, from a given Resource folder Path.
-	 * <p>
-	 * <i>Note:</i> This will only return files that are diretly under the given Resource folder, but <b>no</b> files in subfolders.
-	 * </p>
-	 *
-	 * @param _path
-	 * 		The path to a Resource folder, to parse for files.
-	 * 		<p>(The path must start at the Resource folder [exclusive], use only forward slashes, and be prefixed ans suffixed with a forward slash.)</p>
-	 * 		<p>(i.e. If the resource is <i>src\main\resources\resource_folder</i>,
-	 * 		then you will pass in "/resource_folder/".)</p>
-	 * 		<p>(<i>Note:</i> the passed in path will be trimmed, prefixed/suffixed with a forward slash if needed,
-	 * 		and all backslashes will be replaced with forward slashes.)</p>
-	 * @param _charset
-	 * 		The encoding if the file to return, as a string.
-	 *
-	 * @return All files directly under the given Resource folder, as a collection of {@link String}s;
-	 * or {@code null}, if the Resource folder was not found, or an empty collection, if the Resource folder had no files.
-	 *
-	 * @throws IllegalArgumentException
-	 * 		If the given Path is blank or if the given Charset is {@code null}.
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
-	 */
-	public static Set<String> getResourcesAsStrings(String _path, Charset _charset) {
-		
-		//------------------------ Pre-Checks ----------------------------------
-		
-		//------------------------ CONSTANTS -----------------------------------
-		
-		//------------------------ Variables -----------------------------------
-		Set<InputStream> streams = getResources(_path); // Validation done here.
-		Set<String> strings = null;
-		
-		//------------------------ Code ----------------------------------------
-		if(streams != null) {
-			
-			strings = new HashSet<>(streams.size());
-			
-			for(InputStream is : streams) {
-				
-				String str = streamToString(is, _charset); // Validation done here.
-				strings.add(str);
-			}
-		}
-		
-		return strings;
-	}
-	
-	// TODO: public static Set<Files> getResourcesAsFiles(String _path) // Returns a copy of the files, from a folder in the temp directory.
-	
-	// TODO: public static Set<Path> getResourcesAsPaths(String _path) // Returns a relitive path to each file, in the given Resource directory.
 	
 	//========================= Helper Static Methods ==========================
 	
