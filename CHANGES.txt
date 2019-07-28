@@ -1,16 +1,5 @@
 # Committed but Unreleased Changes
 
-DataMapping, ResourceHelper, & SqlPojoCollectionMapping
 
-DataMapping
-- Added getMappingName() method
-- Added setMappingName() method
 
-ResourceHelper
-- Added class to help get Resource files
-
-SqlPojoCollectionMapping
-- Added convertSourceValuesToString() & convertDestinationValuesToString()
-- Fixed bug in Name generation
-
-# Expected Release: v1.14.0
+# Expected Release: v1.14.1
