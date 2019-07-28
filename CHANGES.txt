@@ -1,10 +1,13 @@
 # Committed but Unreleased Changes
 
-DataMapping & SqlPojoCollectionMapping
+DataMapping, ResourceHelper, & SqlPojoCollectionMapping
 
 DataMapping
 - Added getMappingName() method
 - Added setMappingName() method
+
+ResourceHelper
+- Added class to help get Resource files
 
 SqlPojoCollectionMapping
 - Added convertSourceValuesToString() & convertDestinationValuesToString()
