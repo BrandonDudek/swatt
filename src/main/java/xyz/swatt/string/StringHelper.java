@@ -226,6 +226,9 @@ public class StringHelper {
 	 * <p>
 	 *     <b>Note:</b> Same as calling {@code StringHelper.replace(_string, "", CharacterPosition.ANYWHERE, false|true, CharacterSet.ALL_WHITESPACE);}.
 	 * </p>
+	 * <p>
+	 *     (Similar to StringUtils.deleteWhitespace(String); but thos method removed more "whitespace" characters.
+	 * </p>
 	 *
 	 * @param _string
 	 * 		The string to remove the whitespace from.

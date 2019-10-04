@@ -43,6 +43,9 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	static {}
 	
 	//========================= Static Methods =================================
+	// TODO: Add a builder() method.
+	
+	// TODO: Add a combileAll method that takes in a collections of SqlPojoCollectionMappings and combiles the ones that have the same Destination Table & Column.
 	
 	//========================= CONSTANTS ======================================
 	public T tTypeObject;
@@ -475,6 +478,8 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 				MAPPING_FLAGS.toArray(new CollectionMapping.MappingFlag[] {}));
 	}
 	
+	// TODO: Allow Source/Destination to be a REGEX.
+	
 	//========================= Public Methods =================================
 	
 	/**
@@ -482,7 +487,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 *
 	 * @return A reference to this object, for method call caining.
 	 *
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public SqlPojoCollectionMapping convertSourceValuesToString() {
 		
@@ -505,7 +510,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 *
 	 * @return A reference to this object, for method call caining.
 	 *
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public SqlPojoCollectionMapping convertDestinationValuesToString() {
 		
@@ -568,4 +573,5 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	//========================= Helper Methods =================================
 	
 	//========================= Classes ========================================
+	// TODO: Create a Builder class.
 }

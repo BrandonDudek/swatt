@@ -33,6 +33,9 @@ public interface SqlPojo<T> extends RowMapper<T> {
     //========================= Static Constructor =============================
 
     //========================= Static Methods =================================
+	// TODO: Add method that takes in a collection of SqlPojos and a RowMapperColumnEnum, and returnes a collection of values, from those Tables / Columns.
+	
+	// TODO: Write Methods for Insert and Delete.
 	
 	//-------------------- Comparators --------------------
     /**

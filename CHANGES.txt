@@ -1,5 +1,27 @@
 # Committed but Unreleased Changes
 
+ConversionException, JsonException, JsonWrapper, POM, and Scripts
 
+**ConversionException**
+- Added Exception class
 
-# Expected Release: v1.14.1
+**JsonException**
+- Added Exception class
+
+**JsonWrapper**
+- Added a class for working with JSON
+- Can convert between types
+- Can get fields by JSON Path
+- Can delete nodes by JSON Path
+
+**POM**
+- Added Gson v2.8.5 dependency
+- Added Jayway v2.4.0 dependency
+- Updated TestNG dependency to v7.0.0
+- Added Jackson Dependencies: jackson-datatype-jdk8 & jackson-datatype-jsr310
+
+**Scripts**
+- Updated SQL-RowMapper-POJO-Generator.groovy to have random query methods
+- Added hashCode() generation
+
+# Expected Release: v1.15.0

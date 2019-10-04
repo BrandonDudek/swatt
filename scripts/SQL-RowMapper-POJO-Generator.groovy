@@ -60,6 +60,7 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "import org.apache.logging.log4j.LogManager;"
   out.println "import org.apache.logging.log4j.Logger;"
   out.println "import org.springframework.jdbc.core.JdbcTemplate;"
+  out.println "import xyz.swatt.asserts.ArgumentChecks;"
   out.println "import xyz.swatt.exceptions.TooManyResultsException;"
   out.println "import xyz.swatt.log.LogMethods;"
   out.println "import xyz.swatt.pojo.SqlPojo;"
@@ -129,120 +130,316 @@ def generate(out, schemaName, tableName, className, fields) {
   out.println "\tpublic static final String FULL_TABLE_NAME = SCHEMA_NAME + \".\" + TABLE_NAME;"
   out.println ""
   out.println "\t//========================= Static Methods ==============================="
-  out.println "/**\n" +
-          "     * @param _jdbcTemplate The DB Connection to use.\n" +
-          "     *\n" +
-          "     * @return All of the {@link $className} rows in the given Database.\n" +
-          "     */\n" +
-          "    public static List<$className> queryForRows(JdbcTemplate _jdbcTemplate) {\n" +
-          "        return _jdbcTemplate.query(\"select * from \" + FULL_TABLE_NAME, new $className());\n" +
-          "    }"
-  out.println ""
-  out.println "/**\n" +
+  out.println "\t/**\n" +
+          "\t * Will query a given Database (DB) for the row that match the given Column Values.\n" +
+          "\t *\n" +
           "\t * @param _jdbcTemplate\n" +
           "\t * \t\tThe DB Connection to use.\n" +
-          "\t * @param _limit The maximum number of rows to return.\n" +
+          "\t * @param _queryData\n" +
+          "\t * \t\tThis Object's values will be used as criteria, for the select query.\n" +
+          "\t * @param _columns\n" +
+          "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria;\n" +
+          "\t * \t\totherwise, all of the {@code _queryData} Object's non-null values will be used.\n" +
+          "\t *\n" +
+          "\t * @return The {@link $className} row found, or {@code null} if no row was found.\n" +
+          "\t *\n" +
+          "\t * @throws TooManyResultsException\n" +
+          "\t * \t\tIf more then 1 row is found by this query.\n" +
+          "\t */\n" +
+          "\tpublic static $className queryForRow(JdbcTemplate _jdbcTemplate, $className _queryData, Column... _columns) {\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
+          "\t\t//ArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\"); // Validated in sub-method.\n" +
+          "\t\t//ArgumentChecks.notNull(_queryData, \"Query Data\"); // Validated in sub-method.\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Variables -----------------------------------\n" +
+          "\t\t$className row;\n" +
+          "\t\t\n" +
+          "\t\tList<$className> rows = queryForRows(_jdbcTemplate, _queryData, _columns);\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Code ----------------------------------------\n" +
+          "\t\tswitch(rows.size()) {\n" +
+          "\t\t\tcase 0:\n" +
+          "\t\t\t\trow = null;\n" +
+          "\t\t\t\tbreak;\n" +
+          "\t\t\tcase 1:\n" +
+          "\t\t\t\trow = rows.get(0);\n" +
+          "\t\t\t\tbreak;\n" +
+          "\t\t\tdefault:\n" +
+          "\t\t\t\tthrow new TooManyResultsException(\"Expected 1 row but found \" + rows.size() + \"!\");\n" +
+          "\t\t}\n" +
+          "\t\t\n" +
+          "\t\treturn row;\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t *\n" +
+          "\t * @return All of the {@link $className} rows in the given Database.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate) {\n" +
+          "\t\treturn queryForRows(_jdbcTemplate, false);\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _randomize\n" +
+          "\t * \t\tIf {@code true}, then the rows returned will be in random order.\n" +
+          "\t *\n" +
+          "\t * @return All of the {@link $className} rows in the given Database.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, boolean _randomize) {\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
+          "\t\tArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\");\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Variables -----------------------------------\n" +
+          "\t\tList<$className> rows;\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Code ----------------------------------------\n" +
+          "\t\trows = _jdbcTemplate.query(\"select * from \" + FULL_TABLE_NAME + (_randomize ? \" ORDER BY dbms_random.value\" : \"\"), new $className());\n" +
+          "\t\t\n" +
+          "\t\treturn rows;\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * Will get the requested number of rows.\n" +
+          "\t * <p>\n" +
+          "\t * <b>Note:</b> This mwthod is synchronized on the given JdbcTemplate.\n" +
+          "\t * </p>\n" +
+          "\t *\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _limit\n" +
+          "\t * \t\tThe maximum number of rows to return.\n" +
           "\t *\n" +
           "\t * @return All of the {@link $className} rows in the given Database.\n" +
           "\t */\n" +
           "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit) {\n" +
+          "\t\treturn queryForRows(_jdbcTemplate, _limit, false);\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * Will get the requested number of rows.\n" +
+          "\t * <p>\n" +
+          "\t * <b>Note:</b> This method is synchronized on the given JdbcTemplate.\n" +
+          "\t * </p>\n" +
+          "\t *\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _limit\n" +
+          "\t * \t\tThe maximum number of rows to return.\n" +
+          "\t * @param _randomize\n" +
+          "\t * \t\tIf {@code true}, then the rows returned will be in random order.\n" +
+          "\t *\n" +
+          "\t * @return All of the {@link $className} rows in the given Database.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize) {\n" +
           "\t\t\n" +
-          "\t\tint maxRows = _jdbcTemplate.getMaxRows();\n" +
+          "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
+          "\t\tArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\");\n" +
+          "\t\tif(_limit < 1) {\n" +
+          "\t\t\tthrow new IllegalArgumentException(\"Given limot must be positive!\");\n" +
+          "\t\t}\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Variables -----------------------------------\n" +
           "\t\tList<$className> rows;\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Code ----------------------------------------\n" +
           "\t\tsynchronized(_jdbcTemplate) { // Max Rows may not get reset in time, if another thread accesses this JDBC Template, without lock.\n" +
+          "\t\t\t\n" +
+          "\t\t\tint oldMaxRows = _jdbcTemplate.getMaxRows();\n" +
+          "\t\t\t\n" +
           "\t\t\ttry {\n" +
           "\t\t\t\t_jdbcTemplate.setMaxRows(_limit);\n" +
-          "\t\t\t\trows = queryForRows(_jdbcTemplate);\n" +
+          "\t\t\t\trows = queryForRows(_jdbcTemplate, _randomize);\n" +
           "\t\t\t}\n" +
           "\t\t\tfinally {\n" +
-          "\t\t\t\t_jdbcTemplate.setMaxRows(maxRows);\n" +
+          "\t\t\t\t_jdbcTemplate.setMaxRows(oldMaxRows);\n" +
           "\t\t\t}\n" +
           "\t\t}\n" +
+          "\t\t\n" +
           "\t\treturn rows;\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * Will query a given Database (DB) for rows that match the given Column Values.\n" +
+          "\t * <p>\n" +
+          "\t * <b>Note:</b> This method is synchronized on the given JdbcTemplate, if the given limit is > 0.\n" +
+          "\t * </p>\n" +
+          "\t *\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _limit\n" +
+          "\t * \t\tThe maximum number of rows to return.\n" +
+          "\t * @param _randomize\n" +
+          "\t * \t\tIf {@code true}, then the rows returned will be in random order.\n" +
+          "\t * @param _queryData\n" +
+          "\t * \t\tThis Object's values will be used as criteria, for the select query.\n" +
+          "\t * @param _columns\n" +
+          "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
+          "\t * \t\tvalues will be used.\n" +
+          "\t *\n" +
+          "\t * @return The {@link $className} rows found.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize, $className _queryData, Column... _columns) {\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
+          "\t\t//ArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\"); // Validated in sub-method.\n" +
+          "\t\tArgumentChecks.notNull(_queryData, \"Query Data\");\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Variables -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Code ----------------------------------------\n" +
+          "\t\treturn queryForRows(_jdbcTemplate, _limit, _randomize, Arrays.asList(_queryData), _columns);\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * Will query a given Database (DB) for rows that match the given Column Values.\n" +
+          "\t * <p>\n" +
+          "\t * <b>Note:</b> This method is synchronized on the given JdbcTemplate, if the given limit is > 0.\n" +
+          "\t * </p>\n" +
+          "\t *\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _limit\n" +
+          "\t * \t\tThe maximum number of rows to return.\n" +
+          "\t * @param _randomize\n" +
+          "\t * \t\tIf {@code true}, then the rows returned will be in random order.\n" +
+          "\t * @param _queryData\n" +
+          "\t * \t\tThis Object's values will be used as criteria, for the select query.\n" +
+          "\t * @param _columns\n" +
+          "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
+          "\t * \t\tvalues will be used.\n" +
+          "\t *\n" +
+          "\t * @return The {@link $className} rows found.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize, Collection<$className> _queryData, Column... _columns) {\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
+          "\t\tArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\");\n" +
+          "\t\tif(_queryData == null || _queryData.isEmpty()) {\n" +
+          "\t\t\tthrow new IllegalArgumentException(\"The given Query Data Collection cannot be empty!\");\n" +
+          "\t\t}\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Variables -----------------------------------\n" +
+          "\t\tboolean firstQueryDataObject = true, ignoreNull = _columns == null || _columns.length < 1;\n" +
+          "\t\tString queryString = \"select * from \" + FULL_TABLE_NAME + \" where \";\n" +
+          "\t\tColumn[] columnsToParse = ignoreNull ? Column.values() : _columns;\n" +
+          "\t\tList<Object> args = new ArrayList(columnsToParse.length);\n" +
+          "\t\tList<$className> rows;\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Code ----------------------------------------\n" +
+          "\t\tfor($className queryData : _queryData) {\n" +
+          "\t\t\t\n" +
+          "\t\t\tif(firstQueryDataObject) {\n" +
+          "\t\t\t\tfirstQueryDataObject = false;\n" +
+          "\t\t\t}\n" +
+          "\t\t\telse {\n" +
+          "\t\t\t\tqueryString += \" or \";\n" +
+          "\t\t\t}\n" +
+          "\t\t\tqueryString += \"(\";\n" +
+          "\t\t\t\n" +
+          "\t\t\tboolean firstColumnWithData = true;\n" +
+          "\t\t\t\n" +
+          "\t\t\tfor(Column column : columnsToParse) {\n" +
+          "\t\t\t\t\n" +
+          "\t\t\t\tObject value = queryData.getColumnValue(column);\n" +
+          "\t\t\t\tif(value != null || !ignoreNull) {\n" +
+          "\t\t\t\t\tif(firstColumnWithData) {\n" +
+          "\t\t\t\t\t\tfirstColumnWithData = false;\n" +
+          "\t\t\t\t\t}\n" +
+          "\t\t\t\t\telse {\n" +
+          "\t\t\t\t\t\tqueryString += \" and \";\n" +
+          "\t\t\t\t\t}\n" +
+          "\t\t\t\t\tqueryString += column.getColumnName() + \"=?\";\n" +
+          "\t\t\t\t\targs.add(value);\n" +
+          "\t\t\t\t}\n" +
+          "\t\t\t}\n" +
+          "\t\t\t\n" +
+          "\t\t\tqueryString += \")\";\n" +
+          "\t\t}\n" +
+          "\t\t\n" +
+          "\t\tif(_randomize) {\n" +
+          "\t\t\tqueryString += \" ORDER BY dbms_random.value\";\n" +
+          "\t\t}\n" +
+          "\t\t\n" +
+          "\t\tif(_limit > 0) {\n" +
+          "\t\t\tsynchronized(_jdbcTemplate) { // Max Rows may not get reset in time, if another thread accesses this JDBC Template, without lock.\n" +
+          "\t\t\t\t\n" +
+          "\t\t\t\tint oldMaxRows = _jdbcTemplate.getMaxRows();\n" +
+          "\t\t\t\t\n" +
+          "\t\t\t\ttry {\n" +
+          "\t\t\t\t\t_jdbcTemplate.setMaxRows(_limit);\n" +
+          "\t\t\t\t\trows = _jdbcTemplate.query(queryString, args.toArray(), _queryData.iterator().next());\n" +
+          "\t\t\t\t}\n" +
+          "\t\t\t\tfinally {\n" +
+          "\t\t\t\t\t_jdbcTemplate.setMaxRows(oldMaxRows);\n" +
+          "\t\t\t\t}\n" +
+          "\t\t\t}\n" +
+          "\t\t}\n" +
+          "\t\telse {\n" +
+          "\t\t\trows = _jdbcTemplate.query(queryString, args.toArray(), _queryData.iterator().next());\n" +
+          "\t\t}\n" +
+          "\t\t\n" +
+          "\t\treturn rows;\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * Will query a given Database (DB) for rows that match the given Column Values.\n" +
+          "\t *\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _queryData\n" +
+          "\t * \t\tThis Object's values will be used as criteria, for the select query.\n" +
+          "\t * @param _columns\n" +
+          "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
+          "\t * \t\tvalues will be used.\n" +
+          "\t *\n" +
+          "\t * @return The {@link $className} rows found.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, $className _queryData, Column... _columns) {\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
+          "\t\t//ArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\"); // Validated in sub-method.\n" +
+          "\t\tArgumentChecks.notNull(_queryData, \"Query Data\");\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Variables -----------------------------------\n" +
+          "\t\t\n" +
+          "\t\t//------------------------ Code ----------------------------------------\n" +
+          "\t\treturn queryForRows(_jdbcTemplate, Arrays.asList(_queryData), _columns);\n" +
+          "\t}\n" +
+          "\t\n" +
+          "\t/**\n" +
+          "\t * Will query a given Database (DB) for rows that match the given Column Values.\n" +
+          "\t *\n" +
+          "\t * @param _jdbcTemplate\n" +
+          "\t * \t\tThe DB Connection to use.\n" +
+          "\t * @param _queryData\n" +
+          "\t * \t\tThis Object's values will be used as criteria, for the select query.\n" +
+          "\t * @param _columns\n" +
+          "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
+          "\t * \t\tvalues will be used.\n" +
+          "\t *\n" +
+          "\t * @return The {@link $className} rows found.\n" +
+          "\t */\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, Collection<$className> _queryData, Column... _columns) {\n" +
+          "\t\treturn queryForRows(_jdbcTemplate, -1, false, _queryData, _columns);\n" +
           "\t}"
-  out.println ""
-  out.println "/**\n" +
-          "     * Will query a given Database (DB) for rows that match the given Column Values.\n" +
-          "     *\n" +
-          "     * @param _jdbcTemplate\n" +
-          "     *         The DB Connection to use.\n" +
-          "     * @param _queryData\n" +
-          "     *         This Object's values will be used as criteria, for the select query.\n" +
-          "     * @param _columns\n" +
-          "     *         If provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
-          "     *         values will be used.\n" +
-          "     *\n" +
-          "     * @return The {@link $className} rows found.\n" +
-          "     */\n" +
-          "    public static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, $className _queryData, Column... _columns) {\n" +
-          "\n" +
-          "        //------------------------ Pre-Checks ----------------------------------\n" +
-          "\n" +
-          "        //------------------------ CONSTANTS -----------------------------------\n" +
-          "\n" +
-          "        //------------------------ Variables -----------------------------------\n" +
-          "        boolean firstColumnWithData = true, ignoreNull = _columns == null || _columns.length < 1;\n" +
-          "        String queryString = \"select * from \" + FULL_TABLE_NAME + \" where \";\n" +
-          "        Column[] columnsToParse = ignoreNull ? Column.values() : _columns;\n" +
-          "        List<Object> args = new ArrayList(columnsToParse.length);\n" +
-          "        List<$className> rows;\n" +
-          "\n" +
-          "        //------------------------ Code ----------------------------------------\n" +
-          "        for(Column column : columnsToParse) {\n" +
-          "            Object value = _queryData.getColumnValue(column);\n" +
-          "            if(value != null || !ignoreNull) {\n" +
-          "                if(firstColumnWithData) {\n" +
-          "                    firstColumnWithData = false;\n" +
-          "                }\n" +
-          "                else {\n" +
-          "                    queryString += \" and \";\n" +
-          "                }\n" +
-          "                queryString += column.getColumnName() + \"=?\";\n" +
-          "                args.add(value);\n" +
-          "            }\n" +
-          "        }\n" +
-          "\n" +
-          "        rows = _jdbcTemplate.query(queryString, args.toArray(), _queryData);\n" +
-          "\n" +
-          "        return rows;\n" +
-          "    }"
-  out.println ""
-  out.println "/**\n" +
-          "     * Will query a given Database (DB) for the row that match the given Column Values.\n" +
-          "     *\n" +
-          "     * @param _jdbcTemplate The DB Connection to use.\n" +
-          "     * @param _queryData This Object's values will be used as criteria, for the select query.\n" +
-          "     * @param _columns If provided, these will be the only columns that will be used as selection criteria;\n" +
-          "     *                 otherwise, all of the {@code _queryData} Object's non-null values will be used.\n" +
-          "     *\n" +
-          "     * @return The {@link $className} row found, or {@code null} if no row was found.\n" +
-          "     *\n" +
-          "     * @throws TooManyResultsException If more then 1 row is found by this query.\n" +
-          "     */\n" +
-          "    public static $className queryForRow(JdbcTemplate _jdbcTemplate, $className _queryData, Column... _columns) {\n" +
-          "\n" +
-          "        //------------------------ Pre-Checks ----------------------------------\n" +
-          "\n" +
-          "        //------------------------ CONSTANTS -----------------------------------\n" +
-          "\n" +
-          "        //------------------------ Variables -----------------------------------\n" +
-          "        $className row;\n" +
-          "        List<$className> rows = queryForRows(_jdbcTemplate, _queryData, _columns);\n" +
-          "\n" +
-          "        //------------------------ Code ----------------------------------------\n" +
-          "        switch(rows.size()) {\n" +
-          "            case 0:\n" +
-          "                row = null;\n" +
-          "                break;\n" +
-          "            case 1:\n" +
-          "                row = rows.get(0);\n" +
-          "                break;\n" +
-          "            default:\n" +
-          "                throw new TooManyResultsException(\"Expected 1 row but found \" + rows.size() + \"!\");\n" +
-          "        }\n" +
-          "\n" +
-          "        return row;\n" +
-          "    }"
   out.println ""
   out.println "\t//========================= Variables ======================================"
   fields.each() {
@@ -378,17 +575,33 @@ def generate(out, schemaName, tableName, className, fields) {
   }
   out.println "\t}"
   out.println ""
+  out.print "\t@Override\n" +
+          "\tpublic int hashCode() {\n" +
+          "\t\treturn Objects.hash("
+  fields.eachWithIndex() { it, index ->
+    out.print it.name
+    if(index < fields.size() - 1) {
+      out.print ",\n\t\t\t\t\t\t\t"
+    }
+  }
+  out.println ");\n" +
+          "\t}"
+  out.println ""
   out.println "\t@Override"
   out.println "\tpublic String toString() {"
   out.println "\t\treturn \"${className}{\" +"
-  fields.each() {
-    out.println "\t\t\t\"${it.name}='\" + ${it.name} + \"', \" +"
+  fields.eachWithIndex() { it, index ->
+    out.print "\t\t\t\"${it.name}='\" + ${it.name} + \"'"
+    if(index < fields.size() - 1) {
+      out.print ", "
+    }
+    out.println "\" +"
   }
   out.println "\t\t'}';"
   out.println "\t}"
   out.println ""
   out.println "\t//========================= Queries ========================================"
-  out.println "/**\n" +
+  out.println "    /**\n" +
           "     * Will query a given Database (DB) for rows that match this Object's values.\n" +
           "     *\n" +
           "     * @param _jdbcTemplate The DB Connection to use.\n" +
@@ -401,7 +614,7 @@ def generate(out, schemaName, tableName, className, fields) {
           "        return queryForRows(_jdbcTemplate, this, _columns);\n" +
           "    }"
   out.println ""
-  out.println "/**\n" +
+  out.println "    /**\n" +
           "     * Will query a given Database (DB) for the row that match this Object's values.\n" +
           "     *\n" +
           "     * @param _jdbcTemplate The DB Connection to use.\n" +

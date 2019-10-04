@@ -1,5 +1,5 @@
 /*
- * Created on 2019-07-26 by Brandon Dudek &lt;bdudek@paychex.com&gt; for {swatt}.
+ * Created on 2019-07-26 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>) for {swatt}.
  */
 package xyz.swatt.files;
 
@@ -26,7 +26,7 @@ import java.util.zip.ZipInputStream;
 /**
  * Helps get Resource Files our of a Build Directory or an Executing Jar.
  *
- * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+ * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
 public class ResourceHelper {
@@ -55,7 +55,7 @@ public class ResourceHelper {
 	/**
 	 * The path to the default, root Resources location.
 	 */
-	public static final URL RESOURCES_URL = ResourceHelper.class.getResource(PATH_SEPARATOR);
+	public static final URL RESOURCES_URL = ResourceHelper.class.getResource(PATH_SEPARATOR); // TODO: Ensure that this works of there is a space in the path.
 	
 	//========================= Static Variables ===============================
 	
@@ -92,7 +92,7 @@ public class ResourceHelper {
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the given Path is blank.
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static InputStream getResource(String _path) {
 		
@@ -129,7 +129,7 @@ public class ResourceHelper {
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the given Path is blank or if the given Charset is {@code null}.
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static String getResourceAsString(String _path, Charset _charset) {
 		
@@ -168,7 +168,7 @@ public class ResourceHelper {
 	 * @throws IllegalArgumentException
 	 * 		If the given Path is blank.
 	 *
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static Set<InputStream> getResources(String _path) {
 		
@@ -216,7 +216,7 @@ public class ResourceHelper {
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the given Path is blank or if the given Charset is {@code null}.
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static Set<String> getResourcesAsStrings(String _path, Charset _charset) {
 		
@@ -266,7 +266,7 @@ public class ResourceHelper {
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the given Path is blank.
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static Set<Path> getResourcesAsPaths(String _path) {
 		
@@ -345,7 +345,7 @@ public class ResourceHelper {
 	//========================= Helper Static Methods ==========================
 	
 	/**
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	private static String fixPath(String _path, boolean _isFolder) {
 		
@@ -369,7 +369,7 @@ public class ResourceHelper {
 	}
 	
 	/**
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	private static String streamToString(InputStream _stream, Charset _charset) {
 		

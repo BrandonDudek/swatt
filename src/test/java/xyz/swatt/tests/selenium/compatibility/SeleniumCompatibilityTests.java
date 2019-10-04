@@ -57,7 +57,7 @@ public class SeleniumCompatibilityTests {
                     {ChromeBrowser.CHROME}, // Automatically Chooses OS.
                     {ChromeBrowser.CHROME_WIN_32},
                     {FirefoxBrowser.FIREFOX}, // Automatically Chooses OS and 32/64 bit.
-                    {FirefoxBrowser.FIREFOX_WIN}, // Automatically Chooses 32/64 bit.*/
+                    {FirefoxBrowser.FIREFOX_WIN}, // Automatically Chooses 32/64 bit.
                     {FirefoxBrowser.FIREFOX_WIN_64},
                     {FirefoxBrowser.FIREFOX_WIN_32},
                     {IEBrowser.IE_WIN}, // Automatically Chooses 32/64 bit.
