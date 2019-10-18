@@ -47,7 +47,7 @@ SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quick
 
 |Chrome Driver|Chrome|
 |:---:|:---:|
-|74.0.3729.6|74.0.3729.131|
+|74.0.3729.6|77.0.3865|
 
 |Gecko Driver|Firefox|
 |:---:|:---:|

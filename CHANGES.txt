@@ -1,6 +1,6 @@
 # Committed but Unreleased Changes
 
-ConversionException, JsonException, JsonWrapper, POM, and Scripts
+ConversionException, JsonException, JsonWrapper, POM, and Drivers Binaries, Scripts
 
 **ConversionException**
 - Added Exception class
@@ -19,6 +19,12 @@ ConversionException, JsonException, JsonWrapper, POM, and Scripts
 - Added Jayway v2.4.0 dependency
 - Updated TestNG dependency to v7.0.0
 - Added Jackson Dependencies: jackson-datatype-jdk8 & jackson-datatype-jsr310
+
+**Drivers**
+- Updated Chrome Drivers to v77.0.3865.40
+
+**Binaries**
+- Added Linux RPM installer for compatable Chrome version
 
 **Scripts**
 - Updated SQL-RowMapper-POJO-Generator.groovy to have random query methods
