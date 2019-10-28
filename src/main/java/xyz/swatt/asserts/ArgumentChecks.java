@@ -1,16 +1,19 @@
 package xyz.swatt.asserts;
 
 import net.sf.saxon.s9api.Processor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.support.ui.Quotes;
+import xyz.swatt.log.LogMethods;
 
 import java.io.File;
 import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 
 /**
  * Tests for method Arguments.
@@ -31,7 +34,7 @@ public class ArgumentChecks {
 	//========================= Static Constructor =============================
 	static {}
 	
-	//========================= Static Methods =================================
+	//========================= Public Static Methods ==========================
 	/**
 	 * Check a given {@link File} to ensure that is it Exists.
 	 *
@@ -50,7 +53,7 @@ public class ArgumentChecks {
 		LOGGER.info("fileExists(_file: {}, _argumentName: {}) [START]", (_file == null ? "(NULL)" : _file.getAbsolutePath()), _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
-		_argumentName = (_argumentName == null || _argumentName.trim().isEmpty()) ? "" : _argumentName.trim() + " ";
+		_argumentName = formatArgumentName(_argumentName);
 
 		//------------------------ CONSTANTS -----------------------------------
 
@@ -88,7 +91,7 @@ public class ArgumentChecks {
 		LOGGER.info("folderExists(_folder: {}, _argumentName: {}) [START]", (_folder == null ? "(NULL)" : _folder.getAbsolutePath()), _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
-		_argumentName = (_argumentName == null || _argumentName.trim().isEmpty()) ? "" : _argumentName.trim() + " ";
+		_argumentName = formatArgumentName(_argumentName);
 
 		//------------------------ CONSTANTS -----------------------------------
 
@@ -107,7 +110,36 @@ public class ArgumentChecks {
 
 		LOGGER.debug("folderExists(_folder: {}, _argumentName: {}) [END]", _folder.getAbsolutePath(), _argumentName);
 	}
-
+	
+	/**
+	 * Check a given {@link Collection} to ensure that is it exists and has entries.
+	 *
+	 * @param _arg
+	 * 		The {@link Collection} to check.
+	 * @param _argumentName
+	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the {@link Collection} is {@code null} oe empty.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	@LogMethods
+	public static void notEmpty(Collection _arg, String _argumentName) throws IllegalArgumentException {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		_argumentName = formatArgumentName(_argumentName);
+		
+		//------------------------ Code ----------------------------------------
+		if(CollectionUtils.isEmpty(_arg)) {
+			throw new IllegalArgumentException("Given " + _argumentName + "Collection cannot be Empty!");
+		}
+	}
+	
 	/**
 	 * Check a given Object to ensure that is it exists.
 	 *
@@ -118,28 +150,27 @@ public class ArgumentChecks {
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the Object is {@code null}.
-	 * 		
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static void notNull(Object _arg, String _argumentName) throws IllegalArgumentException {
-
+		
 		LOGGER.info("notNull(_arg: {}, _argumentName: {}) [START]", (_arg == null ? "(NULL)" : _arg), _argumentName);
-
+		
 		//------------------------ Pre-Checks ----------------------------------
-		_argumentName = (_argumentName == null || _argumentName.trim().isEmpty()) ? "" : _argumentName.trim() + " ";
-
+		_argumentName = formatArgumentName(_argumentName);
+		
 		//------------------------ CONSTANTS -----------------------------------
-
+		
 		//------------------------ Variables -----------------------------------
-
+		
 		//------------------------ Code ----------------------------------------
 		if(_arg == null) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Object cannot be NULL!");
 		}
-
+		
 		LOGGER.debug("notNull(_arg: {}, _argumentName: {}) [END]", _arg, _argumentName);
 	}
-
+	
 	/**
 	 * Checks that a given {@link Path} is Absolute and points to a File, without looking at the file system.
 	 * <p>
@@ -159,21 +190,21 @@ public class ArgumentChecks {
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the {@link Path} is {@code null}, Empty, Whitespace Only, not valid, not Absolute, or points to a Folder (not always caught).
-	 * 		
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static Path pathIsAbsoluteFile(String _path, String _argumentName) throws IllegalArgumentException {
-
+		
 		LOGGER.info("pathIsAbsoluteFile(_path: {}, _argumentName: {}) [START]", _path, _argumentName);
-
+		
 		//------------------------ Pre-Checks ----------------------------------
-		_argumentName = (_argumentName == null || _argumentName.trim().isEmpty()) ? "" : _argumentName.trim() + " ";
-
+		_argumentName = formatArgumentName(_argumentName);
+		
 		//------------------------ CONSTANTS -----------------------------------
-
+		
 		//------------------------ Variables -----------------------------------
 		Path path;
-
+		
 		//------------------------ Code ----------------------------------------
 		if(_path == null) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path cannot be NULL!");
@@ -184,24 +215,24 @@ public class ArgumentChecks {
 		else if(_path.trim().isEmpty()) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path cannot be a Whitespace Only String!");
 		}
-
+		
 		try {
 			path = Paths.get(_path);
 		}
 		catch(InvalidPathException e) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path is not valid!\n\tPath: " + _path, e);
 		}
-
+		
 		if(!_path.startsWith("\\") && /*Unix*/ !_path.startsWith("/") /*Unix*/ &&  !_path.matches("[A-Z]:[\\\\/].*") /*Windows*/) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path must Absolute!");
 		}
-
+		
 		if(FilenameUtils.getName(_path).isEmpty()) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path points to a Folder!");
 		}
-
+		
 		LOGGER.debug("pathIsAbsoluteFile(_path: {}, _argumentName: {}) [END]", _path, _argumentName);
-
+		
 		return path;
 	}
 
@@ -232,7 +263,7 @@ public class ArgumentChecks {
 		LOGGER.info("pathIsAbsoluteFolder(_path: {}, _argumentName: {}) [START]", _path, _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
-		_argumentName = (_argumentName == null || _argumentName.trim().isEmpty()) ? "" : _argumentName.trim() + " ";
+		_argumentName = formatArgumentName(_argumentName);
 
 		//------------------------ CONSTANTS -----------------------------------
 
@@ -384,9 +415,8 @@ public class ArgumentChecks {
 
         LOGGER.debug("xpathIsValid(_string: {}, _argumentName: {}) [END]", Quotes.escape(_xPath), _argumentName);
 	}
-
-	//-------------------- Helper Static Methods --------------------
-
+	
+	//========================= Helper Static Methods ==========================
 	/**
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */

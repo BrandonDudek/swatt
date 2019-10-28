@@ -3291,7 +3291,6 @@ public class WebDriverWrapper implements Comparable {
 	 * @param _maxWaitTime
 	 *         The maximum amount of time to wait for the Title to equal the given value.
 	 *
-	 *
 	 * @throws IllegalArgumentException
 	 *         If the given Wait Time is {@code null}.
 	 * @throws TimeoutException
@@ -3373,6 +3372,158 @@ public class WebDriverWrapper implements Comparable {
 
 		LOGGER.debug("waitForTitle(_value: {}, _trim: {}, _caseMatters: {}, _maxWaitTime: {}) [END]", _value, _trim, _caseMatters,
 				(_maxWaitTime == null ? "(NULL)" : _maxWaitTime));
+	}
+	
+	/**
+	 * This method will wait up to {@link #maxPageLoadTime}, for the Page's Title to equal one of the given values.
+	 * <p>
+	 * <i>(This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.)</i>
+	 * </p>
+	 * <p>
+	 * <b>Note:</b> The Tile and Expected values will be trimmed, and the case will be ignored.
+	 * </p>
+	 *
+	 * @param _values
+	 * 		Collection of what the Page's Title could be.
+	 *
+	 * @return The Title that was found, if successful.
+	 *
+	 * @throws TimeoutException
+	 * 		If the Page's Title does not equal the given after {@link #maxPageLoadTime}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public String waitForTitle(Collection<String> _values) {
+		return waitForTitle(_values, true, false, maxPageLoadTime);
+	}
+	
+	/**
+	 * This method will wait up to {@link #maxPageLoadTime}, for the Page's Title to equal one of the given values.
+	 * <p>
+	 * <i>Note:</i> This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.
+	 * </p>
+	 *
+	 * @param _values
+	 * 		Collection of what the Page's Title could be.
+	 * @param _trim
+	 *        {@code true}, to trim both values before comparing.
+	 * @param _caseMatters
+	 *        {@code false}, to ignore case.
+	 *
+	 * @return The Title that was found, if successful.
+	 *
+	 * @throws TimeoutException
+	 * 		If the Page's Title does not equal the given after {@link #maxPageLoadTime}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public String waitForTitle(Collection<String> _values, boolean _trim, boolean _caseMatters) {
+		return waitForTitle(_values, _trim, _caseMatters, maxPageLoadTime);
+	}
+	
+	/**
+	 * This method will wait for the given amount of time, for the Page's Title to equal one of the given values.
+	 * <p>
+	 * <i>(This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.)</i>
+	 * </p>
+	 * <p>
+	 * <b>Note:</b> The Tile and Expected values will be trimmed, and the case will be ignored.
+	 * </p>
+	 *
+	 * @param _values
+	 * 		Collection of what the Page's Title could be.
+	 * @param _maxWaitTime
+	 * 		The maximum amount of time to wait for the Title to equal the given value.
+	 *
+	 * @return The Title that was found, if successful.
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given Wait Time is {@code null}.
+	 * @throws TimeoutException
+	 * 		If the Page's Title does not equal the given after the given Wait Time.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public String waitForTitle(Collection<String> _values, Duration _maxWaitTime) {
+		return waitForTitle(_values, true, false, _maxWaitTime);
+	}
+	
+	/**
+	 * This method will wait for the given amount of time, for the Page's Title to equal one of the given values.
+	 * <p>
+	 * <i>Note:</i> This can be useful to wait for redirects to finish, because {@link #waitForPageLoad()} will not handle redirects.
+	 * </p>
+	 *
+	 * @param _values
+	 * 		Collection of what the Page's Title could be.
+	 * @param _trim
+	 *        {@code true}, to trim both values before comparing.
+	 * @param _caseMatters
+	 *        {@code false}, to ignore case.
+	 * @param _maxWaitTime
+	 * 		The maximum amount of time to wait for the Title to equal the given value.
+	 *
+	 * @return The Title that was found, if successful.
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given Value or Wait Time are {@code null}.
+	 * @throws TimeoutException
+	 * 		If the Page's Title does not equal the given after the given Wait Time.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	@LogMethods
+	public String waitForTitle(Collection<String> _values, boolean _trim, boolean _caseMatters, Duration _maxWaitTime) {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notEmpty(_values, "Possible Page Title Values");
+		ArgumentChecks.notNull(_maxWaitTime, "Max Wait Time");
+		
+		//------------------------ CONSTANTS -----------------------------------
+		final Set<String> foundTitle = new HashSet(1);
+		
+		//------------------------ Variables -----------------------------------
+		FluentWait<WebDriver> fluentWait;
+		LocalDateTime startTime, endTime;
+		
+		//------------------------ Code ----------------------------------------
+		synchronized(LOCK) {
+			
+			fluentWait = new FluentWait<>(DRIVER);
+			
+			// Fluent Wait Settings..
+			fluentWait.withTimeout(_maxWaitTime).pollingEvery(POLLING_INTERVAL);
+			
+			startTime = LocalDateTime.now();
+			
+			try {
+				fluentWait.until(driver -> {
+					
+					String currentTitle = _trim ? DRIVER.getTitle().trim() : DRIVER.getTitle();
+					
+					for(String expectedTitle : _values) {
+						
+						expectedTitle = _trim ? expectedTitle.trim() : expectedTitle;
+						
+						if(_caseMatters && currentTitle.equals(expectedTitle)) {
+							foundTitle.add(expectedTitle);
+							return true;
+						}
+						else if(currentTitle.equalsIgnoreCase(expectedTitle)) {
+							foundTitle.add(expectedTitle);
+							return true;
+						}
+					}
+					
+					return false;
+				});
+			}
+			catch(TimeoutException e) {
+				endTime = LocalDateTime.now();
+				Duration timeSpent = Duration.between(startTime, endTime);
+				String currentTitle = getPageTitle();
+				throw new TimeoutException("Page title never equaled expected!\n\t\t  Actual: " + currentTitle + "\n\t\tExpected: " + _values +
+						"\n\tReal Time Waited: " + timeSpent + getScreenshotExceptionMessagePart(), e);
+			}
+			
+			return foundTitle.iterator().next();
+		}
 	}
 
 	//-------------------- Override Methods --------------------

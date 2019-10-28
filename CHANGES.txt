@@ -1,6 +1,9 @@
 # Committed but Unreleased Changes
 
-ConversionException, JsonException, JsonWrapper, POM, and Drivers Binaries, Scripts
+ArgumentChecks, ConversionException, JsonException, JsonWrapper, TestNgPlainTextFileReporter, WebDriverWrapper, POM, and Drivers Binaries, Scripts
+
+**ArgumentChecks**
+- Added notEmpty check
 
 **ConversionException**
 - Added Exception class
@@ -13,6 +16,12 @@ ConversionException, JsonException, JsonWrapper, POM, and Drivers Binaries, Scri
 - Can convert between types
 - Can get fields by JSON Path
 - Can delete nodes by JSON Path
+
+**TestNgPlainTextFileReporter**
+- Added TestNG Reporter for Plain Text file
+
+**WebDriverWrapper**
+- Added waitForTitle(Collection<String>, ...) methods
 
 **POM**
 - Added Gson v2.8.5 dependency
