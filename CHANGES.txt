@@ -1,42 +1,8 @@
 # Committed but Unreleased Changes
 
-ArgumentChecks, ConversionException, JsonException, JsonWrapper, TestNgPlainTextFileReporter, WebDriverWrapper, POM, and Drivers Binaries, Scripts
+#
 
-**ArgumentChecks**
-- Added notEmpty check
+** **
+-
 
-**ConversionException**
-- Added Exception class
-
-**JsonException**
-- Added Exception class
-
-**JsonWrapper**
-- Added a class for working with JSON
-- Can convert between types
-- Can get fields by JSON Path
-- Can delete nodes by JSON Path
-
-**TestNgPlainTextFileReporter**
-- Added TestNG Reporter for Plain Text file
-
-**WebDriverWrapper**
-- Added waitForTitle(Collection<String>, ...) methods
-
-**POM**
-- Added Gson v2.8.5 dependency
-- Added Jayway v2.4.0 dependency
-- Updated TestNG dependency to v7.0.0
-- Added Jackson Dependencies: jackson-datatype-jdk8 & jackson-datatype-jsr310
-
-**Drivers**
-- Updated Chrome Drivers to v77.0.3865.40
-
-**Binaries**
-- Added Linux RPM installer for compatable Chrome version
-
-**Scripts**
-- Updated SQL-RowMapper-POJO-Generator.groovy to have random query methods
-- Added hashCode() generation
-
-# Expected Release: v1.15.0
+# Expected Release: v1.15.1
