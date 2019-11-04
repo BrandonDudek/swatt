@@ -1,8 +1,14 @@
 # Committed but Unreleased Changes
 
-#
+# DatabaseException, WebDriverWrapper, & Scripts
 
-** **
--
+**DatabaseException**
+- Added the DatabaseException class, for generic Runtime Exception when working with Databases
 
-# Expected Release: v1.15.1
+**WebDriverWrapper**
+- Added Current URL to most Exception messages
+
+**Scripts**
+- Added insert(...) methods to SQL-RowMapper-POJO-Generator.groovy
+
+# Expected Release: v1.16.0

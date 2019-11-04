@@ -1051,7 +1051,7 @@ public class WebElementWrapper {
 					break;
 				default:
 					throw new TooManyResultsException("ERROR! Only 1 Descendant expected, but " + descendants.size() + " were found!\nBy: " + _by +
-							WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
+							WEB_DRIVER_WRAPPER.getUrlAndScreenshotExceptionMessagePart());
 			}
 		}
 
@@ -1435,7 +1435,7 @@ public class WebElementWrapper {
 						}
 						catch(IOException e) {
 							throw new JsonException("Could not convert List " + selectedOptions + "to JSON!" +
-									WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart(), e);
+									WEB_DRIVER_WRAPPER.getUrlAndScreenshotExceptionMessagePart(), e);
 						}
 					}
 					break;
@@ -2351,11 +2351,11 @@ public class WebElementWrapper {
 						return toString(_prettyPrint);
 					}
 					else {
-						throw new StaleElementReferenceException(webElement.toString() + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
+						throw new StaleElementReferenceException(webElement.toString() + WEB_DRIVER_WRAPPER.getUrlAndScreenshotExceptionMessagePart());
 					}
 				}
 				else {
-					throw new JavascriptException(toString + "\n\t" + JAVASCRIPT_COMMAND + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
+					throw new JavascriptException(toString + "\n\t" + JAVASCRIPT_COMMAND + WEB_DRIVER_WRAPPER.getUrlAndScreenshotExceptionMessagePart());
 				}
 			}
 
@@ -2488,7 +2488,7 @@ public class WebElementWrapper {
 
 				throw new InvalidTypeException("ERROR! Only input Elements of type \"file\" can be used to upload files! This Element "
 						+ (!correctName ? "is a " + webElement.getTagName() + " Element." : "has a type of \""
-						+ (typeAttribute == null ? "NULL" : typeAttribute) + "\".") + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
+						+ (typeAttribute == null ? "NULL" : typeAttribute) + "\".") + WEB_DRIVER_WRAPPER.getUrlAndScreenshotExceptionMessagePart());
 			}
 
 			////////// Execute //////////
@@ -3286,7 +3286,7 @@ public class WebElementWrapper {
 							long currentTime = System.currentTimeMillis();
 							if(currentTime >= maxEndWaitTime) {
 								throw new TimeoutException("Web Element failed to appear after waiting " + _waitTime + " seconds!" +
-										WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart());
+										WEB_DRIVER_WRAPPER.getUrlAndScreenshotExceptionMessagePart());
 							}
 							else if(reacquireWebElement()) {
 								break; // Successfully re-acquired.
@@ -3642,7 +3642,7 @@ public class WebElementWrapper {
 		//------------------------ Variables -----------------------------------
 
 		//------------------------ Code ----------------------------------------
-		String errorMessage = _message + WEB_DRIVER_WRAPPER.getScreenshotExceptionMessagePart();
+		String errorMessage = _message + WEB_DRIVER_WRAPPER.getUrlAndScreenshotExceptionMessagePart();
 
 		LOGGER.debug("throwNoSuchElementException(_message: {}) [END]", _message);
 

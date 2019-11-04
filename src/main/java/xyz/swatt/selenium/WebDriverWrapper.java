@@ -2,6 +2,7 @@ package xyz.swatt.selenium;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.logging.log4j.LogManager;
@@ -1718,7 +1719,7 @@ public class WebDriverWrapper implements Comparable {
 			toRet = null;
 		}
 		else if(!(jsReturnObject instanceof String)) {
-			throw new JavascriptException("Unknown Return Type: " + jsReturnObject.getClass().getName() + "!" + getScreenshotExceptionMessagePart());
+			throw new JavascriptException("Unknown Return Type: " + jsReturnObject.getClass().getName() + "!" + getUrlAndScreenshotExceptionMessagePart());
 		}
 		else {
 			toRet = (String) jsReturnObject;
@@ -2089,7 +2090,7 @@ public class WebDriverWrapper implements Comparable {
 			switch(webElementWrappers.size()) {
 				case 0:
 					if(_noElementExceptionMessage != null) {
-						throw new NoSuchElementException(_noElementExceptionMessage + getScreenshotExceptionMessagePart());
+						throw new NoSuchElementException(_noElementExceptionMessage + getUrlAndScreenshotExceptionMessagePart());
 					}
 					else {
 						break; // Return NULL.
@@ -2099,7 +2100,7 @@ public class WebDriverWrapper implements Comparable {
 					break;
 				default:
 					throw new TooManyResultsException("ERROR! Only 1 WebElement expected, but " + webElementWrappers.size() + " were found!\n\tBy: " + _by +
-							getScreenshotExceptionMessagePart());
+							getUrlAndScreenshotExceptionMessagePart());
 			}
 		}
 
@@ -2732,7 +2733,7 @@ public class WebDriverWrapper implements Comparable {
 		}
 
 		if(element == null) {
-			throw new WebDriverWrapperException("There is no page loaded in the browser!" + getScreenshotExceptionMessagePart());
+			throw new WebDriverWrapperException("There is no page loaded in the browser!" + getUrlAndScreenshotExceptionMessagePart());
 		}
 
 		element.sendKeys(_keys); // User Wait/Think time happens here.
@@ -2898,10 +2899,10 @@ public class WebDriverWrapper implements Comparable {
 			 * because they will switch to invisible Frames.
 			 */
 			if(frames.isEmpty()) {
-				throw new NoSuchElementException("ERROR! " + _by + " returns no visible Frame/IFrame!" + getScreenshotExceptionMessagePart());
+				throw new NoSuchElementException("ERROR! " + _by + " returns no visible Frame/IFrame!" + getUrlAndScreenshotExceptionMessagePart());
 			}
 			else if(frames.size() > 1) {
-				throw new TooManyResultsException("ERROR! " + _by + " returns more than one visible Frame/IFrame!" + getScreenshotExceptionMessagePart());
+				throw new TooManyResultsException("ERROR! " + _by + " returns more than one visible Frame/IFrame!" + getUrlAndScreenshotExceptionMessagePart());
 			}
 
 			DRIVER.switchTo().frame(frames.get(0).getWebElement());
@@ -3160,9 +3161,8 @@ public class WebDriverWrapper implements Comparable {
 	 * 		With the given message.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
+	@LogMethods
 	public void throwWebPageException(String _message, Throwable _cause) throws WebPageException {
-		
-		LOGGER.info("throwWebPageException(_message: {}) [START]", _message);
 		
 		//------------------------ Pre-Checks ----------------------------------
 		
@@ -3171,9 +3171,7 @@ public class WebDriverWrapper implements Comparable {
 		//------------------------ Variables -----------------------------------
 		
 		//------------------------ Code ----------------------------------------
-		String errorMessage = _message + getScreenshotExceptionMessagePart();
-		
-		LOGGER.debug("throwWebPageException(_message: {}) [END]", _message);
+		String errorMessage = _message + getUrlAndScreenshotExceptionMessagePart();
 		
 		if(_cause == null) {
 			throw new WebPageException(errorMessage);
@@ -3226,7 +3224,7 @@ public class WebDriverWrapper implements Comparable {
 				String documentReadyState = (String) ((JavascriptExecutor) DRIVER).executeScript("return document.readyState;");
 
 				if(!documentReadyState.equals(REQUIRED_DOCUMENT_READY_STATE)) {
-					throw new TimeoutException("document.readyState=" + documentReadyState + getScreenshotExceptionMessagePart(), e);
+					throw new TimeoutException("document.readyState=" + documentReadyState + getUrlAndScreenshotExceptionMessagePart(), e);
 				}
 			}
 
@@ -3323,55 +3321,19 @@ public class WebDriverWrapper implements Comparable {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
+	@LogMethods
 	public void waitForTitle(String _value, boolean _trim, boolean _caseMatters, Duration _maxWaitTime) {
-
-		LOGGER.info("waitForTitle(_value: {}, _trim: {}, _caseMatters: {}, _maxWaitTime: {}) [START]", _value, _trim, _caseMatters,
-				(_maxWaitTime == null ? "(NULL)" : _maxWaitTime));
 
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_value, "Expected Page Title Value");
-		ArgumentChecks.notNull(_maxWaitTime, "Max Wait Time");
+		//ArgumentChecks.notNull(_maxWaitTime, "Max Wait Time"); // Will be validated below.
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		String expectedTitle = _trim ? _value.trim() : _value;
-
-		FluentWait<WebDriver> fluentWait;
-		LocalDateTime startTime, endTime;
 
 		//------------------------ Code ----------------------------------------
-		synchronized(LOCK) {
-
-			fluentWait = new FluentWait<>(DRIVER);
-
-			// Fluent Wait Settings..
-			fluentWait.withTimeout(_maxWaitTime).pollingEvery(POLLING_INTERVAL);
-			
-			startTime = LocalDateTime.now();
-			
-			try {
-				fluentWait.until(driver -> {
-					String currentTitle = _trim ? DRIVER.getTitle().trim() : DRIVER.getTitle();
-					if(_caseMatters) {
-						return currentTitle.equals(expectedTitle);
-					}
-					else {
-						return currentTitle.equalsIgnoreCase(expectedTitle);
-					}
-				});
-			}
-			catch(TimeoutException e) {
-				endTime = LocalDateTime.now();
-				Duration timeSpent = Duration.between(startTime, endTime);
-				String currentTitle = getPageTitle();
-				throw new TimeoutException("Page title never equaled expected!\n\t\t  Actual: " + currentTitle + "\n\t\tExpected: " + _value +
-						"\n\tReal Time Waited: " + timeSpent + getScreenshotExceptionMessagePart(), e);
-			}
-		}
-
-		LOGGER.debug("waitForTitle(_value: {}, _trim: {}, _caseMatters: {}, _maxWaitTime: {}) [END]", _value, _trim, _caseMatters,
-				(_maxWaitTime == null ? "(NULL)" : _maxWaitTime));
+		waitForTitle(Arrays.asList(_value), _trim, _caseMatters, _maxWaitTime);
 	}
 	
 	/**
@@ -3518,8 +3480,10 @@ public class WebDriverWrapper implements Comparable {
 				endTime = LocalDateTime.now();
 				Duration timeSpent = Duration.between(startTime, endTime);
 				String currentTitle = getPageTitle();
-				throw new TimeoutException("Page title never equaled expected!\n\t\t  Actual: " + currentTitle + "\n\t\tExpected: " + _values +
-						"\n\tReal Time Waited: " + timeSpent + getScreenshotExceptionMessagePart(), e);
+				throw new TimeoutException("Page title never equaled expected!\n\t\t  Actual: " + currentTitle +
+						"\n\t\tExpected: " + _values +
+						"\n\tReal Time Waited: " + timeSpent +
+						getUrlAndScreenshotExceptionMessagePart(), e);
 			}
 			
 			return foundTitle.iterator().next();
@@ -3556,31 +3520,33 @@ public class WebDriverWrapper implements Comparable {
 	}
 
 	//-------------------- Helper Methods --------------------
-
 	/**
+	 * Starts with "\n\t".
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	@LogMethods
-	String getScreenshotExceptionMessagePart() {
+	String getUrlAndScreenshotExceptionMessagePart() {
 
 		//------------------------ Pre-Checks ----------------------------------
 
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-		String screenshotExceptionMessagePart = "";
+		String screenshotExceptionMessagePart = "\n\tURL: " + getCurrentUrl();
 
 		//------------------------ Code ----------------------------------------
 		if(!autoTakeScreenshotsOnErrors) {
 			return screenshotExceptionMessagePart;
 		}
-
+		
+		screenshotExceptionMessagePart += "\n\tScreenshot: ";
 		try {
 			File screenshot = takeScreenshot();
-			screenshotExceptionMessagePart = "\n\tScreenshot: " + screenshot.getAbsolutePath();
+			screenshotExceptionMessagePart += screenshot.getAbsolutePath();
 		}
 		catch(Exception e) {
-			screenshotExceptionMessagePart = ""; // Should already be an empty string.
+			screenshotExceptionMessagePart += StringUtils.normalizeSpace(e.getLocalizedMessage());
 		}
 
 		return screenshotExceptionMessagePart;
