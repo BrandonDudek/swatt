@@ -1,14 +1,25 @@
 # Committed but Unreleased Changes
 
-# DatabaseException, WebDriverWrapper, & Scripts
+# ArgumentChecks, DatabaseException, SqlPojoCollectionMapping, WebDriverWrapper, & Scripts
+
+**ArgumentChecks**
+- Added greaterThanZero(...), notNegative(...), & stringNotBlank(...) methods
+- Deprecated stringNotWhitespaceOnly(...) method
 
 **DatabaseException**
 - Added the DatabaseException class, for generic Runtime Exception when working with Databases
 
+**SqlPojoCollectionMapping**
+- Added consolidateOnDestination(...) methods
+
 **WebDriverWrapper**
 - Added Current URL to most Exception messages
+- Updated Chrome Driver to version 79
 
 **Scripts**
 - Added insert(...) methods to SQL-RowMapper-POJO-Generator.groovy
+- Added @Generated annotation to SQL-RowMapper-POJO-Generator.groovy
+- Renamed 2 queryForRows(...) methods to "queryForAllRows"
+- Fixed NUMBER to Long mapping in SQL-RowMapper-POJO-Generator.groovy
 
 # Expected Release: v1.16.0

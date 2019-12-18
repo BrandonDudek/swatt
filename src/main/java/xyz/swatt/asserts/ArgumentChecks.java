@@ -5,7 +5,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.support.ui.Quotes;
 import xyz.swatt.log.LogMethods;
 
 import java.io.File;
@@ -22,6 +21,7 @@ import java.util.Collection;
  * </p>
  */
 @SuppressWarnings("Duplicates")
+@LogMethods
 public class ArgumentChecks {
 	
 	//========================= Static Enums ===================================
@@ -41,16 +41,14 @@ public class ArgumentChecks {
 	 * @param _file
 	 * 		The {@link File} to Check.
 	 * @param _argumentName
-	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the {@link File} is {@code null}, Does Not Exist, or is a Folder.
-	 * 		
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static void fileExists(File _file, String _argumentName) throws IllegalArgumentException {
-
-		LOGGER.info("fileExists(_file: {}, _argumentName: {}) [START]", (_file == null ? "(NULL)" : _file.getAbsolutePath()), _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -69,8 +67,6 @@ public class ArgumentChecks {
 		else if(!_file.isFile()) {
 			throw new IllegalArgumentException("Given " + _argumentName + "File is actually a Folder!\n\tPath: " + _file.getAbsolutePath());
 		}
-
-		LOGGER.debug("fileExists(_file: {}, _argumentName: {}) [END]", _file.getAbsolutePath(), _argumentName);
 	}
 
 	/**
@@ -79,16 +75,14 @@ public class ArgumentChecks {
 	 * @param _folder
 	 * 		The Folder to Check.
 	 * @param _argumentName
-	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the Folder is {@code null}, Does Not Exist, or is a File.
-	 * 		
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static void folderExists(File _folder, String _argumentName) throws IllegalArgumentException {
-
-		LOGGER.info("folderExists(_folder: {}, _argumentName: {}) [START]", (_folder == null ? "(NULL)" : _folder.getAbsolutePath()), _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -96,7 +90,7 @@ public class ArgumentChecks {
 		//------------------------ CONSTANTS -----------------------------------
 
 		//------------------------ Variables -----------------------------------
-
+		
 		//------------------------ Code ----------------------------------------
 		if(_folder == null) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Folder cannot be NULL!");
@@ -107,8 +101,36 @@ public class ArgumentChecks {
 		else if(!_folder.isDirectory()) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Folder is actually a File!\n\tPath: " + _folder.getAbsolutePath());
 		}
-
-		LOGGER.debug("folderExists(_folder: {}, _argumentName: {}) [END]", _folder.getAbsolutePath(), _argumentName);
+	}
+	
+	/**
+	 * Check a given number to ensure that it is not {@code null} and greater than {@code 0}.
+	 *
+	 * @param _number
+	 * 		The number to check.
+	 * @param _argumentName
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given number is {@code <= 0}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static void greaterThanZero(Double _number, String _argumentName) throws IllegalArgumentException {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		_argumentName = formatArgumentName(_argumentName);
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		
+		//------------------------ Code ----------------------------------------
+		if(_number == null) {
+			throw new IllegalArgumentException("Given " + _argumentName + "Number cannot be NULL!");
+		}
+		else if(_number <= 0) {
+			throw new IllegalArgumentException("Given " + _argumentName + "Number (" + _number + ") must be greater than 0!");
+		}
 	}
 	
 	/**
@@ -117,7 +139,7 @@ public class ArgumentChecks {
 	 * @param _arg
 	 * 		The {@link Collection} to check.
 	 * @param _argumentName
-	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the {@link Collection} is {@code null} oe empty.
@@ -141,20 +163,48 @@ public class ArgumentChecks {
 	}
 	
 	/**
+	 * Check a given number to ensure that it is not {@code null} and not negative.
+	 *
+	 * @param _number
+	 * 		The number to check.
+	 * @param _argumentName
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given number is {@code < 0}.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public static void notNegative(Double _number, String _argumentName) throws IllegalArgumentException {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		_argumentName = formatArgumentName(_argumentName);
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		
+		//------------------------ Code ----------------------------------------
+		if(_number == null) {
+			throw new IllegalArgumentException("Given " + _argumentName + "Number cannot be NULL!");
+		}
+		else if(_number < 0) {
+			throw new IllegalArgumentException("Given " + _argumentName + "Number (" + _number + ") cannot be Negative!");
+		}
+	}
+	
+	/**
 	 * Check a given Object to ensure that is it exists.
 	 *
 	 * @param _arg
 	 * 		The Object to Check.
 	 * @param _argumentName
-	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the Object is {@code null}.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static void notNull(Object _arg, String _argumentName) throws IllegalArgumentException {
-		
-		LOGGER.info("notNull(_arg: {}, _argumentName: {}) [START]", (_arg == null ? "(NULL)" : _arg), _argumentName);
 		
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -167,8 +217,6 @@ public class ArgumentChecks {
 		if(_arg == null) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Object cannot be NULL!");
 		}
-		
-		LOGGER.debug("notNull(_arg: {}, _argumentName: {}) [END]", _arg, _argumentName);
 	}
 	
 	/**
@@ -184,7 +232,7 @@ public class ArgumentChecks {
 	 * @param _path
 	 * 		The {@link Path} to Check.
 	 * @param _argumentName
-	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
 	 *
 	 * @return A {@link Path} representing the given {@link String}.
 	 *
@@ -194,8 +242,6 @@ public class ArgumentChecks {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static Path pathIsAbsoluteFile(String _path, String _argumentName) throws IllegalArgumentException {
-		
-		LOGGER.info("pathIsAbsoluteFile(_path: {}, _argumentName: {}) [START]", _path, _argumentName);
 		
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -231,8 +277,6 @@ public class ArgumentChecks {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path points to a Folder!");
 		}
 		
-		LOGGER.debug("pathIsAbsoluteFile(_path: {}, _argumentName: {}) [END]", _path, _argumentName);
-		
 		return path;
 	}
 
@@ -249,7 +293,7 @@ public class ArgumentChecks {
 	 * @param _path
 	 * 		The {@link Path} to Check.
 	 * @param _argumentName
-	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
 	 *
 	 * @return A {@link Path} representing the given {@link String}.
 	 *
@@ -259,8 +303,6 @@ public class ArgumentChecks {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static Path pathIsAbsoluteFolder(String _path, String _argumentName) throws IllegalArgumentException {
-
-		LOGGER.info("pathIsAbsoluteFolder(_path: {}, _argumentName: {}) [START]", _path, _argumentName);
 
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -296,37 +338,31 @@ public class ArgumentChecks {
 		if(!extension.isEmpty()) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Path points to a File!\n\tPath: " + _path);
 		}
-
-		LOGGER.debug("pathIsAbsoluteFolder(_path: {}, _argumentName: {}) [END]", _path, _argumentName);
-
+		
 		return path;
 	}
-
+	
 	/**
-     * Check a given {@link String} to ensure that it is not Whitespace Only.
+	 * Check a given {@link String} to ensure that it is not NULL, Empty, or only Whitespace.
 	 *
 	 * @param _string
-	 * 		The {@link String} to Check.
+	 * 		The {@link String} to check.
 	 * @param _argumentName
-	 * 		The Name of the Argument being checked. (Can be {@code null} or Empty String, to ignore.)
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
 	 *
 	 * @throws IllegalArgumentException
-     * 		If the given {@link String} is {@code null}, Empty, or Whitespace Only.
-	 *
+	 * 		If the given {@link String} is {@code null}, Empty, or Whitespace only.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static void stringNotWhitespaceOnly(String _string, String _argumentName) throws IllegalArgumentException {
-
-		LOGGER.info("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [START]",
-				(_string == null ? "(NULL)" : Quotes.escape(_string)), _argumentName);
-
+	public static void stringNotBlank(String _string, String _argumentName) throws IllegalArgumentException {
+		
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
-
+		
 		//------------------------ CONSTANTS -----------------------------------
-
+		
 		//------------------------ Variables -----------------------------------
-
+		
 		//------------------------ Code ----------------------------------------
 		if(_string == null) {
 			throw new IllegalArgumentException("Given " + _argumentName + "String cannot be NULL!");
@@ -335,20 +371,36 @@ public class ArgumentChecks {
 			throw new IllegalArgumentException("Given " + _argumentName + "String cannot be an Empty String!");
 		}
 		else if(_string.trim().isEmpty()) {
-			throw new IllegalArgumentException("Given " + _argumentName + "String cannot be a Whitespace Only String!");
+			throw new IllegalArgumentException("Given " + _argumentName + "String cannot only contain Whitespace!");
 		}
 		// Same effect as: StringUtils.isBlank(CharSequence).
-
-		LOGGER.debug("stringNotWhitespaceOnly(_string: {}, _argumentName: {}) [END]", Quotes.escape(_string), _argumentName);
 	}
-
+	
 	/**
-     * Check a given {@link String} to ensure that it is a validly formatted URL.
-     *
-     * @param _url
-     *         The {@link String} to Check.
-     * @param _argumentName
-     *         The Name of the Argument being checked. (Can be NULL or Empty String, to ignore.)
+	 * Check a given {@link String} to ensure that it is not NULL, Empty, or only Whitespace.
+	 *
+	 * @param _string
+	 * 		The {@link String} to check.
+	 * @param _argumentName
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the given {@link String} is {@code null}, Empty, or Whitespace only.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 * @deprecated Use {@link #stringNotBlank(String, String)} instead.
+	 */
+	@Deprecated
+	public static void stringNotWhitespaceOnly(String _string, String _argumentName) throws IllegalArgumentException {
+		stringNotBlank(_string, _argumentName);
+	}
+	
+	/**
+	 * Check a given {@link String} to ensure that it is a validly formatted URL.
+	 *
+	 * @param _url
+	 *         The {@link String} to Check.
+	 * @param _argumentName
+	 *         The Name of the Argument being checked. (Can be NULL or Empty String, to ignore.)
      *
      * @throws IllegalArgumentException
      *         If the given {@link String} is not a validly formatted XPath.
@@ -356,8 +408,6 @@ public class ArgumentChecks {
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     public static void urlIsValid(String _url, String _argumentName) throws IllegalArgumentException {
-
-        LOGGER.info("urlIsValid(_string: {}, _argumentName: {}) [START]", Quotes.escape(_url), _argumentName);
 
         //------------------------ Pre-Checks ----------------------------------
         _argumentName = formatArgumentName(_argumentName);
@@ -375,8 +425,6 @@ public class ArgumentChecks {
         catch(Exception e) {
             throw new IllegalArgumentException("Given " + _argumentName + "URL is invalid!", e);
         }
-
-        LOGGER.debug("urlIsValid(_string: {}, _argumentName: {}) [END]", Quotes.escape(_url), _argumentName);
     }
 
     /**
@@ -394,8 +442,6 @@ public class ArgumentChecks {
 	 */
 	public static void xpathIsValid(String _xPath, String _argumentName) throws IllegalArgumentException {
 
-        LOGGER.info("xpathIsValid(_string: {}, _argumentName: {}) [START]", Quotes.escape(_xPath), _argumentName);
-
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
 
@@ -412,8 +458,6 @@ public class ArgumentChecks {
 		catch(Exception e) {
 			throw new IllegalArgumentException("Given " + _argumentName + "XPath is invalid!", e);
 		}
-
-        LOGGER.debug("xpathIsValid(_string: {}, _argumentName: {}) [END]", Quotes.escape(_xPath), _argumentName);
 	}
 	
 	//========================= Helper Static Methods ==========================

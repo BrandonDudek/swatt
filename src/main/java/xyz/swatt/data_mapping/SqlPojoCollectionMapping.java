@@ -6,6 +6,7 @@ package xyz.swatt.data_mapping;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.log.LogMethods;
 import xyz.swatt.pojo.SqlPojo;
 import xyz.swatt.string.StringHelper;
@@ -47,6 +48,87 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	
 	// TODO: Add a combileAll method that takes in a collections of SqlPojoCollectionMappings and combiles the ones that have the same Destination Table & Column.
 	
+	/**
+	 * Will combine Mappings that have the same Destination Row(s) and Column.
+	 * <p>
+	 * Or, for the mappings that do not have a Destination Row/Column, they will be combined on Destination Value(s).
+	 * </p>
+	 * <p>
+	 * <i>Note:</i> Mapping Names will also be combined.
+	 * </p>
+	 *
+	 * @param _mappings
+	 * 		The Mappings to consolidate.
+	 *
+	 * @return All Mappings, after combining.
+	 *
+	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 */
+	public static Collection<SqlPojoCollectionMapping> consolidateOnDestination(Collection<SqlPojoCollectionMapping> _mappings) {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notEmpty(_mappings, "Mappings");
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		Map<SqlPojoCollectionMapping.TablesColumnPair, SqlPojoCollectionMapping> combinedTableMappings = new HashMap<>();
+		Map<List, SqlPojoCollectionMapping> combinedValuesMappings = new HashMap<>();
+		
+		//------------------------ Code ----------------------------------------
+		for(SqlPojoCollectionMapping mapping : _mappings) {
+			
+			SqlPojoCollectionMapping otherMapping;
+			
+			if(mapping.DESTINATION_TABLE_ROWS == null || mapping.DESTINATION_TABLE_ROWS.isEmpty() || mapping.DESTINATION_COLUMN == null) {
+				otherMapping = combinedValuesMappings.put(mapping.DESTINATION_VALUES, mapping);
+			}
+			else {
+				TablesColumnPair tablesColumnPair = new TablesColumnPair(mapping.DESTINATION_TABLE_ROWS, mapping.DESTINATION_COLUMN);
+				otherMapping = combinedTableMappings.put(tablesColumnPair, mapping);
+			}
+			
+			if(otherMapping != null) { // Combine.
+				mapping.SOURCE_VALUES.addAll(otherMapping.SOURCE_VALUES);
+				mapping.mappingName += " & " + otherMapping.mappingName;
+			}
+		}
+		
+		return CollectionUtils.union(combinedTableMappings.values(), combinedValuesMappings.values());
+	}
+	
+	/**
+	 * Will combine Mappings that have the same Destination Row(s) and Column.
+	 * <p>
+	 * Or, for the mappings that do not have a Destination Row/Column, they will be combined on Destination Value(s).
+	 * </p>
+	 * <p>
+	 * <i>Note:</i> Mapping Names will also be combined.
+	 * </p>
+	 *
+	 * @param _mappings
+	 * 		The Mappings to consolidate.
+	 *
+	 * @return All Mappings, after combining.
+	 *
+	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 */
+	public static Collection<SqlPojoCollectionMapping> consolidateOnDestination(SqlPojoCollectionMapping... _mappings) {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		ArgumentChecks.notNull(_mappings, "Mappings");
+		if(_mappings.length < 1) {
+			throw new RuntimeException("No Mappings given!");
+		}
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		
+		//------------------------ Code ----------------------------------------
+		return consolidateOnDestination(Arrays.asList(_mappings));
+	}
+	
 	//========================= CONSTANTS ======================================
 	public T tTypeObject;
 	
@@ -64,6 +146,15 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * The {@link CollectionMapping.MappingFlag}s that are applied to this {@link SqlPojoCollectionMapping} object. (read only)
 	 */
 	public final Set<CollectionMapping.MappingFlag> MAPPING_FLAGS;
+	
+	/**
+	 * Just used for reference.
+	 */
+	private final Collection<SqlPojo> DESTINATION_TABLE_ROWS;
+	/**
+	 * Just used for reference.
+	 */
+	private final SqlPojo.RowMapperColumnEnum DESTINATION_COLUMN;
 	
 	//========================= Variables ======================================
 	/**
@@ -399,6 +490,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		//------------------------ Pre-Checks ----------------------------------
 		
 		//------------------------ CONSTANTS -----------------------------------
+		DESTINATION_COLUMN = _destinationColumn;
 		
 		//------------------------ Variables -----------------------------------
 		String mappingName = "";
@@ -458,10 +550,15 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		SOURCE_VALUES = new ArrayList(_sourceValues); // Copying values to a new Collection, so that changes made to the passed in collection, will be seen.
 		
 		if(_destinationValues == null) {
+			DESTINATION_TABLE_ROWS = new ArrayList<>(_destinationTables.size());
 			_destinationValues = new ArrayList(_destinationTables.size());
 			for(SqlPojo destinationRow : _destinationTables) {
+				DESTINATION_TABLE_ROWS.add(destinationRow);
 				_destinationValues.add((T) destinationRow.getColumnValue(_destinationColumn));
 			}
+		}
+		else {
+			DESTINATION_TABLE_ROWS = new ArrayList<>();
 		}
 		DESTINATION_VALUES = new ArrayList(_destinationValues); // Copying values to a new Collection, so that changes made to the passed in collection, will be seen.
 		
@@ -573,5 +670,44 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	//========================= Helper Methods =================================
 	
 	//========================= Classes ========================================
+	
+	/**
+	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 */
+	private static class TablesColumnPair {
+		
+		private final Collection<? extends SqlPojo> TABLE_ROWS;
+		private final SqlPojo.RowMapperColumnEnum COLUMN;
+		
+		/**
+		 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+		 */
+		private TablesColumnPair(Collection<? extends SqlPojo> _tables, SqlPojo.RowMapperColumnEnum _column) {
+			TABLE_ROWS = _tables;
+			COLUMN = _column;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			
+			if(obj == null) {
+				return false;
+			}
+			
+			if(!(obj instanceof SqlPojoCollectionMapping.TablesColumnPair)) {
+				return false;
+			}
+			
+			TablesColumnPair other = (TablesColumnPair) obj;
+			
+			return COLUMN == other.COLUMN && Objects.equals(TABLE_ROWS, other.TABLE_ROWS);
+		}
+		
+		@Override
+		public int hashCode() {
+			return Objects.hash(TABLE_ROWS, COLUMN);
+		}
+	}
+	
 	// TODO: Create a Builder class.
 }

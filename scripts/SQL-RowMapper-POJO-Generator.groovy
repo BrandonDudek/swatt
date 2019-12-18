@@ -2,6 +2,8 @@ import com.intellij.database.model.DasTable
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
 
+import java.time.ZonedDateTime
+
 /*
  * Available context bindings:
  *   SELECTION   Iterable<DasObject>
@@ -12,19 +14,19 @@ import com.intellij.database.util.DasUtil
 packageName = "com.sample;"
 typeMapping = [
         ///// Numbers /////
-        (~/(?i)int|number(\([^,]*(,0)?\))?/)      : "Long",
-        (~/(?i)float|double|decimal|real|number/) : "BigDecimal",
+        (~/(?i)int|number\s*((?!\()|\([^,]*(,\s*0)?\))/)  : "Long",
+        (~/(?i)float|double|decimal|real|number/)         : "BigDecimal",
 
         ///// Date/Time /////
-        (~/(?i)date|datetime/)                    : "LocalDateTime", // SQL Date also contains Time in Oracle Databases.
-        (~/(?i)time/)                             : "LocalTime",
-        (~/(?i)timestamp/)                        : "Timestamp",
+        (~/(?i)date|datetime/)                            : "LocalDateTime", // SQL Date also contains Time in Oracle Databases.
+        (~/(?i)time/)                                     : "LocalTime",
+        (~/(?i)timestamp/)                                : "Timestamp",
 
         ///// Objects /////
-        (~/(?i)mdsys.sdo_geometry/)               : "JGeometry", // https://mvnrepository.com/artifact/com.oracle.spatial/com.springsource.oracle.spatial.geometry
+        (~/(?i)mdsys.sdo_geometry/)                       : "JGeometry", // https://mvnrepository.com/artifact/com.oracle.spatial/com.springsource.oracle.spatial.geometry
 
         ///// Fallback /////
-        (~/(?i)/)                                 : "String"
+        (~/(?i)/)                                         : "String"
 ]
 
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
@@ -57,25 +59,9 @@ def generateClass(out, schemaName, tableName, className, fields) {
 
   out.println "package $packageName"
   out.println ""
-  out.println "import oracle.spatial.geometry.JGeometry;"
-  out.println "import org.apache.logging.log4j.LogManager;"
-  out.println "import org.apache.logging.log4j.Logger;"
-  out.println "import org.springframework.jdbc.core.JdbcTemplate;"
-  out.println "import xyz.swatt.asserts.ArgumentChecks;"
-  out.println "import xyz.swatt.exceptions.TooManyResultsException;"
-  out.println "import xyz.swatt.log.LogMethods;"
-  out.println "import xyz.swatt.pojo.SqlPojo;"
+  generateImports(out)
   out.println ""
-  out.println "import java.math.BigDecimal;"
-  out.println "import java.sql.ResultSet;"
-  out.println "import java.sql.ResultSetMetaData;"
-  out.println "import java.sql.SQLException;"
-  out.println "import java.sql.Timestamp;"
-  out.println "import java.time.LocalDateTime;"
-  out.println "import java.time.LocalTime;"
-  out.println "import java.util.*;"
-  out.println "import java.util.stream.Collectors;"
-  out.println ""
+  out.println "@Generated(value = \"xyz.swatt.SQL-RowMapper-POJO-Generator.groovy\", date = \"" + ZonedDateTime.now() + "\")"
   out.println "@LogMethods"
   out.println "@SuppressWarnings(\"Duplicates\")"
   out.println "public class $className implements SqlPojo<$className>, Cloneable {"
@@ -281,6 +267,29 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println "}"
 }
 
+def generateImports(out) {
+
+  out.println "import oracle.spatial.geometry.JGeometry;"
+  out.println "import org.apache.logging.log4j.LogManager;"
+  out.println "import org.apache.logging.log4j.Logger;"
+  out.println "import org.springframework.jdbc.core.JdbcTemplate;"
+  out.println "import xyz.swatt.asserts.ArgumentChecks;"
+  out.println "import xyz.swatt.exceptions.TooManyResultsException;"
+  out.println "import xyz.swatt.log.LogMethods;"
+  out.println "import xyz.swatt.pojo.SqlPojo;"
+  out.println ""
+  out.println "import javax.annotation.Generated;"
+  out.println "import java.math.BigDecimal;"
+  out.println "import java.sql.ResultSet;"
+  out.println "import java.sql.ResultSetMetaData;"
+  out.println "import java.sql.SQLException;"
+  out.println "import java.sql.Timestamp;"
+  out.println "import java.time.LocalDateTime;"
+  out.println "import java.time.LocalTime;"
+  out.println "import java.util.*;"
+  out.println "import java.util.stream.Collectors;"
+}
+
 def generateGettersAndSetters(out, className, fields) {
 
   out.println "\t@Override"
@@ -377,8 +386,8 @@ def generateStaticMethods(out, className) {
           "\t *\n" +
           "\t * @return All of the {@link $className} rows in the given Database.\n" +
           "\t */\n" +
-          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate) {\n" +
-          "\t\treturn queryForRows(_jdbcTemplate, false);\n" +
+          "\tpublic static List<$className> queryForAllRows(JdbcTemplate _jdbcTemplate) {\n" +
+          "\t\treturn queryForAllRows(_jdbcTemplate, false);\n" +
           "\t}\n" +
           "\t\n" +
           "\t/**\n" +
@@ -389,7 +398,7 @@ def generateStaticMethods(out, className) {
           "\t *\n" +
           "\t * @return All of the {@link $className} rows in the given Database.\n" +
           "\t */\n" +
-          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, boolean _randomize) {\n" +
+          "\tpublic static List<$className> queryForAllRows(JdbcTemplate _jdbcTemplate, boolean _randomize) {\n" +
           "\t\t\n" +
           "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
           "\t\tArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\");\n" +
@@ -456,8 +465,8 @@ def generateStaticMethods(out, className) {
           "\t\t\tint oldMaxRows = _jdbcTemplate.getMaxRows();\n" +
           "\t\t\t\n" +
           "\t\t\ttry {\n" +
-          "\t\t\t\t_jdbcTemplate.setMaxRows(_limit);\n" +
-          "\t\t\t\trows = queryForRows(_jdbcTemplate, _randomize);\n" +
+          "\t\t\t\t_jdbcTemplate.setMaxRows(_limit); // TODO: \"FETCH NEXT \" + _limit + \" ROWS ONLY\".\n" +
+          "\t\t\t\trows = queryForAllRows(_jdbcTemplate, _randomize);\n" +
           "\t\t\t}\n" +
           "\t\t\tfinally {\n" +
           "\t\t\t\t_jdbcTemplate.setMaxRows(oldMaxRows);\n" +
@@ -650,7 +659,7 @@ def generateQueryMethods(out, className) {
           "     *\n" +
           "     * @return The {@link $className} rows found.\n" +
           "     */\n" +
-          "    public List<$className> queryForRows(JdbcTemplate _jdbcTemplate, Column _columns) {\n" +
+          "    public List<$className> queryForRows(JdbcTemplate _jdbcTemplate, Column... _columns) {\n" +
           "        return queryForRows(_jdbcTemplate, this, _columns);\n" +
           "    }"
   out.println ""

@@ -25,27 +25,28 @@ public interface SqlPojo<T> extends RowMapper<T> {
 		public String getColumnName();
 		public int getColumnIndex();
 	}
-
-    //========================= STATIC CONSTANTS ===============================
-
-    //========================= Static Variables ===============================
-
-    //========================= Static Constructor =============================
-
-    //========================= Static Methods =================================
+	
+	//========================= STATIC CONSTANTS ===============================
+	
+	//========================= Static Variables ===============================
+	
+	//========================= Static Constructor =============================
+	
+	//========================= Static Methods =================================
 	// TODO: Add method that takes in a collection of SqlPojos and a RowMapperColumnEnum, and returnes a collection of values, from those Tables / Columns.
 	
-	// TODO: Write Methods for Insert and Delete.
+	// TODO: Write Methods for Delete.
 	
 	//-------------------- Comparators --------------------
-    /**
-     * Will compare two {@link SqlPojo} Collections and determine the differences between them.
-     *
-     * @param _sqlPojos1
-     *         The First {@link SqlPojo} Collection to compare against the Second.
-     * @param _sqlPojos2
-     *         The Second {@link SqlPojo} Collection to compare against the First.
-     * @param _ignoreColumnIndexes
+	
+	/**
+	 * Will compare two {@link SqlPojo} Collections and determine the differences between them.
+	 *
+	 * @param _sqlPojos1
+	 *         The First {@link SqlPojo} Collection to compare against the Second.
+	 * @param _sqlPojos2
+	 *         The Second {@link SqlPojo} Collection to compare against the First.
+	 * @param _ignoreColumnIndexes
      *         An array of 0-based column indexes to ignore in this comparison.
      *
      * @return A Collection of differences, as descriptive {@link String}s or an empty collection, if there are no differences.
