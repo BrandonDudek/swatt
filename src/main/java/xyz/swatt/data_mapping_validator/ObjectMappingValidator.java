@@ -1,17 +1,18 @@
 /*
  * Created on 2019-03-08 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
-package xyz.swatt.data_mapping;
+package xyz.swatt.data_mapping_validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.swatt.log.LogMethods;
-import xyz.swatt.string.StringHelper;
+
+import java.util.Set;
 
 /**
  * Use this class to validate that 2 different {@link T}s are equal.
  * <p>
- * (This will just use the {@link T}'s {@code equals(T)} method, and is the fallback class for the {@link DataMapping} interface.)
+ * (This will just use the {@link T}'s {@code equals(T)} method, and is the fallback class for the {@link DataMappingValidator} interface.)
  * </p>
  * <p>
  * <i>Note:</i> This class is used instead of direct comparison, to simplify large batches of comparisons.
@@ -20,16 +21,16 @@ import xyz.swatt.string.StringHelper;
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
-public class ObjectMapping<T> implements DataMapping {
-
+public class ObjectMappingValidator<T> extends AbstractDataMapping<T> {
+    
     //========================= Static Enums ===================================
-
+    
     //========================= STATIC CONSTANTS ===============================
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LogManager.getLogger(ObjectMapping.class);
-
+    private static final Logger LOGGER = LogManager.getLogger(ObjectMappingValidator.class);
+    
     //========================= Static Variables ===============================
-
+    
     //========================= Static Constructor =============================
     static {}
 
@@ -42,34 +43,28 @@ public class ObjectMapping<T> implements DataMapping {
     public final T SOURCE_VALUE, DESTINATION_VALUE;
     
     //========================= Variables ======================================
-    /**
-     * The name that was given to this mapping.
-     * <p>
-     * <i>Note:</i> This name is optional and may be {@code null}.
-     * </p>
-     */
-    public String mappingName;
     
     //========================= Constructors ===================================
+    
     /**
-     * Creates a new {@link T}-to-{@link T} {@link DataMapping} object.
+     * Creates a new {@link T}-to-{@link T} {@link DataMappingValidator} object.
      *
      * @param _sourceValue
-     *         The value from the Source Data.
+     * 		The value from the Source Data.
      * @param _destinationValue
-     *         The mapped value found in the Destination Data.
+     * 		The mapped value found in the Destination Data.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public ObjectMapping(T _sourceValue, T _destinationValue) {
+    public ObjectMappingValidator(T _sourceValue, T _destinationValue) {
         this(null, _sourceValue, _destinationValue);
     }
 
     /**
-     * Creates a new {@link T}-to-{@link T} {@link DataMapping} object.
+     * Creates a new {@link T}-to-{@link T} {@link DataMappingValidator} object.
      *
      * @param _mappingName
-     *         An optional, unique name to give this {@link ObjectMapping}.
+     *         An optional, unique name to give this {@link ObjectMappingValidator}.
      * @param _sourceValue
      *         The value from the Source Data.
      * @param _destinationValue
@@ -77,83 +72,65 @@ public class ObjectMapping<T> implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public ObjectMapping(String _mappingName, T _sourceValue, T _destinationValue) {
-
+    public ObjectMappingValidator(String _mappingName, T _sourceValue, T _destinationValue) {
+    
         //------------------------ Pre-Checks ----------------------------------
-
+    
         //------------------------ CONSTANTS -----------------------------------
-
+    
         //------------------------ Variables -----------------------------------
-
+    
         //------------------------ Code ----------------------------------------
-        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        setMappingName(_mappingName);
+    
         SOURCE_VALUE = _sourceValue;
         DESTINATION_VALUE = _destinationValue;
     }
-
+    
     //========================= Public Methods =================================
     /**
-     * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+     * @return All Flags on this Mapping or {@code null} / empty list, if there are no mappings.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Override
-    public String getMappingName() {
-        return mappingName;
-    }
-    
-    /**
-     * @param _name
-     * 		The Name to set, for this Mapping.
-     *
-     * @return A reference to self is returned for method call chaining.
-     *
-     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-     */
-    @Override
-    public ObjectMapping<T> setMappingName(String _name) {
-        mappingName = _name;
-        return this;
-    }
-    
-    @Override
-    public String toString() {
-        return mappingName != null ? mappingName : super.toString();
+    public Set<? extends DataMappingFlagEnum> getDataMappingFlags() {
+        return null;
     }
     
     @Override
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------
-
+        
         //------------------------ CONSTANTS -----------------------------------
-        String ERROR_MESSAGE = DataMapping.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
-
+        String ERROR_MESSAGE = DataMappingValidator.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
+        
         //------------------------ Variables -----------------------------------
-
+        
         //------------------------ Code ----------------------------------------
-        ////////// Handle NULLs /////
-        if(SOURCE_VALUE == null || DESTINATION_VALUE == null) {
-            if(SOURCE_VALUE == DESTINATION_VALUE) {
-                return null; // Equal.
+        ///// Custom Comparator /////
+        if(customComparator != null) {
+            if(customComparator.compair(this, SOURCE_VALUE, DESTINATION_VALUE)) {
+                return null;
             }
             else {
                 return ERROR_MESSAGE;
             }
         }
-
-        ////// Compare /////
-        boolean isEqual = SOURCE_VALUE.equals(DESTINATION_VALUE);
-
-        ////// Return /////
-        if(isEqual) {
-            return null;
+        
+        ///// Handle NULLs /////
+        switch(DataMappingValidator.nullCount(SOURCE_VALUE, DESTINATION_VALUE)) {
+            case 1:
+                return ERROR_MESSAGE;
+            case 2:
+                return null;
         }
-        else {
-            return ERROR_MESSAGE;
-        }
+        
+        ////// Compare & Return /////
+        return SOURCE_VALUE.equals(DESTINATION_VALUE) ? null : ERROR_MESSAGE;
     }
-
+    
     //========================= Helper Methods =================================
 
     //========================= Classes ========================================

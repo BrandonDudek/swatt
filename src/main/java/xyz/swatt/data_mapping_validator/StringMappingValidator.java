@@ -1,7 +1,7 @@
 /*
  * Created on 2019-03-08 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
-package xyz.swatt.data_mapping;
+package xyz.swatt.data_mapping_validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,9 +24,10 @@ import java.util.Set;
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
-public class StringMapping implements DataMapping {
-
+public class StringMappingValidator extends AbstractDataMapping<String> {
+    
     //========================= Static Enums ===================================
+    
     /**
      * <p>
      * List of possible flags for a Data Mapping.
@@ -77,13 +78,13 @@ public class StringMapping implements DataMapping {
          */
         XML_ESCAPE_DESTINATION
     }
-
+    
     //========================= STATIC CONSTANTS ===============================
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LogManager.getLogger(StringMapping.class);
-
+    private static final Logger LOGGER = LogManager.getLogger(StringMappingValidator.class);
+    
     /**
-     * Sets {@link MappingFlag}s to be used for all {@link StringMapping}s.
+     * Sets {@link MappingFlag}s to be used for all {@link StringMappingValidator}s.
      */
     public static final EnumSet<MappingFlag> GLOBAL_MAPPING_FLAGS = EnumSet.noneOf(MappingFlag.class);
 
@@ -121,165 +122,146 @@ public class StringMapping implements DataMapping {
      * The values being compared.
      */
     public final String SOURCE_VALUE, DESTINATION_VALUE;
-
+    
     /**
-     * The {@link MappingFlag}s that are applied to this {@link StringMapping} object.
+     * The {@link MappingFlag}s that are applied to this {@link StringMappingValidator} object.
      */
     public final Set<MappingFlag> MAPPING_FLAGS;
 
     //========================= Variables ======================================
-    /**
-     * The name that was given to this mapping.
-     * <p>
-     * <i>Note:</i> This name is optional and may be {@code null}.
-     * </p>
-     */
-    public String mappingName;
     
     //========================= Constructors ===================================
+    
     /**
-     * Creates a new {@link String}-to-{@link String} {@link DataMapping} object.
+     * Creates a new {@link String}-to-{@link String} {@link DataMappingValidator} object.
      *
      * @param _sourceValue
-     *         The value from the Source Data.
+     * 		The value from the Source Data.
      * @param _destinationValue
-     *         The mapped value found in the Destination Data.
+     * 		The mapped value found in the Destination Data.
      * @param _flags
-     *         Any {@link MappingFlag}s that should be applied to this {@link StringMapping}.
+     * 		Any {@link MappingFlag}s that should be applied to this {@link StringMappingValidator}.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public StringMapping(String _sourceValue, String _destinationValue, MappingFlag... _flags) {
+    public StringMappingValidator(String _sourceValue, String _destinationValue, MappingFlag... _flags) {
         this(null, _sourceValue, _destinationValue, _flags);
     }
 
     /**
-     * Creates a new {@link String}-to-{@link String} {@link DataMapping} object.
+     * Creates a new {@link String}-to-{@link String} {@link DataMappingValidator} object.
      *
      * @param _mappingName
-     *         An optional, unique name to give this {@link StringMapping}.
+     *         An optional, unique name to give this {@link StringMappingValidator}.
      * @param _sourceValue
      *         The value from the Source Data.
      * @param _destinationValue
      *         The mapped value found in the Destination Data.
      * @param _flags
-     *         Any {@link MappingFlag}s that should be applied to this {@link StringMapping}.
+     *         Any {@link MappingFlag}s that should be applied to this {@link StringMappingValidator}.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public StringMapping(String _mappingName, String _sourceValue, String _destinationValue, MappingFlag... _flags) {
-
+    public StringMappingValidator(String _mappingName, String _sourceValue, String _destinationValue, MappingFlag... _flags) {
+    
         //------------------------ Pre-Checks ----------------------------------
-
+    
         //------------------------ CONSTANTS -----------------------------------
-
+    
         //------------------------ Variables -----------------------------------
         EnumSet<MappingFlag> flags = EnumSet.noneOf(MappingFlag.class);
-
+    
         //------------------------ Code ----------------------------------------
-        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        setMappingName(_mappingName);
+    
         SOURCE_VALUE = _sourceValue;
         DESTINATION_VALUE = _destinationValue;
-
+    
         flags.addAll(GLOBAL_MAPPING_FLAGS);
         if(_flags != null && _flags.length > 0) {
             flags.addAll(Arrays.asList(_flags));
         }
         MAPPING_FLAGS = Collections.unmodifiableSet(flags);
     }
-
+    
     //========================= Public Methods =================================
     /**
-     * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+     * @return All Flags on this Mapping or {@code null} / empty list, if there are no mappings.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Override
-    public String getMappingName() {
-        return mappingName;
-    }
-    
-    /**
-     * @param _name
-     * 		The Name to set, for this Mapping.
-     *
-     * @return A reference to self is returned for method call chaining.
-     *
-     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-     */
-    @Override
-    public StringMapping setMappingName(String _name) {
-        mappingName = _name;
-        return this;
-    }
-    
-    @Override
-    public String toString() {
-        return mappingName != null ? mappingName : super.toString();
+    public Set<? extends DataMappingFlagEnum> getDataMappingFlags() {
+        return MAPPING_FLAGS;
     }
     
     @Override
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------
-
+        
         //------------------------ CONSTANTS -----------------------------------
-        String ERROR_MESSAGE = DataMapping.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
-
+        String ERROR_MESSAGE = DataMappingValidator.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
+        
         //------------------------ Variables -----------------------------------
+        boolean isEqual;
+        
         String source = SOURCE_VALUE, destination = DESTINATION_VALUE; // Not work with class variables, so that `validated()` can be called, idempotently.
-
+        
         //------------------------ Code ----------------------------------------
-        ////////// Handle NULLs /////
-        if(source == null || destination == null) {
-            if(source == destination) {
-                return null; // Equal.
+        ///// Handle NULLs w/o Custom Comparator /////
+        if(customComparator == null) {
+            switch(DataMappingValidator.nullCount(SOURCE_VALUE, DESTINATION_VALUE)) {
+                case 1:
+                    return ERROR_MESSAGE;
+                case 2:
+                    return null;
+            }
+        }
+        
+        ////// Handle Flags /////
+        if(source != null && MAPPING_FLAGS.contains(MappingFlag.NORMALIZE_SOURCE)) {
+            source = StringHelper.normalize(source);
+        }
+        if(destination != null && MAPPING_FLAGS.contains(MappingFlag.NORMALIZE_DESTINATION)) {
+            destination = StringHelper.normalize(destination);
+        }
+        
+        if(source != null && MAPPING_FLAGS.contains(MappingFlag.TRIM_SOURCE)) {
+            source = StringHelper.trim(source);
+        }
+        if(destination != null && MAPPING_FLAGS.contains(MappingFlag.TRIM_DESTINATION)) {
+            destination = StringHelper.trim(destination);
+        }
+        
+        if(source != null && MAPPING_FLAGS.contains(MappingFlag.XML_ESCAPE_SOURCE)) {
+            source = xmlEscape(source);
+        }
+        if(destination != null && MAPPING_FLAGS.contains(MappingFlag.XML_ESCAPE_DESTINATION)) {
+            destination = xmlEscape(destination);
+        }
+        
+        ////// Compare & Return /////
+        if(customComparator != null) {
+            if(customComparator.compair(this, source, destination)) {
+                return null;
             }
             else {
                 return ERROR_MESSAGE;
             }
         }
-
-        ////// Handle Flags /////
-        if(MAPPING_FLAGS.contains(MappingFlag.NORMALIZE_SOURCE)) {
-            source = StringHelper.normalize(source);
-        }
-        if(MAPPING_FLAGS.contains(MappingFlag.NORMALIZE_DESTINATION)) {
-            destination = StringHelper.normalize(destination);
-        }
-
-        if(MAPPING_FLAGS.contains(MappingFlag.TRIM_SOURCE)) {
-            source = StringHelper.trim(source);
-        }
-        if(MAPPING_FLAGS.contains(MappingFlag.TRIM_DESTINATION)) {
-            destination = StringHelper.trim(destination);
-        }
-
-        if(MAPPING_FLAGS.contains(MappingFlag.XML_ESCAPE_SOURCE)) {
-            source = xmlEscape(source);
-        }
-        if(MAPPING_FLAGS.contains(MappingFlag.XML_ESCAPE_DESTINATION)) {
-            destination = xmlEscape(destination);
-        }
-
-        ////// Compare /////
-        boolean isEqual;
-        if(MAPPING_FLAGS.contains(MappingFlag.IGNORE_CASE)) {
-            isEqual = source.equalsIgnoreCase(destination);
-        }
         else {
-            isEqual = source.equals(destination);
-        }
-
-        ////// Return /////
-        if(isEqual) {
-            return null;
-        }
-        else {
-            return ERROR_MESSAGE;
+            if(MAPPING_FLAGS.contains(MappingFlag.IGNORE_CASE)) {
+                isEqual = source.equalsIgnoreCase(destination);
+            }
+            else {
+                isEqual = source.equals(destination);
+            }
+            
+            return isEqual ? null : ERROR_MESSAGE;
         }
     }
-
+    
     //========================= Helper Methods =================================
 
     //========================= Classes ========================================

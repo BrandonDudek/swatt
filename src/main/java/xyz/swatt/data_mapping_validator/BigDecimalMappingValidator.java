@@ -1,12 +1,11 @@
 /*
  * Created on 2019-03-08 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
-package xyz.swatt.data_mapping;
+package xyz.swatt.data_mapping_validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.swatt.log.LogMethods;
-import xyz.swatt.string.StringHelper;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -25,10 +24,10 @@ import java.util.Set;
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
-public class BigDecimalMapping implements DataMapping {
-
+public class BigDecimalMappingValidator extends AbstractDataMapping<BigDecimal> {
+    
     //========================= Static Enums ===================================
-
+    
     /**
      * <p>
      * List of possible flags for a Data Mapping.
@@ -50,13 +49,13 @@ public class BigDecimalMapping implements DataMapping {
          */
         IGNORE_PRECISION
     }
-
+    
     //========================= STATIC CONSTANTS ===============================
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LogManager.getLogger(BigDecimalMapping.class);
-
+    private static final Logger LOGGER = LogManager.getLogger(BigDecimalMappingValidator.class);
+    
     /**
-     * Sets {@link MappingFlag}s to be used for all {@link BigDecimalMapping}s.
+     * Sets {@link MappingFlag}s to be used for all {@link BigDecimalMappingValidator}s.
      */
     public static final EnumSet<MappingFlag> GLOBAL_MAPPING_FLAGS = EnumSet.noneOf(MappingFlag.class);
 
@@ -72,146 +71,121 @@ public class BigDecimalMapping implements DataMapping {
      * The values being compared.
      */
     public final BigDecimal SOURCE_VALUE, DESTINATION_VALUE;
-
+    
     /**
-     * The {@link MappingFlag}s that are applied to this {@link BigDecimalMapping} object.
+     * The {@link MappingFlag}s that are applied to this {@link BigDecimalMappingValidator} object.
      */
     public final Set<MappingFlag> MAPPING_FLAGS;
 
     //========================= Variables ======================================
-    /**
-     * The name that was given to this mapping.
-     * <p>
-     * <i>Note:</i> This name is optional and may be {@code null}.
-     * </p>
-     */
-    public String mappingName;
     
     //========================= Constructors ===================================
-
+    
     /**
-     * Creates a new {@link BigDecimal}-to-{@link BigDecimal} {@link DataMapping} object.
+     * Creates a new {@link BigDecimal}-to-{@link BigDecimal} {@link DataMappingValidator} object.
      *
      * @param _sourceValue
-     *         The value from the Source Data.
+     * 		The value from the Source Data.
      * @param _destinationValue
-     *         The mapped value found in the Destination Data.
+     * 		The mapped value found in the Destination Data.
      * @param _flags
-     *         Any {@link MappingFlag}s that should be applied to this {@link BigDecimalMapping}.
+     * 		Any {@link MappingFlag}s that should be applied to this {@link BigDecimalMappingValidator}.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public BigDecimalMapping(BigDecimal _sourceValue, BigDecimal _destinationValue, MappingFlag... _flags) {
+    public BigDecimalMappingValidator(BigDecimal _sourceValue, BigDecimal _destinationValue, MappingFlag... _flags) {
         this(null, _sourceValue, _destinationValue, _flags);
     }
 
     /**
-     * Creates a new {@link BigDecimal}-to-{@link BigDecimal} {@link DataMapping} object.
+     * Creates a new {@link BigDecimal}-to-{@link BigDecimal} {@link DataMappingValidator} object.
      *
      * @param _mappingName
-     *         An optional, unique name to give this {@link BigDecimalMapping}.
+     *         An optional, unique name to give this {@link BigDecimalMappingValidator}.
      * @param _sourceValue
      *         The value from the Source Data.
      * @param _destinationValue
      *         The mapped value found in the Destination Data.
      * @param _flags
-     *         Any {@link MappingFlag}s that should be applied to this {@link BigDecimalMapping}.
+     *         Any {@link MappingFlag}s that should be applied to this {@link BigDecimalMappingValidator}.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public BigDecimalMapping(String _mappingName, BigDecimal _sourceValue, BigDecimal _destinationValue, MappingFlag... _flags) {
-
+    public BigDecimalMappingValidator(String _mappingName, BigDecimal _sourceValue, BigDecimal _destinationValue, MappingFlag... _flags) {
+    
         //------------------------ Pre-Checks ----------------------------------
-
+    
         //------------------------ CONSTANTS -----------------------------------
-
+    
         //------------------------ Variables -----------------------------------
         EnumSet<MappingFlag> flags = EnumSet.noneOf(MappingFlag.class);
-
+    
         //------------------------ Code ----------------------------------------
-        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        setMappingName(_mappingName);
+    
         SOURCE_VALUE = _sourceValue;
         DESTINATION_VALUE = _destinationValue;
-
+    
         flags.addAll(GLOBAL_MAPPING_FLAGS);
         if(_flags != null && _flags.length > 0) {
             flags.addAll(Arrays.asList(_flags));
         }
         MAPPING_FLAGS = Collections.unmodifiableSet(flags);
     }
-
+    
     //========================= Public Methods =================================
     /**
-     * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+     * @return All Flags on this Mapping or {@code null} / empty list, if there are no mappings.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Override
-    public String getMappingName() {
-        return mappingName;
-    }
-    
-    /**
-     * @param _name
-     * 		The Name to set, for this Mapping.
-     *
-     * @return A reference to self is returned for method call chaining.
-     *
-     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-     */
-    @Override
-    public BigDecimalMapping setMappingName(String _name) {
-        mappingName = _name;
-        return this;
+    public Set<? extends DataMappingFlagEnum> getDataMappingFlags() {
+        return MAPPING_FLAGS;
     }
     
     @Override
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------
-
+        
         //------------------------ CONSTANTS -----------------------------------
-        String ERROR_MESSAGE = DataMapping.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
-
+        String ERROR_MESSAGE = DataMappingValidator.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
+        
         //------------------------ Variables -----------------------------------
-        BigDecimal source = SOURCE_VALUE, destination = DESTINATION_VALUE; // Not work with class variables, so that `validated()` can be called, idempotently.
-
+        boolean isEqual;
+        
         //------------------------ Code ----------------------------------------
-        ////////// Handle NULLs /////
-        if(source == null || destination == null) {
-            if(source == destination) {
-                return null; // Equal.
+        ///// Custom Comparator /////
+        if(customComparator != null) {
+            if(customComparator.compair(this, SOURCE_VALUE, DESTINATION_VALUE)) {
+                return null;
             }
             else {
                 return ERROR_MESSAGE;
             }
         }
-
-        ////// Handle Flags /////
-
+        
+        ///// Handle NULLs /////
+        switch(DataMappingValidator.nullCount(SOURCE_VALUE, DESTINATION_VALUE)) {
+            case 1:
+                return ERROR_MESSAGE;
+            case 2:
+                return null;
+        }
+        
         ////// Compare /////
-        boolean isEqual;
         if(MAPPING_FLAGS.contains(MappingFlag.IGNORE_PRECISION)) {
-            isEqual = source.compareTo(destination) == 0;
+            isEqual = SOURCE_VALUE.compareTo(DESTINATION_VALUE) == 0;
         }
         else {
-            isEqual = source.equals(destination);
+            isEqual = SOURCE_VALUE.equals(DESTINATION_VALUE);
         }
-
+        
         ////// Return /////
-        if(isEqual) {
-            return null;
-        }
-        else {
-            return ERROR_MESSAGE;
-        }
+        return isEqual ? null : ERROR_MESSAGE;
     }
-
-    @Override
-    public String toString() {
-        return mappingName != null ? mappingName : super.toString();
-    }
-
+    
     //========================= Helper Methods =================================
 
     //========================= Classes ========================================

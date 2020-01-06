@@ -1,12 +1,13 @@
 /*
  * Created on 2019-03-08 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
-package xyz.swatt.data_mapping;
+package xyz.swatt.data_mapping_validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.swatt.log.LogMethods;
-import xyz.swatt.string.StringHelper;
+
+import java.util.Set;
 
 /**
  * <p>
@@ -19,16 +20,16 @@ import xyz.swatt.string.StringHelper;
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
-public class LongMapping implements DataMapping {
-
+public class LongMappingValidator extends AbstractDataMapping<Long> {
+    
     //========================= Static Enums ===================================
-
+    
     //========================= STATIC CONSTANTS ===============================
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LogManager.getLogger(LongMapping.class);
-
+    private static final Logger LOGGER = LogManager.getLogger(LongMappingValidator.class);
+    
     //========================= Static Variables ===============================
-
+    
     //========================= Static Constructor =============================
     static {}
 
@@ -41,34 +42,28 @@ public class LongMapping implements DataMapping {
     public final Long SOURCE_VALUE, DESTINATION_VALUE;
     
     //========================= Variables ======================================
-    /**
-     * The name that was given to this mapping.
-     * <p>
-     * <i>Note:</i> This name is optional and may be {@code null}.
-     * </p>
-     */
-    public String mappingName;
     
     //========================= Constructors ===================================
+    
     /**
-     * Creates a new {@link long}-to-{@link long} {@link DataMapping} object.
+     * Creates a new {@link long}-to-{@link long} {@link DataMappingValidator} object.
      *
      * @param _sourceValue
-     *         The value from the Source Data.
+     * 		The value from the Source Data.
      * @param _destinationValue
-     *         The mapped value found in the Destination Data.
+     * 		The mapped value found in the Destination Data.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public LongMapping(long _sourceValue, long _destinationValue) {
+    public LongMappingValidator(long _sourceValue, long _destinationValue) {
         this(null, _sourceValue, _destinationValue);
     }
 
     /**
-     * Creates a new {@link long}-to-{@link long} {@link DataMapping} object.
+     * Creates a new {@link long}-to-{@link long} {@link DataMappingValidator} object.
      *
      * @param _mappingName
-     *         An optional, unique name to give this {@link LongMapping}.
+     *         An optional, unique name to give this {@link LongMappingValidator}.
      * @param _sourceValue
      *         The value from the Source Data.
      * @param _destinationValue
@@ -76,12 +71,12 @@ public class LongMapping implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public LongMapping(String _mappingName, long _sourceValue, long _destinationValue) {
+    public LongMappingValidator(String _mappingName, long _sourceValue, long _destinationValue) {
         this(_mappingName, new Long(_sourceValue), new Long(_destinationValue));
     }
-
+    
     /**
-     * Creates a new {@link Long}-to-{@link Long} {@link DataMapping} object.
+     * Creates a new {@link Long}-to-{@link Long} {@link DataMappingValidator} object.
      *
      * @param _sourceValue
      *         The value from the Source Data.
@@ -90,15 +85,15 @@ public class LongMapping implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public LongMapping(Long _sourceValue, Long _destinationValue) {
+    public LongMappingValidator(Long _sourceValue, Long _destinationValue) {
         this(null, _sourceValue, _destinationValue);
     }
-
+    
     /**
-     * Creates a new {@link Long}-to-{@link Long} {@link DataMapping} object.
+     * Creates a new {@link Long}-to-{@link Long} {@link DataMappingValidator} object.
      *
      * @param _mappingName
-     *         An optional, unique name to give this {@link LongMapping}.
+     *         An optional, unique name to give this {@link LongMappingValidator}.
      * @param _sourceValue
      *         The value from the Source Data.
      * @param _destinationValue
@@ -106,84 +101,65 @@ public class LongMapping implements DataMapping {
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public LongMapping(String _mappingName, Long _sourceValue, Long _destinationValue) {
-
+    public LongMappingValidator(String _mappingName, Long _sourceValue, Long _destinationValue) {
+        
         //------------------------ Pre-Checks ----------------------------------
-
+        
         //------------------------ CONSTANTS -----------------------------------
-
+        
         //------------------------ Variables -----------------------------------
-
+        
         //------------------------ Code ----------------------------------------
-        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        setMappingName(_mappingName);
+        
         SOURCE_VALUE = _sourceValue;
         DESTINATION_VALUE = _destinationValue;
     }
-
+    
     //========================= Public Methods =================================
     /**
-     * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+     * @return All Flags on this Mapping or {@code null} / empty list, if there are no mappings.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Override
-    public String getMappingName() {
-        return mappingName;
-    }
-    
-    /**
-     * @param _name
-     * 		The Name to set, for this Mapping.
-     *
-     * @return A reference to self is returned for method call chaining.
-     *
-     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-     */
-    @Override
-    public LongMapping setMappingName(String _name) {
-        mappingName = _name;
-        return this;
-    }
-    
-    @Override
-    public String toString() {
-        return mappingName != null ? mappingName : super.toString();
+    public Set<? extends DataMappingFlagEnum> getDataMappingFlags() {
+        return null;
     }
     
     @Override
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------
-
+        
         //------------------------ CONSTANTS -----------------------------------
-        String ERROR_MESSAGE = DataMapping.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
-
+        String ERROR_MESSAGE = DataMappingValidator.createFormattedErrorString(SOURCE_VALUE, DESTINATION_VALUE);
+        
         //------------------------ Variables -----------------------------------
-        Long source = SOURCE_VALUE, destination = DESTINATION_VALUE; // Not work with class variables, so that `validated()` can be called, idempotently.
-
+        
         //------------------------ Code ----------------------------------------
-        ////////// Handle NULLs /////
-        if(source == null || destination == null) {
-            if(source == destination) {
-                return null; // Equal.
+        ///// Custom Comparator /////
+        if(customComparator != null) {
+            if(customComparator.compair(this, SOURCE_VALUE, DESTINATION_VALUE)) {
+                return null;
             }
             else {
                 return ERROR_MESSAGE;
             }
         }
-
-        ////// Compare /////
-        boolean isEqual = source.equals(destination);
-
-        ////// Return /////
-        if(isEqual) {
-            return null;
+        
+        ///// Handle NULLs /////
+        switch(DataMappingValidator.nullCount(SOURCE_VALUE, DESTINATION_VALUE)) {
+            case 1:
+                return ERROR_MESSAGE;
+            case 2:
+                return null;
         }
-        else {
-            return ERROR_MESSAGE;
-        }
+        
+        ////// Compare & Return /////
+        return SOURCE_VALUE.equals(DESTINATION_VALUE) ? null : ERROR_MESSAGE;
     }
-
+    
     //========================= Helper Methods =================================
 
     //========================= Classes ========================================

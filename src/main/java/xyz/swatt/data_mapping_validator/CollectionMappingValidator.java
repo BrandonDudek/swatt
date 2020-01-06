@@ -1,12 +1,11 @@
 /*
  * Created on 2019-03-08 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
-package xyz.swatt.data_mapping;
+package xyz.swatt.data_mapping_validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import xyz.swatt.log.LogMethods;
-import xyz.swatt.string.StringHelper;
 
 import java.util.*;
 
@@ -19,9 +18,10 @@ import java.util.*;
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
-public class CollectionMapping<T> implements DataMapping {
-
+public class CollectionMappingValidator<T> extends AbstractDataMapping<T> {
+    
     //========================= Static Enums ===================================
+    
     /**
      * <p>
      * List of possible flags for a Data Mapping.
@@ -68,13 +68,13 @@ public class CollectionMapping<T> implements DataMapping {
          */
         DESTINATION_CONTAINS_SOURCE,
     }
-
+    
     //========================= STATIC CONSTANTS ===============================
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LogManager.getLogger(CollectionMapping.class);
-
+    private static final Logger LOGGER = LogManager.getLogger(CollectionMappingValidator.class);
+    
     /**
-     * Sets {@link MappingFlag}s to be used for all {@link CollectionMapping}s.
+     * Sets {@link MappingFlag}s to be used for all {@link CollectionMappingValidator}s.
      */
     public static final EnumSet<MappingFlag> GLOBAL_MAPPING_FLAGS = EnumSet.noneOf(MappingFlag.class);
 
@@ -90,72 +90,67 @@ public class CollectionMapping<T> implements DataMapping {
      * The values being compared.
      */
     public final Collection<T> SOURCE_VALUES, DESTINATION_VALUES;
-
+    
     /**
-     * The {@link MappingFlag}s that are applied to this {@link CollectionMapping} object. (read only)
+     * The {@link MappingFlag}s that are applied to this {@link CollectionMappingValidator} object. (read only)
      */
     public final Set<MappingFlag> MAPPING_FLAGS;
 
     //========================= Variables ======================================
-    /**
-     * The name that was given to this mapping.
-     * <p>
-     * <i>Note:</i> This name is optional and may be {@code null}.
-     * </p>
-     */
-    public String mappingName;
     
     //========================= Constructors ===================================
+    
     /**
-     * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+     * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
      *
      * @param _sourceValues
-     *         The values from the Source Data.
+     * 		The values from the Source Data.
      * @param _destinationValues
-     *         The mapped values found in the Destination Data.
+     * 		The mapped values found in the Destination Data.
      * @param _flags
-     *         Any {@link MappingFlag}s that should be applied to this {@link CollectionMapping}.
+     * 		Any {@link MappingFlag}s that should be applied to this {@link CollectionMappingValidator}.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public CollectionMapping(Collection<T> _sourceValues, Collection<T> _destinationValues, MappingFlag... _flags) {
+    public CollectionMappingValidator(Collection<T> _sourceValues, Collection<T> _destinationValues, MappingFlag... _flags) {
         this(null, _sourceValues, _destinationValues, _flags);
     }
 
     /**
-     * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+     * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
      *
      * @param _mappingName
-     *         An optional, unique name to give this {@link CollectionMapping}.
+     *         An optional, unique name to give this {@link CollectionMappingValidator}.
      * @param _sourceValues
      *         The values from the Source Data.
      * @param _destinationValues
      *         The mapped values found in the Destination Data.
      * @param _flags
-     *         Any {@link MappingFlag}s that should be applied to this {@link CollectionMapping}.
+     *         Any {@link MappingFlag}s that should be applied to this {@link CollectionMappingValidator}.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
-    public CollectionMapping(String _mappingName, Collection<T> _sourceValues, Collection<T> _destinationValues, MappingFlag... _flags) {
-
+    public CollectionMappingValidator(String _mappingName, Collection<T> _sourceValues, Collection<T> _destinationValues, MappingFlag... _flags) {
+    
         //------------------------ Pre-Checks ----------------------------------
-
+    
         //------------------------ CONSTANTS -----------------------------------
-
+    
         //------------------------ Variables -----------------------------------
         EnumSet<MappingFlag> flags = EnumSet.noneOf(MappingFlag.class);
-
+    
         //------------------------ Code ----------------------------------------
-        mappingName = _mappingName == null || StringHelper.removeWhitespace(_mappingName).isEmpty() ? null : StringHelper.trim(_mappingName);
+        setMappingName(_mappingName);
+    
         SOURCE_VALUES = _sourceValues;
         DESTINATION_VALUES = _destinationValues;
-
+    
         flags.addAll(GLOBAL_MAPPING_FLAGS);
         if(_flags != null && _flags.length > 0) {
             flags.addAll(Arrays.asList(_flags));
         }
         MAPPING_FLAGS = Collections.unmodifiableSet(flags);
-
+    
         ///// Check for Mapping Flag Conflicts /////
         if(MAPPING_FLAGS.containsAll(Arrays.asList(MappingFlag.SOURCE_CONTAINS_DESTINATION, MappingFlag.DESTINATION_CONTAINS_SOURCE))) {
             throw new IllegalArgumentException("Cannot use both SOURCE_CONTAINS_DESTINATION & DESTINATION_CONTAINS_SOURCE flags in the same CollectionMapping!");
@@ -164,58 +159,36 @@ public class CollectionMapping<T> implements DataMapping {
 
     //========================= Public Methods =================================
     /**
-     * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+     * @return All Flags on this Mapping or {@code null} / empty list, if there are no mappings.
      *
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     @Override
-    public String getMappingName() {
-        return mappingName;
-    }
-    
-    /**
-     * @param _name
-     * 		The Name to set, for this Mapping.
-     *
-     * @return A reference to self is returned for method call chaining.
-     *
-     * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
-     */
-    @Override
-    public CollectionMapping<T> setMappingName(String _name) {
-        mappingName = _name;
-        return this;
-    }
-    
-    @Override
-    public String toString() {
-        return mappingName != null ? mappingName : super.toString();
+    public Set<? extends DataMappingFlagEnum> getDataMappingFlags() {
+        return MAPPING_FLAGS;
     }
     
     @Override
     public String validate() {
 
         //------------------------ Pre-Checks ----------------------------------
-
+        
         //------------------------ CONSTANTS -----------------------------------
-
+        String ERROR_MESSAGE = DataMappingValidator.createFormattedErrorString(SOURCE_VALUES, DESTINATION_VALUES);
+        
         //------------------------ Variables -----------------------------------
         Collection<T> sourceValues = SOURCE_VALUES, destinationValues = DESTINATION_VALUES;
-
+        
         //------------------------ Code ----------------------------------------
-        ////////// Handle NULLs /////
-        if(sourceValues == null || destinationValues == null) {
-            if(sourceValues == destinationValues) {
-                return null; // Equal.
-            }
-            else if(sourceValues == null) {
-                return "Source collection is NULL, but Destination collection contains " + destinationValues.size() + " entries!";
-            }
-            else {
-                return "Destination collection is NULL, but Source collection contains " + sourceValues.size() + " entries!";
-            }
+        ///// Handle NULLs /////
+        switch(DataMappingValidator.nullCount(sourceValues, destinationValues)) {
+            case 1:
+                return ERROR_MESSAGE;
+            case 2:
+                return null;
         }
-
+        
+        
         ////// Handle Flags /////
         if(MAPPING_FLAGS.contains(MappingFlag.IGNORE_DUPLICATES)) {
             sourceValues = new HashSet<>(sourceValues);
@@ -225,7 +198,7 @@ public class CollectionMapping<T> implements DataMapping {
             sourceValues = new ArrayList<>(sourceValues);
             destinationValues = new ArrayList<>(destinationValues);
         }
-
+        
         if(MAPPING_FLAGS.contains(MappingFlag.IGNORE_NULLS)) {
             sourceValues.removeAll(Collections.singleton(null));
             destinationValues.removeAll(Collections.singleton(null));
@@ -241,16 +214,24 @@ public class CollectionMapping<T> implements DataMapping {
             Iterator<T> sourceIterator = sourceValues.iterator(), destinationIterator = destinationValues.iterator();
 
             while(sourceIterator.hasNext() || destinationIterator.hasNext()) {
-
+    
                 sourceEntry = sourceIterator.hasNext() ? sourceIterator.next() : null;
                 destinationEntry = destinationIterator.hasNext() ? destinationIterator.next() : null;
-
-                if(!Objects.equals(sourceEntry, destinationEntry)) {
-
+    
+                boolean isEqual;
+                if(customComparator != null) {
+                    isEqual = customComparator.compair(this, sourceEntry, destinationEntry);
+                }
+                else {
+                    isEqual = Objects.equals(sourceEntry, destinationEntry);
+                }
+    
+                if(!isEqual) {
+        
                     errors.add("Entry " + index + " in Source Collection is: " + sourceEntry);
                     errors.add("Entry " + index + " in Destination Collection is: " + destinationEntry);
                 }
-
+    
                 if(MAPPING_FLAGS.contains(MappingFlag.SOURCE_CONTAINS_DESTINATION) && !destinationIterator.hasNext()) {
                     break;
                 }
@@ -263,20 +244,50 @@ public class CollectionMapping<T> implements DataMapping {
         }
         else {
             if(!MAPPING_FLAGS.contains(MappingFlag.SOURCE_CONTAINS_DESTINATION)) {
+    
                 for(T sourceEntry : sourceValues) {
-                    if(!destinationValues.remove(sourceEntry)) {
+        
+                    boolean isEqual = false;
+                    if(customComparator != null) {
+            
+                        for(T destinationEntry : destinationValues) {
+                            if(isEqual = customComparator.compair(this, sourceEntry, destinationEntry)) {
+                                destinationValues.remove(destinationEntry);
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        isEqual = destinationValues.remove(sourceEntry);
+                    }
+        
+                    if(!isEqual) {
                         errors.add("Destination Collection does not contain Source Entry: " + sourceEntry);
                     }
                 }
             }
-
+    
             if(!MAPPING_FLAGS.contains(MappingFlag.DESTINATION_CONTAINS_SOURCE)) {
 
                 for(T destinationEntry : destinationValues) {
 
                     if(MAPPING_FLAGS.contains(MappingFlag.SOURCE_CONTAINS_DESTINATION)) { // Source Values was never tested.
-
-                        if(!sourceValues.remove(destinationEntry)) { // Test against Source Values now.
+    
+                        boolean isEqual = false;
+                        if(customComparator != null) {
+        
+                            for(T sourceEntry : sourceValues) {
+                                if(isEqual = customComparator.compair(this, sourceEntry, destinationEntry)) {
+                                    sourceValues.remove(sourceEntry);
+                                    break;
+                                }
+                            }
+                        }
+                        else {
+                            isEqual = sourceValues.remove(destinationEntry); // Test against Source Values now.
+                        }
+    
+                        if(!isEqual) {
                             errors.add("Source Collection does not contain Destination Entry: " + destinationEntry);
                         }
                     }
@@ -288,14 +299,9 @@ public class CollectionMapping<T> implements DataMapping {
         }
 
         ////// Return /////
-        if(errors.isEmpty()) {
-            return null;
-        }
-        else {
-            return String.join("\n", errors);
-        }
+        return errors.isEmpty() ? null : String.join("\n", errors);
     }
-
+    
     //========================= Helper Methods =================================
 
     //========================= Classes ========================================

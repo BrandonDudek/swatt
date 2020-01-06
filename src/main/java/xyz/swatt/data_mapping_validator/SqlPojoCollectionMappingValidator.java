@@ -1,7 +1,7 @@
 /*
  * Created on 2019-03-08 by Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>); for {swatt}.
  */
-package xyz.swatt.data_mapping;
+package xyz.swatt.data_mapping_validator;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.log.LogMethods;
 import xyz.swatt.pojo.SqlPojo;
-import xyz.swatt.string.StringHelper;
 
 import java.util.*;
 
@@ -25,18 +24,18 @@ import java.util.*;
  * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
  */
 @LogMethods
-public class SqlPojoCollectionMapping<T> implements DataMapping {
+public class SqlPojoCollectionMappingValidator<T> extends AbstractDataMapping<T> {
 	
 	//========================= Static Enums ===================================
 	
 	//========================= STATIC CONSTANTS ===============================
 	@SuppressWarnings("unused")
-	private static final Logger LOGGER = LogManager.getLogger(SqlPojoCollectionMapping.class);
+	private static final Logger LOGGER = LogManager.getLogger(SqlPojoCollectionMappingValidator.class);
 	
 	/**
-	 * Sets {@link CollectionMapping.MappingFlag}s to be used for all {@link SqlPojoCollectionMapping}s.
+	 * Sets {@link CollectionMappingValidator.MappingFlag}s to be used for all {@link SqlPojoCollectionMappingValidator}s.
 	 */
-	public static final EnumSet<CollectionMapping.MappingFlag> GLOBAL_MAPPING_FLAGS = EnumSet.noneOf(CollectionMapping.MappingFlag.class);
+	public static final EnumSet<CollectionMappingValidator.MappingFlag> GLOBAL_MAPPING_FLAGS = EnumSet.noneOf(CollectionMappingValidator.MappingFlag.class);
 	
 	//========================= Static Variables ===============================
 	
@@ -45,8 +44,6 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	
 	//========================= Static Methods =================================
 	// TODO: Add a builder() method.
-	
-	// TODO: Add a combileAll method that takes in a collections of SqlPojoCollectionMappings and combiles the ones that have the same Destination Table & Column.
 	
 	/**
 	 * Will combine Mappings that have the same Destination Row(s) and Column.
@@ -62,9 +59,9 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 *
 	 * @return All Mappings, after combining.
 	 *
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static Collection<SqlPojoCollectionMapping> consolidateOnDestination(Collection<SqlPojoCollectionMapping> _mappings) {
+	public static Collection<SqlPojoCollectionMappingValidator> consolidateOnDestination(Collection<SqlPojoCollectionMappingValidator> _mappings) {
 		
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notEmpty(_mappings, "Mappings");
@@ -72,13 +69,13 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		//------------------------ CONSTANTS -----------------------------------
 		
 		//------------------------ Variables -----------------------------------
-		Map<SqlPojoCollectionMapping.TablesColumnPair, SqlPojoCollectionMapping> combinedTableMappings = new HashMap<>();
-		Map<List, SqlPojoCollectionMapping> combinedValuesMappings = new HashMap<>();
+		Map<SqlPojoCollectionMappingValidator.TablesColumnPair, SqlPojoCollectionMappingValidator> combinedTableMappings = new HashMap<>();
+		Map<List, SqlPojoCollectionMappingValidator> combinedValuesMappings = new HashMap<>();
 		
 		//------------------------ Code ----------------------------------------
-		for(SqlPojoCollectionMapping mapping : _mappings) {
+		for(SqlPojoCollectionMappingValidator mapping : _mappings) {
 			
-			SqlPojoCollectionMapping otherMapping;
+			SqlPojoCollectionMappingValidator otherMapping;
 			
 			if(mapping.DESTINATION_TABLE_ROWS == null || mapping.DESTINATION_TABLE_ROWS.isEmpty() || mapping.DESTINATION_COLUMN == null) {
 				otherMapping = combinedValuesMappings.put(mapping.DESTINATION_VALUES, mapping);
@@ -111,9 +108,9 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 *
 	 * @return All Mappings, after combining.
 	 *
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static Collection<SqlPojoCollectionMapping> consolidateOnDestination(SqlPojoCollectionMapping... _mappings) {
+	public static Collection<SqlPojoCollectionMappingValidator> consolidateOnDestination(SqlPojoCollectionMappingValidator... _mappings) {
 		
 		//------------------------ Pre-Checks ----------------------------------
 		ArgumentChecks.notNull(_mappings, "Mappings");
@@ -130,12 +127,12 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	}
 	
 	//========================= CONSTANTS ======================================
-	public T tTypeObject;
+	public T typeObject;
 	
 	/**
-	 * The {@link CollectionMapping} object that this one is backed by.
+	 * The {@link CollectionMappingValidator} object that this one is backed by.
 	 */
-	public final CollectionMapping<T> COLLECTION_MAPPING_BACKER;
+	public final CollectionMappingValidator<T> COLLECTION_MAPPING_BACKER;
 	
 	/**
 	 * The values being compared.
@@ -143,9 +140,9 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	public final List SOURCE_VALUES, DESTINATION_VALUES;
 	
 	/**
-	 * The {@link CollectionMapping.MappingFlag}s that are applied to this {@link SqlPojoCollectionMapping} object. (read only)
+	 * The {@link CollectionMappingValidator.MappingFlag}s that are applied to this {@link SqlPojoCollectionMappingValidator} object. (read only)
 	 */
-	public final Set<CollectionMapping.MappingFlag> MAPPING_FLAGS;
+	public final Set<CollectionMappingValidator.MappingFlag> MAPPING_FLAGS;
 	
 	/**
 	 * Just used for reference.
@@ -157,17 +154,11 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	private final SqlPojo.RowMapperColumnEnum DESTINATION_COLUMN;
 	
 	//========================= Variables ======================================
-	/**
-	 * The name that was given to this mapping.
-	 * <p>
-	 * <i>Note:</i> This name is optional and may be {@code null}.
-	 * </p>
-	 */
-	public String mappingName;
 	
 	//========================= Constructors ===================================
+	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _sourceValue
 	 * 		The value from the Source Data.
@@ -176,18 +167,18 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(T _sourceValue,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(T _sourceValue,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(null, Arrays.asList(_sourceValue), null, null, null, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _sourceValues
 	 * 		The values from the Source Data.
@@ -196,18 +187,40 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(List<T> _sourceValues,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(List<T> _sourceValues,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(null, _sourceValues, null, null, null, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
+	 *
+	 * @param _sourceTable
+	 * 		The Source Table to pull the Column Value from.
+	 * @param _sourceColumn
+	 * 		The Source Column to pull the Value from.
+	 * @param _destinationTable
+	 * 		The Destination Table to pull the Column Value from.
+	 * @param _destinationColumn
+	 * 		The Destination Column to pull the Value from.
+	 * @param _flags
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public SqlPojoCollectionMappingValidator(SqlPojo _sourceTable, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
+		this(null, Arrays.asList(_sourceTable), _sourceColumn, Arrays.asList(_destinationTable), _destinationColumn, _flags);
+	}
+	
+	/**
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _sourceTable
 	 * 		The Source Table to pull the Column Value from.
@@ -218,18 +231,18 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(SqlPojo _sourceTable, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(SqlPojo _sourceTable, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(null, Arrays.asList(_sourceTable), _sourceColumn, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
@@ -238,18 +251,18 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationValue
 	 * 		The mapped value found in the Destination Data.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                T _destinationValue,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         T _destinationValue,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(null, null, Arrays.asList(_destinationValue), _sourceTables, _sourceColumn, null, null, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
@@ -258,18 +271,18 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationValues
 	 * 		The mapped values found in the Destination Data.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                List<T> _destinationValues,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         List<T> _destinationValues,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(null, null, _destinationValues, _sourceTables, _sourceColumn, null, null, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
@@ -280,18 +293,18 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(null, _sourceTables, _sourceColumn, Arrays.asList(_destinationTable), _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
@@ -302,21 +315,21 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(null, _sourceTables, _sourceColumn, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _mappingName
-	 * 		An optional, unique name to give this {@link SqlPojoCollectionMapping}.
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
 	 * @param _sourceValue
 	 * 		The value from the Source Data.
 	 * @param _destinationTables
@@ -324,22 +337,22 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(String _mappingName,
-	                                T _sourceValue,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
-		this(null, Arrays.asList(_sourceValue), null, null, null, _destinationTables, _destinationColumn, _flags);
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         T _sourceValue,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
+		this(_mappingName, Arrays.asList(_sourceValue), null, null, null, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _mappingName
-	 * 		An optional, unique name to give this {@link SqlPojoCollectionMapping}.
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
 	 * @param _sourceValues
 	 * 		The values from the Source Data.
 	 * @param _destinationTables
@@ -347,22 +360,47 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(String _mappingName,
-	                                List<T> _sourceValues,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
-		this(null, _sourceValues, null, null, null, _destinationTables, _destinationColumn, _flags);
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         List<T> _sourceValues,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
+		this(_mappingName, _sourceValues, null, null, null, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _mappingName
-	 * 		An optional, unique name to give this {@link SqlPojoCollectionMapping}.
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
+	 * @param _sourceTable
+	 * 		The Source Table to pull the Column Value from.
+	 * @param _sourceColumn
+	 * 		The Source Column to pull the Value from.
+	 * @param _destinationTable
+	 * 		The Destination Table to pull the Column Value from.
+	 * @param _destinationColumn
+	 * 		The Destination Column to pull the Value from.
+	 * @param _flags
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         SqlPojo _sourceTable, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
+		this(_mappingName, Arrays.asList(_sourceTable), _sourceColumn, Arrays.asList(_destinationTable), _destinationColumn, _flags);
+	}
+	
+	/**
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
+	 *
+	 * @param _mappingName
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
 	 * @param _sourceTable
 	 * 		The Source Table to pull the Column Value from.
 	 * @param _sourceColumn
@@ -372,22 +410,22 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(String _mappingName,
-	                                SqlPojo _sourceTable, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         SqlPojo _sourceTable, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(_mappingName, Arrays.asList(_sourceTable), _sourceColumn, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _mappingName
-	 * 		An optional, unique name to give this {@link SqlPojoCollectionMapping}.
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
 	 * @param _sourceColumn
@@ -395,22 +433,22 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationValue
 	 * 		The mapped value found in the Destination Data.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(String _mappingName,
-	                                Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                T _destinationValue,
-	                                CollectionMapping.MappingFlag... _flags) {
-		this(null, null, Arrays.asList(_destinationValue), _sourceTables, _sourceColumn, null, null, _flags);
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         T _destinationValue,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
+		this(_mappingName, null, Arrays.asList(_destinationValue), _sourceTables, _sourceColumn, null, null, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _mappingName
-	 * 		An optional, unique name to give this {@link SqlPojoCollectionMapping}.
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
 	 * @param _sourceColumn
@@ -418,22 +456,22 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationValues
 	 * 		The mapped values found in the Destination Data.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(String _mappingName,
-	                                Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                List<T> _destinationValues,
-	                                CollectionMapping.MappingFlag... _flags) {
-		this(null, null, _destinationValues, _sourceTables, _sourceColumn, null, null, _flags);
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         List<T> _destinationValues,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
+		this(_mappingName, null, _destinationValues, _sourceTables, _sourceColumn, null, null, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _mappingName
-	 * 		An optional, unique name to give this {@link SqlPojoCollectionMapping}.
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
 	 * @param _sourceColumn
@@ -443,22 +481,22 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(String _mappingName,
-	                                Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(_mappingName, _sourceTables, _sourceColumn, Arrays.asList(_destinationTable), _destinationColumn, _flags);
 	}
 	
 	/**
-	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMapping} object.
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
 	 *
 	 * @param _mappingName
-	 * 		An optional, unique name to give this {@link SqlPojoCollectionMapping}.
+	 * 		An optional, unique name to give this {@link SqlPojoCollectionMappingValidator}.
 	 * @param _sourceTables
 	 * 		The Source Tables to pull the Column Value from.
 	 * @param _sourceColumn
@@ -468,24 +506,24 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 * @param _destinationColumn
 	 * 		The Destination Column to pull the Value from.
 	 * @param _flags
-	 * 		Any {@link CollectionMapping.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMapping}.
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping(String _mappingName,
-	                                Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                CollectionMapping.MappingFlag... _flags) {
+	public SqlPojoCollectionMappingValidator(String _mappingName,
+	                                         Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                         Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
 		this(_mappingName, null, null, _sourceTables, _sourceColumn, _destinationTables, _destinationColumn, _flags);
 	}
 	
 	/**
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	private SqlPojoCollectionMapping(String _mappingName, Collection<T> _sourceValues, Collection<T> _destinationValues,
-	                                 Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
-	                                 Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
-	                                 CollectionMapping.MappingFlag... _flags) {
+	private SqlPojoCollectionMappingValidator(String _mappingName, Collection<T> _sourceValues, Collection<T> _destinationValues,
+	                                          Collection<? extends SqlPojo> _sourceTables, SqlPojo.RowMapperColumnEnum _sourceColumn,
+	                                          Collection<? extends SqlPojo> _destinationTables, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                          CollectionMappingValidator.MappingFlag... _flags) {
 		
 		//------------------------ Pre-Checks ----------------------------------
 		
@@ -494,7 +532,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		
 		//------------------------ Variables -----------------------------------
 		String mappingName = "";
-		EnumSet<CollectionMapping.MappingFlag> flags = EnumSet.noneOf(CollectionMapping.MappingFlag.class);
+		EnumSet<CollectionMappingValidator.MappingFlag> flags = EnumSet.noneOf(CollectionMappingValidator.MappingFlag.class);
 		
 		//------------------------ Code ----------------------------------------
 		///// Name /////
@@ -537,7 +575,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 			this.mappingName = mappingName;
 		}
 		else {
-			this.mappingName = StringHelper.trim(_mappingName); // Allowing empty string, because when NULL is passes in, default name generation is used.
+			setMappingName(_mappingName); // Allowing empty string, because when NULL is passes in, default name generation is used.
 		}
 		
 		///// Values /////
@@ -571,8 +609,8 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		// Check for Mapping Flag Conflicts. (Done in CollectionMapping.)
 		
 		///// Backer /////
-		COLLECTION_MAPPING_BACKER = new CollectionMapping(this.mappingName, SOURCE_VALUES, DESTINATION_VALUES,
-				MAPPING_FLAGS.toArray(new CollectionMapping.MappingFlag[] {}));
+		COLLECTION_MAPPING_BACKER = new CollectionMappingValidator(mappingName, SOURCE_VALUES, DESTINATION_VALUES,
+				MAPPING_FLAGS.toArray(new CollectionMappingValidator.MappingFlag[] {}));
 	}
 	
 	// TODO: Allow Source/Destination to be a REGEX.
@@ -586,7 +624,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping convertSourceValuesToString() {
+	public SqlPojoCollectionMappingValidator convertSourceValuesToString() {
 		
 		//------------------------ Pre-Checks ----------------------------------
 		
@@ -609,7 +647,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public SqlPojoCollectionMapping convertDestinationValuesToString() {
+	public SqlPojoCollectionMappingValidator convertDestinationValuesToString() {
 		
 		//------------------------ Pre-Checks ----------------------------------
 		
@@ -626,32 +664,29 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	}
 	
 	/**
-	 * @return The Set or Generated Name of this Mapping; or {@code null}, if not set.
+	 * @return All Flags on this Mapping or {@code null} / empty list, if there are no mappings.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	@Override
-	public String getMappingName() {
-		return mappingName;
+	public Set<? extends DataMappingFlagEnum> getDataMappingFlags() {
+		return MAPPING_FLAGS;
 	}
 	
 	/**
-	 * @param _name
-	 * 		The Name to set, for this Mapping.
+	 * This will set a custom Comparator, to be used instead of {@code .equals(...)} when compairing a Source and Destination Value.
 	 *
-	 * @return A reference to self is returned for method call chaining.
+	 * @param _Comparator The {@link DataMappingComparator} to use instead of {@code .equals}.
+	 *
+	 * @return A reference to this {@link DataMappingValidator}, for method call chaining.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	@Override
-	public SqlPojoCollectionMapping<T> setMappingName(String _name) {
-		mappingName = _name;
+	public DataMappingValidator setComparator(DataMappingComparator<T> _Comparator) {
+		customComparator = _Comparator;
+		COLLECTION_MAPPING_BACKER.setComparator(_Comparator);
 		return this;
-	}
-	
-	@Override
-	public String toString() {
-		return mappingName != null ? mappingName : super.toString();
 	}
 	
 	@Override
@@ -672,7 +707,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 	//========================= Classes ========================================
 	
 	/**
-	 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	private static class TablesColumnPair {
 		
@@ -680,7 +715,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 		private final SqlPojo.RowMapperColumnEnum COLUMN;
 		
 		/**
-		 * @author Brandon Dudek &lt;bdudek@paychex.com&gt;
+		 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 		 */
 		private TablesColumnPair(Collection<? extends SqlPojo> _tables, SqlPojo.RowMapperColumnEnum _column) {
 			TABLE_ROWS = _tables;
@@ -694,7 +729,7 @@ public class SqlPojoCollectionMapping<T> implements DataMapping {
 				return false;
 			}
 			
-			if(!(obj instanceof SqlPojoCollectionMapping.TablesColumnPair)) {
+			if(!(obj instanceof SqlPojoCollectionMappingValidator.TablesColumnPair)) {
 				return false;
 			}
 			

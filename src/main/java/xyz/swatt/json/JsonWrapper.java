@@ -47,9 +47,13 @@ public class JsonWrapper {
 	static { }
 	
 	//========================= Static Methods =================================
-	
 	/**
-	 * Will convert a given String into a Jaway {@link JsonPath}.
+	 * Will convert a given {@link String} into a Jaway {@link JsonPath}.
+	 *
+	 * @param _jsonPath
+	 * 		The {@link String} to convert.
+	 *
+	 * @return The Jaway {@link JsonPath} equivalent of the given {@link String}.
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */

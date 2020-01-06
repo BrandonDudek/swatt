@@ -1,6 +1,8 @@
 xyz.swatt.asserts
-xyz.swatt.data_mapping
+xyz.swatt.data_mapping_validator
 xyz.swatt.exceptions
+xyz.swatt.files
+xyz.swatt.json
 xyz.swatt.log
 xyz.swatt.pojo
 xyz.swatt.selenium
