@@ -1,11 +1,8 @@
 # Committed but Unreleased Changes
 
-# DataMappingValidator Classes
+# XXX
 
-**DataMappingValidator Classes**
-- Renamed "data_mapping" package to "data_mapping_validator"
-- Renamed all data_mapping_validator Classes
-- Added Custom Comparator functionality to all DataMappingValidator classes
-- Added Updated Unit Tests
+**XXX**
+- ...
 
-# Expected Release: v1.17.0
+# Expected Release: v1.17.1
