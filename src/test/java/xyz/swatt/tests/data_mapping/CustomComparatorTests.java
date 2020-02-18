@@ -69,7 +69,7 @@ public class CustomComparatorTests {
 		data.add(new Object[] {new BigDecimalMappingValidator(bigDecimalMappingName, bigDecimalVal1, bigDecimalVal2, bigDecimalFlag)
 				.setComparator(new DataMappingValidator.DataMappingComparator<BigDecimal>() {
 			@Override
-			public boolean compair(DataMappingValidator _dataMappingValidator, BigDecimal _source, BigDecimal _destination) {
+			public boolean compare(DataMappingValidator _dataMappingValidator, BigDecimal _source, BigDecimal _destination) {
 				boolean isEqual = _dataMappingValidator.getMappingName().equals(bigDecimalMappingName);
 				isEqual &= _source.equals(bigDecimalVal1);
 				isEqual &= _destination.equals(bigDecimalVal2);
@@ -85,7 +85,7 @@ public class CustomComparatorTests {
 		data.add(new Object[] {new DateTimeMappingValidator(dateTimeMappingName, dateTimeVal1, dateTimeVal2, dateTimeFlag)
 				.setComparator(new DataMappingValidator.DataMappingComparator<DateTimeMappingValidator.LocalDateTimeTuple>() {
 			@Override
-			public boolean compair(DataMappingValidator _dataMappingValidator, DateTimeMappingValidator.LocalDateTimeTuple _source,
+			public boolean compare(DataMappingValidator _dataMappingValidator, DateTimeMappingValidator.LocalDateTimeTuple _source,
 			                       DateTimeMappingValidator.LocalDateTimeTuple _destination) {
 				boolean isEqual = _dataMappingValidator.getMappingName().equals(dateTimeMappingName);
 				isEqual &= _source.DATE.equals(dateTimeVal1);
@@ -101,7 +101,7 @@ public class CustomComparatorTests {
 		data.add(new Object[] {new LongMappingValidator(longMappingName, longVal1, longVal2)
 				.setComparator(new DataMappingValidator.DataMappingComparator<Long>() {
 			@Override
-			public boolean compair(DataMappingValidator _dataMappingValidator, Long _source, Long _destination) {
+			public boolean compare(DataMappingValidator _dataMappingValidator, Long _source, Long _destination) {
 				boolean isEqual = _dataMappingValidator.getMappingName().equals(longMappingName);
 				isEqual &= _source.equals(longVal1);
 				isEqual &= _destination.equals(longVal2);
@@ -115,7 +115,7 @@ public class CustomComparatorTests {
 		data.add(new Object[] {new ObjectMappingValidator(objectMappingName, stringVal1, stringVal2)
 				.setComparator(new DataMappingValidator.DataMappingComparator<String>() {
 			@Override
-			public boolean compair(DataMappingValidator _dataMappingValidator, String _source, String _destination) {
+			public boolean compare(DataMappingValidator _dataMappingValidator, String _source, String _destination) {
 				boolean isEqual = _dataMappingValidator.getMappingName().equals(objectMappingName);
 				isEqual &= _source.equals(stringVal1);
 				isEqual &= _destination.equals(stringVal2);
@@ -128,7 +128,7 @@ public class CustomComparatorTests {
 		data.add(new Object[] {new StringMappingValidator(stringMappingName, stringVal1, stringVal2, stringFlag)
 				.setComparator(new DataMappingValidator.DataMappingComparator<String>() {
 			@Override
-			public boolean compair(DataMappingValidator _dataMappingValidator, String _source, String _destination) {
+			public boolean compare(DataMappingValidator _dataMappingValidator, String _source, String _destination) {
 				boolean isEqual = _dataMappingValidator.getMappingName().equals(stringMappingName);
 				isEqual &= _source.equals(stringVal1);
 				isEqual &= _destination.equals(stringVal2);

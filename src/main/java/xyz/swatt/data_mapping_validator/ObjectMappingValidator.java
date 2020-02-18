@@ -111,11 +111,11 @@ public class ObjectMappingValidator<T> extends AbstractDataMapping<T> {
         //------------------------ Code ----------------------------------------
         ///// Custom Comparator /////
         if(customComparator != null) {
-            if(customComparator.compair(this, SOURCE_VALUE, DESTINATION_VALUE)) {
-                return null;
+            if(customComparator.compare(this, SOURCE_VALUE, DESTINATION_VALUE)) {
+	            return null;
             }
             else {
-                return ERROR_MESSAGE;
+	            return ERROR_MESSAGE;
             }
         }
         

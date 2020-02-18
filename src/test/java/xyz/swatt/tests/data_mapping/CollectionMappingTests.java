@@ -66,7 +66,7 @@ public class CollectionMappingTests {
         data.add(new Object[] {new CollectionMappingValidator(mappingName, list1, list2, flag)
                 .setComparator(new DataMappingValidator.DataMappingComparator<String>() {
             @Override
-            public boolean compair(DataMappingValidator _dataMappingValidator, String _source, String _destination) {
+            public boolean compare(DataMappingValidator _dataMappingValidator, String _source, String _destination) {
                 boolean isEqual = _dataMappingValidator.getMappingName().equals(mappingName);
                 isEqual &= _source.equals(list1.get(0));
                 isEqual &= _destination.equals(list2.get(0));

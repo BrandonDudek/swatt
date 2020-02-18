@@ -1,8 +1,16 @@
 # Committed but Unreleased Changes
 
-# XXX
+# ArgumentChecks, DataMappingValidator, & Scripts
 
-**XXX**
-- ...
+**ArgumentChecks**
+- Improved greaterThanZero and notNegative checks to include BigDecimal and BigInteger.
 
-# Expected Release: v1.17.1
+**DataMappingValidator**
+- Renamed `compair` method to `compare`. (BREAKING CHANGE!)
+
+**Scripts**
+- SQL-RowMapper-POJO-Generator:
+-- Improved Number Data Types
+-- Fixed NULLs in Where clause
+
+# Expected Release: v1.18.0

@@ -158,7 +158,7 @@ public class BigDecimalMappingValidator extends AbstractDataMapping<BigDecimal> 
         //------------------------ Code ----------------------------------------
         ///// Custom Comparator /////
         if(customComparator != null) {
-            if(customComparator.compair(this, SOURCE_VALUE, DESTINATION_VALUE)) {
+            if(customComparator.compare(this, SOURCE_VALUE, DESTINATION_VALUE)) {
                 return null;
             }
             else {

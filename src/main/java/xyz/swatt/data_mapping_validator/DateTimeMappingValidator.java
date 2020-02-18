@@ -398,7 +398,7 @@ public class DateTimeMappingValidator extends AbstractDataMapping<DateTimeMappin
 		//------------------------ Code ----------------------------------------
 		///// Custom Comparator /////
 		if(customComparator != null) {
-			if(customComparator.compair(this, SOURCE, DESTINATION)) {
+			if(customComparator.compare(this, SOURCE, DESTINATION)) {
 				return null;
 			}
 			else {

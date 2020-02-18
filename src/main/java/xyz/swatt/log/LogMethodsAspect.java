@@ -9,15 +9,18 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.ConstructorSignature;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.math.BigInteger;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * This class handles the logic for the @{@link LogMethods} annotation.
@@ -40,17 +43,31 @@ public class LogMethodsAspect {
     //========================= CONSTANTS ======================================
 
     //========================= Variables ======================================
-
+    
     //========================= Constructors ===================================
-
+    @Test
+    public static void test() {
+        
+        //------------------------ Pre-Checks ----------------------------------
+        
+        //------------------------ CONSTANTS -----------------------------------
+        
+        //------------------------ Variables -----------------------------------
+        
+        //------------------------ Code ----------------------------------------
+        LOGGER.error("bigInt");
+        BigInteger bigInt = new BigInteger(Double.SIZE, new Random());
+        LOGGER.error(bigInt);
+    }
+    
     //========================= Methods for External Use =======================
     @Around("(execution(*.new(..)) || execution(* *(..))) && (@within(LogMethods) || @annotation(LogMethods))")
     public Object around(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-
+        
         LOGGER.info("around(ProceedingJoinPoint: {}) [START]", proceedingJoinPoint.getKind());
-
+        
         //------------------------ Pre-Checks ----------------------------------
-
+        
         //-------------------------CONSTANTS------------------------------------
 
         //-------------------------Variables------------------------------------

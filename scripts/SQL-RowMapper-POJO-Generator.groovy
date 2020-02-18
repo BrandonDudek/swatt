@@ -3,6 +3,7 @@ import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
 
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
 /*
  * Available context bindings:
@@ -14,19 +15,22 @@ import java.time.ZonedDateTime
 packageName = "com.sample;"
 typeMapping = [
         ///// Numbers /////
-        (~/(?i)int|number\s*((?!\()|\([^,]*(,\s*0)?\))/)  : "Long",
-        (~/(?i)float|double|decimal|real|number/)         : "BigDecimal",
+        // If both precision and scale are not given, in a NUMBER deffinition, oracle defaults to max for both.
+        (~/(?i)int|number\s*\(\s*(([0-9]+\s*(,\s*0\s*)?)|,\s*0\s*)\)/): "Long", // NUMBER(1+), NUMBER(,0), NUMBER(1+,0)
+        // TODO: Handle Whole Number with more than 18 digits. (Use BigInteger.)
+        (~/(?i)float|double|decimal|real|number/)                     : "BigDecimal", // NUMBER, NUMBER(*), NUMBER(,1+), NUMBER(*,1+), NUMBER(0+,1+)
 
         ///// Date/Time /////
-        (~/(?i)date|datetime/)                            : "LocalDateTime", // SQL Date also contains Time in Oracle Databases.
-        (~/(?i)time/)                                     : "LocalTime",
-        (~/(?i)timestamp/)                                : "Timestamp",
+        (~/(?i)date|datetime/)                                        : "LocalDateTime", // SQL Date also contains Time in Oracle Databases.
+        (~/(?i)time/)                                                 : "LocalTime",
+        (~/(?i)timestamp/)                                            : "Timestamp",
 
         ///// Objects /////
-        (~/(?i)mdsys.sdo_geometry/)                       : "JGeometry", // https://mvnrepository.com/artifact/com.oracle.spatial/com.springsource.oracle.spatial.geometry
+        // https://mvnrepository.com/artifact/com.oracle.spatial/com.springsource.oracle.spatial.geometry
+        (~/(?i)mdsys.sdo_geometry/)                                   : "JGeometry",
 
         ///// Fallback /////
-        (~/(?i)/)                                         : "String"
+        (~/(?i)/)                                                     : "String"
 ]
 
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
@@ -39,13 +43,11 @@ def generateFile(table, dir) {
   def fields = calcFields(table)
 
   packageName = dir.getPath()
-  if(packageName.contains("\\src\\main\\java\\")) {
+  if (packageName.contains("\\src\\main\\java\\")) {
     packageName = packageName.substring(packageName.indexOf("\\src\\main\\java\\") + 15)
-  }
-  else if(packageName.contains("\\src\\test\\java\\")) {
+  } else if (packageName.contains("\\src\\test\\java\\")) {
     packageName = packageName.substring(packageName.indexOf("\\src\\test\\java\\") + 15)
-  }
-  else if(packageName.contains(":")) {
+  } else if (packageName.contains(":")) {
     packageName = packageName.substring(packageName.indexOf(":") + 1)
   }
   packageName = packageName.replace('\\', '.') + ";"
@@ -61,7 +63,8 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println ""
   generateImports(out)
   out.println ""
-  out.println "@Generated(value = \"xyz.swatt.SQL-RowMapper-POJO-Generator.groovy\", date = \"" + ZonedDateTime.now() + "\")"
+  out.println "@Generated(value = \"xyz.swatt.SQL-RowMapper-POJO-Generator.groovy\", date = \"" + ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS) +
+          "\", comments = \"Generator Version 2\")"
   out.println "@LogMethods"
   out.println "@SuppressWarnings(\"Duplicates\")"
   out.println "public class $className implements SqlPojo<$className>, Cloneable {"
@@ -69,6 +72,7 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println "\t//========================= Enums ========================================="
   out.println "\tpublic static enum Column implements SqlPojo.RowMapperColumnEnum {"
   fields.eachWithIndex() { it, index ->
+    out.println "\n\t\t/**${it.type} - ${it.spec}*/"
     out.println "\t\t${it.colname}($index, \"${it.colname}\"),"
   }
   out.println "\t\t;"
@@ -122,9 +126,11 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println "\t//========================= Variables ======================================"
   fields.each() {
     if (it.annos != "") out.println "\t${it.annos}"
-    out.println "\tpublic ${it.type} ${it.name}; // ${it.spec}"
+    out.println "\t/**\n" +
+            "\t * ${it.spec}\n" +
+            "\t */\n" +
+            "\tpublic ${it.type} ${it.name};\n"
   }
-  out.println ""
   out.println "\t//========================= Row Mapper ====================================="
   out.println "\t@Override"
   out.println "\tpublic $className mapRow(ResultSet _rs, int _rowNum) throws SQLException {"
@@ -146,10 +152,9 @@ def generateClass(out, schemaName, tableName, className, fields) {
           "\t\t\tswitch(column) {"
   fields.eachWithIndex() { it, index ->
     out.println "\t\t\t\tcase ${it.colname}:"
-    if(it.type == "JGeometry") {
+    if (it.type == "JGeometry") {
       out.println "\t\t\t\t\t$lowerClassName.${it.name} = (${it.type}) _rs.getObject(i);"
-    }
-    else {
+    } else {
       out.println "\t\t\t\t\t$lowerClassName.${it.name} = _rs.getObject(i, ${it.type}.class);"
     }
     out.println "\t\t\t\t\tbreak;"
@@ -192,10 +197,9 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println "\t\tignoreColumns.addAll(other${className}.differencesSkipColumns);"
   out.println ""
   fields.eachWithIndex() { it, index ->
-    if(it.type == "BigDecimal") {
+    if (it.type == "BigDecimal") {
       out.println "\t\tif(!ignoreColumns.contains(Column.${it.colname}.COLUMN_INDEX) && !(${it.name} == null || other$className.${it.name} == null ? ${it.name} == other$className.${it.name} : ${it.name}.compareTo(other$className.${it.name}) == 0)) { // BigDecimal's .equals(Object) method takes precision into account."
-    }
-    else {
+    } else {
       out.println "\t\tif(!ignoreColumns.contains(Column.${it.colname}.COLUMN_INDEX) && !Objects.equals(this.${it.name}, other$className.${it.name})) {"
     }
     out.println "\t\t\tdiffs.add(\"Different ${it.name}: \" + this.${it.name} + \" != \" + other$className.${it.name});"
@@ -212,16 +216,14 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println "\t\t$className other = ($className) _otherObject;"
   out.println "\t\treturn "
   fields.eachWithIndex() { it, index ->
-    if(it.type == "BigDecimal") {
+    if (it.type == "BigDecimal") {
       out.print "\t\t\t\t(${it.name} == null || other.${it.name} == null ? ${it.name} == other.${it.name} : ${it.name}.compareTo(other.${it.name}) == 0) /* BigDecimal's .equals(Object) method takes precision into account. */"
-    }
-    else {
+    } else {
       out.print "\t\t\t\tObjects.equals(${it.name}, other.${it.name})"
     }
-    if(index < fields.size() - 1) {
+    if (index < fields.size() - 1) {
       out.println " &&"
-    }
-    else {
+    } else {
       out.println ";"
     }
   }
@@ -232,7 +234,7 @@ def generateClass(out, schemaName, tableName, className, fields) {
           "\t\treturn Objects.hash("
   fields.eachWithIndex() { it, index ->
     out.print it.name
-    if(index < fields.size() - 1) {
+    if (index < fields.size() - 1) {
       out.print ",\n\t\t\t\t\t\t\t"
     }
   }
@@ -244,7 +246,7 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println "\t\treturn \"${className}{\" +"
   fields.eachWithIndex() { it, index ->
     out.print "\t\t\t\"${it.name}='\" + ${it.name} + \"'"
-    if(index < fields.size() - 1) {
+    if (index < fields.size() - 1) {
       out.print ", "
     }
     out.println "\" +"
@@ -308,13 +310,14 @@ def generateGettersAndSetters(out, className, fields) {
     out.println "\tpublic ${it.type} get${it.name.capitalize()}() {"
     out.println "\t\treturn ${it.name};"
     out.println "\t}"
-    out.println "\tpublic $className set${it.name.capitalize()}(${it.type} _${it.name}) {"
-    out.println "\t\tthis.${it.name} = _${it.name};"
-    out.println "\t\treturn this;"
-    out.println "\t}"
-    if(it.type == "BigDecimal") {
-      out.println "\tpublic $className set${it.name.capitalize()}(double _${it.name}) { // RowMapper cannot map to BigDecimal directly."
-      out.println "\t\tthis.${it.name} = BigDecimal.valueOf(_${it.name});"
+    if (it.type == "BigDecimal") {
+      out.println "\tpublic $className set${it.name.capitalize()}(Number _${it.name}) {"
+      out.println "\t\tthis.${it.name} = _${it.name} == null ? null : new BigDecimal(_${it.name}.toString());"
+      out.println "\t\treturn this;"
+      out.println "\t}"
+    } else {
+      out.println "\tpublic $className set${it.name.capitalize()}(${it.type} _${it.name}) {"
+      out.println "\t\tthis.${it.name} = _${it.name};"
       out.println "\t\treturn this;"
       out.println "\t}"
     }
@@ -508,9 +511,9 @@ def generateStaticMethods(out, className) {
           "\t\t\n" +
           "\t\t//------------------------ Code ----------------------------------------\n" +
           "\t\treturn queryForRows(_jdbcTemplate, _limit, _randomize, Arrays.asList(_queryData), _columns);\n" +
-          "\t}\n" +
-          "\t\n" +
-          "\t/**\n" +
+          "\t}\n"
+
+  out.println "\t/**\n" +
           "\t * Will query a given Database (DB) for rows that match the given Column Values.\n" +
           "\t * <p>\n" +
           "\t * <b>Note:</b> This method is synchronized on the given JdbcTemplate, if the given limit is > 0.\n" +
@@ -530,19 +533,20 @@ def generateStaticMethods(out, className) {
           "\t *\n" +
           "\t * @return The {@link $className} rows found.\n" +
           "\t */\n" +
-          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize, Collection<$className> _queryData, Column... _columns) {\n" +
+          "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize, Collection<$className> _queryData,\n" +
+          "\t                                                 Column... _columns) {\n" +
           "\t\t\n" +
           "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
           "\t\tArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\");\n" +
-          "\t\tif(_queryData == null || _queryData.isEmpty()) {\n" +
-          "\t\t\tthrow new IllegalArgumentException(\"The given Query Data Collection cannot be empty!\");\n" +
-          "\t\t}\n" +
+          "\t\tArgumentChecks.notEmpty(_queryData, \"Query Data\");\n" +
           "\t\t\n" +
           "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
           "\t\t\n" +
           "\t\t//------------------------ Variables -----------------------------------\n" +
           "\t\tboolean firstQueryDataObject = true, ignoreNull = _columns == null || _columns.length < 1;\n" +
-          "\t\tString queryString = \"select * from \" + FULL_TABLE_NAME + \" where \";\n" +
+          "\t\t\n" +
+          "\t\tStringBuilder queryStringBuilder = new StringBuilder(\"select * from \" + FULL_TABLE_NAME + \" where \");\n" +
+          "\t\t\n" +
           "\t\tColumn[] columnsToParse = ignoreNull ? Column.values() : _columns;\n" +
           "\t\tList<Object> args = new ArrayList(columnsToParse.length);\n" +
           "\t\tList<$className> rows;\n" +
@@ -554,9 +558,9 @@ def generateStaticMethods(out, className) {
           "\t\t\t\tfirstQueryDataObject = false;\n" +
           "\t\t\t}\n" +
           "\t\t\telse {\n" +
-          "\t\t\t\tqueryString += \" or \";\n" +
+          "\t\t\t\tqueryStringBuilder.append(\" or \");\n" +
           "\t\t\t}\n" +
-          "\t\t\tqueryString += \"(\";\n" +
+          "\t\t\tqueryStringBuilder.append(\"(\");\n" +
           "\t\t\t\n" +
           "\t\t\tboolean firstColumnWithData = true;\n" +
           "\t\t\t\n" +
@@ -564,22 +568,31 @@ def generateStaticMethods(out, className) {
           "\t\t\t\t\n" +
           "\t\t\t\tObject value = queryData.getColumnValue(column);\n" +
           "\t\t\t\tif(value != null || !ignoreNull) {\n" +
+          "\t\t\t\t\t\n" +
           "\t\t\t\t\tif(firstColumnWithData) {\n" +
           "\t\t\t\t\t\tfirstColumnWithData = false;\n" +
           "\t\t\t\t\t}\n" +
           "\t\t\t\t\telse {\n" +
-          "\t\t\t\t\t\tqueryString += \" and \";\n" +
+          "\t\t\t\t\t\tqueryStringBuilder.append(\" and \");\n" +
           "\t\t\t\t\t}\n" +
-          "\t\t\t\t\tqueryString += column.getColumnName() + \"=?\";\n" +
-          "\t\t\t\t\targs.add(value);\n" +
+          "\t\t\t\t\t\n" +
+          "\t\t\t\t\tqueryStringBuilder.append(column.getColumnName());\n" +
+          "\t\t\t\t\t\n" +
+          "\t\t\t\t\tif(value == null) {\n" +
+          "\t\t\t\t\t\tqueryStringBuilder.append(\" IS NULL\");\n" +
+          "\t\t\t\t\t}\n" +
+          "\t\t\t\t\telse {\n" +
+          "\t\t\t\t\t\tqueryStringBuilder.append(\"=?\");\n" +
+          "\t\t\t\t\t\targs.add(value);\n" +
+          "\t\t\t\t\t}\n" +
           "\t\t\t\t}\n" +
           "\t\t\t}\n" +
           "\t\t\t\n" +
-          "\t\t\tqueryString += \")\";\n" +
+          "\t\t\tqueryStringBuilder.append(\")\");\n" +
           "\t\t}\n" +
           "\t\t\n" +
           "\t\tif(_randomize) {\n" +
-          "\t\t\tqueryString += \" ORDER BY dbms_random.value\";\n" +
+          "\t\t\tqueryStringBuilder.append(\" ORDER BY dbms_random.value\");\n" +
           "\t\t}\n" +
           "\t\t\n" +
           "\t\tif(_limit > 0) {\n" +
@@ -589,7 +602,7 @@ def generateStaticMethods(out, className) {
           "\t\t\t\t\n" +
           "\t\t\t\ttry {\n" +
           "\t\t\t\t\t_jdbcTemplate.setMaxRows(_limit);\n" +
-          "\t\t\t\t\trows = _jdbcTemplate.query(queryString, args.toArray(), _queryData.iterator().next());\n" +
+          "\t\t\t\t\trows = _jdbcTemplate.query(queryStringBuilder.toString(), args.toArray(), _queryData.iterator().next());\n" +
           "\t\t\t\t}\n" +
           "\t\t\t\tfinally {\n" +
           "\t\t\t\t\t_jdbcTemplate.setMaxRows(oldMaxRows);\n" +
@@ -597,13 +610,13 @@ def generateStaticMethods(out, className) {
           "\t\t\t}\n" +
           "\t\t}\n" +
           "\t\telse {\n" +
-          "\t\t\trows = _jdbcTemplate.query(queryString, args.toArray(), _queryData.iterator().next());\n" +
+          "\t\t\trows = _jdbcTemplate.query(queryStringBuilder.toString(), args.toArray(), _queryData.iterator().next());\n" +
           "\t\t}\n" +
           "\t\t\n" +
           "\t\treturn rows;\n" +
-          "\t}\n" +
-          "\t\n" +
-          "\t/**\n" +
+          "\t}\n"
+
+  out.println "\t/**\n" +
           "\t * Will query a given Database (DB) for rows that match the given Column Values.\n" +
           "\t *\n" +
           "\t * @param _jdbcTemplate\n" +
@@ -734,17 +747,19 @@ def generateInsertMethods(out) {
           "\t}"
 }
 
+// TODO: Write Delete Method(s).
+
 //---------- Helper Methods ----------
 def calcFields(table) {
   DasUtil.getColumns(table).reduce([]) { fields, col ->
     def spec = Case.LOWER.apply(col.getDataType().getSpecification())
     def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
     fields += [[
-                       colname : col.getName(),
-                       name : javaName(col.getName(), false),
-                       type : typeStr,
-                       spec : spec,
-                       annos: ""]]
+                       colname: col.getName(),
+                       name   : javaName(col.getName(), false),
+                       type   : typeStr,
+                       spec   : spec,
+                       annos  : ""]]
   }
 }
 
@@ -753,5 +768,5 @@ def javaName(str, capitalize) {
           .collect { Case.LOWER.apply(it).capitalize() }
           .join("")
           .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
-  capitalize || s.length() == 1? s : Case.LOWER.apply(s[0]) + s[1..-1]
+  capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
 }

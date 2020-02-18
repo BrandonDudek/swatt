@@ -220,7 +220,7 @@ public class CollectionMappingValidator<T> extends AbstractDataMapping<T> {
     
                 boolean isEqual;
                 if(customComparator != null) {
-                    isEqual = customComparator.compair(this, sourceEntry, destinationEntry);
+                    isEqual = customComparator.compare(this, sourceEntry, destinationEntry);
                 }
                 else {
                     isEqual = Objects.equals(sourceEntry, destinationEntry);
@@ -251,10 +251,10 @@ public class CollectionMappingValidator<T> extends AbstractDataMapping<T> {
                     if(customComparator != null) {
             
                         for(T destinationEntry : destinationValues) {
-                            if(isEqual = customComparator.compair(this, sourceEntry, destinationEntry)) {
-                                destinationValues.remove(destinationEntry);
-                                break;
-                            }
+	                        if(isEqual = customComparator.compare(this, sourceEntry, destinationEntry)) {
+		                        destinationValues.remove(destinationEntry);
+		                        break;
+	                        }
                         }
                     }
                     else {
@@ -277,10 +277,10 @@ public class CollectionMappingValidator<T> extends AbstractDataMapping<T> {
                         if(customComparator != null) {
         
                             for(T sourceEntry : sourceValues) {
-                                if(isEqual = customComparator.compair(this, sourceEntry, destinationEntry)) {
-                                    sourceValues.remove(sourceEntry);
-                                    break;
-                                }
+	                            if(isEqual = customComparator.compare(this, sourceEntry, destinationEntry)) {
+		                            sourceValues.remove(sourceEntry);
+		                            break;
+	                            }
                             }
                         }
                         else {

@@ -57,7 +57,7 @@ public abstract class AbstractDataMapping<T> implements DataMappingValidator<T> 
 	}
 	
 	/**
-	 * This will set a custom Comparator, to be used instead of {@code .equals(...)} when compairing a Source and Destination Value.
+	 * This will set a custom Comparator, to be used instead of {@code .equals(...)} when compareing a Source and Destination Value.
 	 *
 	 * @param _Comparator
 	 * 		The {@link DataMappingComparator} to use instead of {@code .equals}.

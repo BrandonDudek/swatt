@@ -243,11 +243,11 @@ public class StringMappingValidator extends AbstractDataMapping<String> {
         
         ////// Compare & Return /////
         if(customComparator != null) {
-            if(customComparator.compair(this, source, destination)) {
-                return null;
+            if(customComparator.compare(this, source, destination)) {
+	            return null;
             }
             else {
-                return ERROR_MESSAGE;
+	            return ERROR_MESSAGE;
             }
         }
         else {

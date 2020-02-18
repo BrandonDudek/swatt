@@ -115,7 +115,7 @@ public class ArgumentChecks {
 	 * 		If the given number is {@code <= 0}.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static void greaterThanZero(Double _number, String _argumentName) throws IllegalArgumentException {
+	public static void greaterThanZero(Number _number, String _argumentName) throws IllegalArgumentException {
 		
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -125,10 +125,9 @@ public class ArgumentChecks {
 		//------------------------ Variables -----------------------------------
 		
 		//------------------------ Code ----------------------------------------
-		if(_number == null) {
-			throw new IllegalArgumentException("Given " + _argumentName + "Number cannot be NULL!");
-		}
-		else if(_number <= 0) {
+		notNull(_number, _argumentName);
+		
+		if(_number.doubleValue() <= 0) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Number (" + _number + ") must be greater than 0!");
 		}
 	}
@@ -174,7 +173,7 @@ public class ArgumentChecks {
 	 * 		If the given number is {@code < 0}.
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
-	public static void notNegative(Double _number, String _argumentName) throws IllegalArgumentException {
+	public static void notNegative(Number _number, String _argumentName) throws IllegalArgumentException {
 		
 		//------------------------ Pre-Checks ----------------------------------
 		_argumentName = formatArgumentName(_argumentName);
@@ -184,10 +183,9 @@ public class ArgumentChecks {
 		//------------------------ Variables -----------------------------------
 		
 		//------------------------ Code ----------------------------------------
-		if(_number == null) {
-			throw new IllegalArgumentException("Given " + _argumentName + "Number cannot be NULL!");
-		}
-		else if(_number < 0) {
+		notNull(_number, _argumentName);
+		
+		if(_number.doubleValue() < 0) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Number (" + _number + ") cannot be Negative!");
 		}
 	}

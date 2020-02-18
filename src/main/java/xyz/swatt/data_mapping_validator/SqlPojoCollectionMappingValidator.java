@@ -13,7 +13,7 @@ import xyz.swatt.pojo.SqlPojo;
 import java.util.*;
 
 /**
- * Use this class to validate that 2 different {@link Collection}s of {@link SqlPojo}s are equal, compairing their Column Values.
+ * Use this class to validate that 2 different {@link Collection}s of {@link SqlPojo}s are equal, compareing their Column Values.
  * <p>
  * <b>Note:</b> The Column Value Types are defined by {@link T}.
  * </p>
@@ -674,9 +674,10 @@ public class SqlPojoCollectionMappingValidator<T> extends AbstractDataMapping<T>
 	}
 	
 	/**
-	 * This will set a custom Comparator, to be used instead of {@code .equals(...)} when compairing a Source and Destination Value.
+	 * This will set a custom Comparator, to be used instead of {@code .equals(...)} when compareing a Source and Destination Value.
 	 *
-	 * @param _Comparator The {@link DataMappingComparator} to use instead of {@code .equals}.
+	 * @param _Comparator
+	 * 		The {@link DataMappingComparator} to use instead of {@code .equals}.
 	 *
 	 * @return A reference to this {@link DataMappingValidator}, for method call chaining.
 	 *

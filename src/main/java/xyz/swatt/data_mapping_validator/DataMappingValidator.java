@@ -100,7 +100,7 @@ public interface DataMappingValidator<T> {
 	public String getMappingName();
 	
 	/**
-	 * This will set a custom Comparator, to be used instead of {@code .equals(...)} when compairing a Source and Destination Value.
+	 * This will set a custom Comparator, to be used instead of {@code .equals(...)} when compareing a Source and Destination Value.
 	 *
 	 * @param _Comparator
 	 * 		The {@link DataMappingComparator} to use instead of {@code .equals}.
@@ -160,6 +160,6 @@ public interface DataMappingValidator<T> {
 		 *
 		 * @return {@code true}, if the 2 values should be considered equal; otherwise, {@code false}.
 		 */
-		public abstract boolean compair(DataMappingValidator _dataMappingValidator, T _source, T _destination);
+		public abstract boolean compare(DataMappingValidator _dataMappingValidator, T _source, T _destination);
 	}
 }
