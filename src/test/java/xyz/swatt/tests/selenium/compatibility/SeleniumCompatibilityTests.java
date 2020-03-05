@@ -226,7 +226,7 @@ public class SeleniumCompatibilityTests {
         button.click(true);
 
         ///// Validate /////
-        driver.getWebElementWrapper(By.id("resultStats"), true, WebDriverWrapper.maxPageLoadTime,
+        driver.getWebElementWrapper(By.id("top_nav"), true, WebDriverWrapper.maxPageLoadTime,
                 "Search Results failed to load!");
         String pageTitle = driver.getPageTitle();
         if(!pageTitle.equals(SEARCH_TERM + " - Google Search")) {
@@ -294,7 +294,8 @@ public class SeleniumCompatibilityTests {
         driver.openNewWindow();
         String newWindowTitle = driver.getPageTitle();
         if(newWindowTitle.equals(oldWindowTitle)) {
-            throw new RuntimeException("Opened new window, but found old window title: " + Quotes.escape(oldWindowTitle) + "!");
+            driver.switchToLastWindow();
+            throw new RuntimeException("Opened new window, but found old window title: " + Quotes.escape(oldWindowTitle) + "!\n\t" + driver.getCurrentUrl());
         }
 
         // TODO: Validate Window Title and Count. (using visual inspection now)
@@ -317,20 +318,22 @@ public class SeleniumCompatibilityTests {
      */
     @AfterClass
     public void afterClass() {
-
+    
         LOGGER.info("afterClass() [START]");
-
+    
         //------------------------ Pre-Checks ----------------------------------
-
+    
         //------------------------ CONSTANTS -----------------------------------
-
+    
         //------------------------ Variables -----------------------------------
-
+    
         //------------------------ Code ----------------------------------------
-        driver.quit();
-
+        if(driver != null) {
+            driver.quit();
+        }
+    
         WebDriverWrapper.killUsedBrowserDriverProcesses();
-
+    
         LOGGER.debug("afterClass() [END]");
     }
 

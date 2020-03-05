@@ -3478,22 +3478,22 @@ public class WebElementWrapper {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	private String getXpathIdsSelector() {
-
+		
 		LOGGER.info("getXpathIdsSelector() [START]");
-
+		
 		//------------------------ Pre-Checks ----------------------------------
-
+		
 		//------------------------ CONSTANTS -----------------------------------
-
+		
 		//------------------------ Variables -----------------------------------
 		String id;
-		String name;
+		String name = "";
 		StringBuilder xpath;
 		WebElement ancestor;
-
+		
 		//------------------------ Code ----------------------------------------
 		synchronized(WEB_DRIVER_WRAPPER.LOCK) {
-
+			
 			id = webElement.getAttribute("id");
 			if(id == null || (id = id.trim()).isEmpty()) {
 				LOGGER.debug("getXpathIdsSelector() [END]");
@@ -3511,14 +3511,23 @@ public class WebElementWrapper {
 					LOGGER.debug("getXpathIdsSelector() [END]");
 					return xpath.toString();
 				}
-
-				name = ancestor.getTagName();
+				
+				try {
+					name = ancestor.getTagName();
+				}
+				catch(StaleElementReferenceException e) {
+					if(name.trim().equalsIgnoreCase("html")) {
+						LOGGER.trace("Went past <html> tag.", e);
+						return xpath.toString(); // Firefox sometimes alllows going past the <html> root.
+					}
+					throw e;
+				}
 				id = ancestor.getAttribute("id");
-
+				
 				if(id != null && !(id = id.trim()).isEmpty()) {
 					name += "[@id='" + id + "']";
 				}
-
+				
 				xpath.insert(0, "/" + name);
 			}
 		} // Exceptions are thrown, so that WebDriverWrapper.getWebElementWrappers(WebElement, By, double, int, Boolean) can deal with them.

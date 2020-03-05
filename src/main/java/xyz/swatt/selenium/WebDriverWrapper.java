@@ -218,10 +218,10 @@ public class WebDriverWrapper implements Comparable {
 	/**
 	 * A list of supported Internet Explored (IE) Web Browsers.
 	 * <p>
-	 *     <b>Note:</b> IE only supports Windows.
+	 * <b>Note:</b> IE only supports Windows.
 	 * </p>
 	 * <ul>
-	 *     <li>{@link #IE_WIN} - Will attempt to use 64 bit windows, and fall back on 32 bit windows.</li>
+	 *     <li>{@link #IE_WIN} - Will attempt to use 32 bit windows, and fall back on 64 bit windows. (64 bit is slow.)</li>
 	 *     <li>{@link #IE_WIN_32}</li>
 	 *     <li>{@link #IE_WIN_64}</li>
 	 * </ul>
@@ -229,12 +229,12 @@ public class WebDriverWrapper implements Comparable {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
     public enum IEBrowser implements SpecificBrowser {
-
+		
 		/**
-		 * Will attempt to use 64 bit windows, and fall back on 32 bit windows.
+		 * Will attempt to use 32 bit windows, and fall back on 64 bit windows.
 		 * <p>
-		 *     <b>Note: </b> IE 64 bit has slow typing,
-		 *     due to bug: <a href="https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/5116">Selenium Bug 5116</a>
+		 *     <b>Note: </b> IE 64 bit has slow typing, due to bug:
+		 *     <a href="https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/5116">Selenium Bug 5116</a>
 		 * </p>
 		 */
 		// TODO: https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/5116.
@@ -1347,13 +1347,13 @@ public class WebDriverWrapper implements Comparable {
 				+ "/Firefox/Profiles/"); // (System.getenv( "USERPROFILE" ) only works on Windows.)
 		FirefoxOptions options = new FirefoxOptions();
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
-
+		
 		List<String> firefoxExtensionNames = _firefoxExtensionNames == null ? new ArrayList<>(0) : Arrays.asList(_firefoxExtensionNames);
-
+		
 		//------------------------ Code ----------------------------------------
 		////////// Determine Gecko Version and Browser Path //////////
-		if(_browser == FirefoxBrowser.FIREFOX) {
-			if(SystemUtils.IS_OS_WINDOWS){
+		if(_browser == FirefoxBrowser.FIREFOX || _browser == FirefoxBrowser.FIREFOX_WIN) {
+			if(SystemUtils.IS_OS_WINDOWS) {
 				if(new File(FirefoxBrowser.FIREFOX_WIN_64.BROWSER_PATH).exists()) {
 					_browser = FirefoxBrowser.FIREFOX_WIN_64;
 				}
@@ -1361,7 +1361,7 @@ public class WebDriverWrapper implements Comparable {
 					_browser = FirefoxBrowser.FIREFOX_WIN_32;
 				}
 			}
-			else if(SystemUtils.IS_OS_MAC) {
+			else if(SystemUtils.IS_OS_MAC && _browser != FirefoxBrowser.FIREFOX_WIN) {
 				_browser = FirefoxBrowser.FIREFOX_MAC;
 			}
 			else {
@@ -1550,12 +1550,12 @@ public class WebDriverWrapper implements Comparable {
 
 		//------------------------ Code ----------------------------------------
 		if(_browser == IEBrowser.IE_WIN) {
-
-			if(new File(IEBrowser.IE_WIN_64.BROWSER_PATH).exists()) {
-				_browser = IEBrowser.IE_WIN_64;
+			
+			if(new File(IEBrowser.IE_WIN_32.BROWSER_PATH).exists()) {
+				_browser = IEBrowser.IE_WIN_32;
 			}
 			else {
-				_browser = IEBrowser.IE_WIN_32;
+				_browser = IEBrowser.IE_WIN_64;
 			}
 		}
 
@@ -2365,7 +2365,9 @@ public class WebDriverWrapper implements Comparable {
 						wew = new WebElementWrapper(this, webElement, byUsed);
 					}
 					catch(NoSuchElementException/*Sometimes thrown by IE*/ | StaleElementReferenceException e) {
-
+						
+						LOGGER.trace(e);
+						
 						if(msWaited <= _waitTime.toMillis()) {
 							return getWebElementWrappers(_webElement, _by, _waitTime.minusMillis(msWaited), _numOfElementsToGet, _visibility); // Try Again.
 						}
