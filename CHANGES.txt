@@ -1,12 +1,16 @@
 # Committed but Unreleased Changes
 
-# ArgumentChecks, DataMappingValidator, WebDriverWrapper, & Scripts
+# ArgumentChecks, DataMappingValidator, LogMethods, WebDriverWrapper, & Scripts
 
 **ArgumentChecks**
 - Improved greaterThanZero and notNegative checks to include BigDecimal and BigInteger.
+- Added notEmpty(Map _arg, String _argumentName)
 
 **DataMappingValidator**
 - Renamed `compair` method to `compare`. (BREAKING CHANGE!)
+
+**LogMethods**
+- Lowered Log Level to TRACE, for Lambda methods
 
 **WebDriverWrapper**
 - Updated Chrome Drivers to v80.0.3987.106
@@ -18,5 +22,6 @@
 - SQL-RowMapper-POJO-Generator:
 -- Improved Number Data Types
 -- Fixed NULLs in Where clause
+-- Updated toString to ignore NULL columns
 
 # Expected Release: v1.19.0

@@ -36,12 +36,16 @@ public class CollectionMappingValidator<T> extends AbstractDataMapping<T> {
      * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
      */
     public static enum MappingFlag implements DataMappingFlagEnum {
-
+    
+        // TODO: Add COMPARE_AS_NUMBERS (use BigDecimal and ignore scale).
+    
+        // TODO: Add COMPARE_AS_STRINGS.
+    
         /**
          * If Source and Destination lists should be made {@code distinct} before comparing them.
          */
         IGNORE_DUPLICATES,
-
+    
         /**
          * If {@code null} entries in the {@link Collection}s should be skipped.
          */

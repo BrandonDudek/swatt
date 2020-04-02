@@ -2,6 +2,7 @@ package xyz.swatt.asserts;
 
 import net.sf.saxon.s9api.Processor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +14,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Tests for method Arguments.
@@ -158,6 +160,34 @@ public class ArgumentChecks {
 		//------------------------ Code ----------------------------------------
 		if(CollectionUtils.isEmpty(_arg)) {
 			throw new IllegalArgumentException("Given " + _argumentName + "Collection cannot be Empty!");
+		}
+	}
+	
+	/**
+	 * Check a given {@link Map} to ensure that is it exists and has entries.
+	 *
+	 * @param _arg
+	 * 		The {@link Map} to check.
+	 * @param _argumentName
+	 * 		The Name of the Argument being checked. (Can be {@code null} or an Empty String to ignore.)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		If the {@link Map} is {@code null} oe empty.
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	@LogMethods
+	public static void notEmpty(Map _arg, String _argumentName) throws IllegalArgumentException {
+		
+		//------------------------ Pre-Checks ----------------------------------
+		
+		//------------------------ CONSTANTS -----------------------------------
+		
+		//------------------------ Variables -----------------------------------
+		_argumentName = formatArgumentName(_argumentName);
+		
+		//------------------------ Code ----------------------------------------
+		if(MapUtils.isEmpty(_arg)) {
+			throw new IllegalArgumentException("Given " + _argumentName + "Map cannot be Empty!");
 		}
 	}
 	

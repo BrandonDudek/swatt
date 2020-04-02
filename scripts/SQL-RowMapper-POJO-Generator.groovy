@@ -64,7 +64,7 @@ def generateClass(out, schemaName, tableName, className, fields) {
   generateImports(out)
   out.println ""
   out.println "@Generated(value = \"xyz.swatt.SQL-RowMapper-POJO-Generator.groovy\", date = \"" + ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS) +
-          "\", comments = \"Generator Version 2\")"
+          "\", comments = \"Generator Version 3\")"
   out.println "@LogMethods"
   out.println "@SuppressWarnings(\"Duplicates\")"
   out.println "public class $className implements SqlPojo<$className>, Cloneable {"
@@ -241,15 +241,18 @@ def generateClass(out, schemaName, tableName, className, fields) {
   out.println ");\n" +
           "\t}"
   out.println ""
-  out.println "\t@Override"
-  out.println "\tpublic String toString() {"
+  out.println "\t/**\n" +
+          "\t * @return A String representation of this SQL POJO, with only non-null fields.\n" +
+          "\t */\n" +
+          "\t@Override\n" +
+          "\tpublic String toString() {"
   out.println "\t\treturn \"${className}{\" +"
   fields.eachWithIndex() { it, index ->
-    out.print "\t\t\t\"${it.name}='\" + ${it.name} + \"'"
+    out.print "\t\t\t(${it.name} == null ? \"\" : \"${it.name}='\" + ${it.name} + \"'"
     if (index < fields.size() - 1) {
       out.print ", "
     }
-    out.println "\" +"
+    out.println "\") +"
   }
   out.println "\t\t'}';"
   out.println "\t}"

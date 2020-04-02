@@ -14,14 +14,28 @@ import java.lang.annotation.*;
  * <b>Notes:</b>
  * </p>
  * <ul>
- * <li>[START] Logs are {@link Level#INFO} for {@code public} methods and {@link Level#DEBUG} for non-{@code public} methods</li>
- * <li>[END] Logs are {@link Level#DEBUG} for {@code public} methods and {@link Level#TRACE} for non-{@code public} methods</li>
+ * <li>
+ *     <p>[START] Logs are:</p>
+ *     <ul>
+ *         <li>{@link Level#INFO} for {@code public} methods</li>
+ *         <li>{@link Level#DEBUG} for non-{@code public} methods</li>
+ *         <li>{@link Level#TRACE} for Lambda methods</li>
+ *     </ul>
+ * </li>
+ * <li>
+ *     <p>[END] Logs are:</p>
+ *     <ul>
+ *         <li>{@link Level#DEBUG} for {@code public} methods</li>
+ *         <li>{@link Level#TRACE} for non-{@code public} methods</li>
+ *         <li>{@link Level#TRACE} for Lambda methods</li>
+ *     </ul>
+ * </li>
  * <li>(Line Numbers will not be correct for these logs)</li>
  * <li>{@link ElementNSImpl}s are printed as [Name: Value], or [Name: (child_count)] if Value is {@code null}</li>
  * <li>{@link File}s are printed as Absolute Paths</li>
  * <li>Array Values are printed out</li>
  * <li>Multidimensional Array Values are printed out, at each level</li>
- * <li>.toString is used for everything else</li>
+ * <li>{@code .toString()} is used for everything else</li>
  * </ul>
  * <p>
  * <sub>(Work done in {@link LogMethodsAspect}.)</sub>

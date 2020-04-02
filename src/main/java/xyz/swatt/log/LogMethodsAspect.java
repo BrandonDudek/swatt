@@ -72,7 +72,7 @@ public class LogMethodsAspect {
 
         //-------------------------Variables------------------------------------
         ///// Tier 1 /////
-        boolean logArguments, logDuration, logResults, skipLogging;
+        boolean isLambda = false, logArguments, logDuration, logResults, skipLogging;
         int modifiers;
 
         Class<?> classObj = proceedingJoinPoint.getSignature().getDeclaringType(), // Target is null for static methods.
@@ -108,8 +108,12 @@ public class LogMethodsAspect {
             constructorMethodName = method.getName();
             parameterNames = methodSignature.getParameterNames();
             methodReturnType = method.getReturnType();
-
+    
             executable = method;
+    
+            if(constructorMethodName.matches("lambda\\$[0-9]+")) {
+                isLambda = true;
+            }
         }
         constructorMethodAnnotation = executable.getAnnotation(LogMethods.class);
         modifiers = executable.getModifiers();
@@ -151,18 +155,21 @@ public class LogMethodsAspect {
             }
         }
         logString.append(") ");
-
+    
         ///// Perform Logging /////
-        if(Modifier.isPublic(modifiers)) {
+        if(isLambda) {
+            logger.trace(logString + "[START]");
+        }
+        else if(Modifier.isPublic(modifiers)) {
             logger.info(logString + "[START]");
         }
         else {
             logger.debug(logString + "[START]");
         }
-
+    
         ////////// Run Method //////////
         startTime = LocalDateTime.now();
-        toRet = proceedingJoinPoint.proceed();
+        toRet = proceedingJoinPoint.proceed(); // TODO: Catch and log Throwables.
         endTime = LocalDateTime.now();
 
         ////////// Log Method End //////////
@@ -175,17 +182,20 @@ public class LogMethodsAspect {
         if(methodReturnType != null && methodReturnType != Void.TYPE && logResults) {
             logString.append(" => ").append(toLogString(toRet));
         }
-
+    
         ///// Perform Logging /////
-        if(Modifier.isPublic(modifiers)) {
+        if(isLambda) {
+            logger.trace(logString.toString());
+        }
+        else if(Modifier.isPublic(modifiers)) {
             logger.debug(logString.toString());
         }
         else {
             logger.trace(logString.toString());
         }
-
+    
         LOGGER.debug("around(ProceedingJoinPoint: {}) [END]: Object", proceedingJoinPoint.getKind());
-
+    
         return toRet;
     }
 
