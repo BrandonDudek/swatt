@@ -10,7 +10,16 @@ import xyz.swatt.asserts.ArgumentChecks;
 import xyz.swatt.log.LogMethods;
 import xyz.swatt.pojo.SqlPojo;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Use this class to validate that 2 different {@link Collection}s of {@link SqlPojo}s are equal, compareing their Column Values.
@@ -61,6 +70,7 @@ public class SqlPojoCollectionMappingValidator<T> extends AbstractDataMapping<T>
 	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
+	// TODO: Either Argument should not be modified, or there should be no return.
 	public static Collection<SqlPojoCollectionMappingValidator> consolidateOnDestination(Collection<SqlPojoCollectionMappingValidator> _mappings) {
 		
 		//------------------------ Pre-Checks ----------------------------------
@@ -75,10 +85,12 @@ public class SqlPojoCollectionMappingValidator<T> extends AbstractDataMapping<T>
 		//------------------------ Code ----------------------------------------
 		for(SqlPojoCollectionMappingValidator mapping : _mappings) {
 			
-			SqlPojoCollectionMappingValidator otherMapping;
+			SqlPojoCollectionMappingValidator otherMapping = null;
 			
-			if(mapping.DESTINATION_TABLE_ROWS == null || mapping.DESTINATION_TABLE_ROWS.isEmpty() || mapping.DESTINATION_COLUMN == null) {
-				otherMapping = combinedValuesMappings.put(mapping.DESTINATION_VALUES, mapping);
+			if(CollectionUtils.isEmpty(mapping.DESTINATION_TABLE_ROWS) || mapping.DESTINATION_COLUMN == null) {
+				if(!CollectionUtils.isEmpty(mapping.DESTINATION_VALUES)) {
+					otherMapping = combinedValuesMappings.put(mapping.DESTINATION_VALUES, mapping);
+				}
 			}
 			else {
 				TablesColumnPair tablesColumnPair = new TablesColumnPair(mapping.DESTINATION_TABLE_ROWS, mapping.DESTINATION_COLUMN);
@@ -162,6 +174,26 @@ public class SqlPojoCollectionMappingValidator<T> extends AbstractDataMapping<T>
 	 *
 	 * @param _sourceValue
 	 * 		The value from the Source Data.
+	 * @param _destinationTable
+	 * 		The Destination Table to pull the Column Value from.
+	 * @param _destinationColumn
+	 * 		The Destination Column to pull the Value from.
+	 * @param _flags
+	 * 		Any {@link CollectionMappingValidator.MappingFlag}s that should be applied to this {@link SqlPojoCollectionMappingValidator}.
+	 *
+	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
+	 */
+	public SqlPojoCollectionMappingValidator(T _sourceValue,
+	                                         SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
+	                                         CollectionMappingValidator.MappingFlag... _flags) {
+		this(null, Arrays.asList(_sourceValue), null, null, null, Collections.singleton(_destinationTable), _destinationColumn, _flags);
+	}
+	
+	/**
+	 * Creates a new {@link Collection}-to-{@link Collection} {@link DataMappingValidator} object.
+	 *
+	 * @param _sourceValue
+	 * 		The value from the Source Data.
 	 * @param _destinationTables
 	 * 		The Destination Tables to pull the Column Value from.
 	 * @param _destinationColumn
@@ -216,7 +248,7 @@ public class SqlPojoCollectionMappingValidator<T> extends AbstractDataMapping<T>
 	public SqlPojoCollectionMappingValidator(SqlPojo _sourceTable, SqlPojo.RowMapperColumnEnum _sourceColumn,
 	                                         SqlPojo _destinationTable, SqlPojo.RowMapperColumnEnum _destinationColumn,
 	                                         CollectionMappingValidator.MappingFlag... _flags) {
-		this(null, Arrays.asList(_sourceTable), _sourceColumn, Arrays.asList(_destinationTable), _destinationColumn, _flags);
+		this(null, Arrays.asList(_sourceTable), _sourceColumn, Collections.singleton(_destinationTable), _destinationColumn, _flags);
 	}
 	
 	/**

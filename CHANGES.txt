@@ -1,8 +1,20 @@
 # Committed but Unreleased Changes #
 
-# POM
+# SqlPojoCollectionMappingValidator, WebDriverWrapper, POM, Scripts
+
+**SqlPojoCollectionMappingValidator**
+- Added (T, SqlPojo, SqlPojo.RowMapperColumnEnum, CollectionMappingValidator.MappingFlag...) constructor
+
+**WebDriverWrapper**
+- Updated Chrome Driver to v83.0.4103.39
 
 **POM**
 - TestNG version 7.1.0
+- JSoup version 1.13.1
+- Log4J2 version 2.13.3
+- SAXON version 10.1
 
-# Expected Release: v1.19.1
+**Scripts**
+- Fixed typos in SQL-RowMapper-POJO-Generator.groovy
+
+# Expected Release: v1.20.0

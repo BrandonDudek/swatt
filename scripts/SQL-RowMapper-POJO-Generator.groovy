@@ -431,7 +431,7 @@ def generateStaticMethods(out, className) {
           "\t * @param _limit\n" +
           "\t * \t\tThe maximum number of rows to return.\n" +
           "\t *\n" +
-          "\t * @return All of the {@link $className} rows in the given Database.\n" +
+          "\t * @return All of the {@link $className} rows in the given Database or an empty collection, if there are no rows.\n" +
           "\t */\n" +
           "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit) {\n" +
           "\t\treturn queryForRows(_jdbcTemplate, _limit, false);\n" +
@@ -450,14 +450,14 @@ def generateStaticMethods(out, className) {
           "\t * @param _randomize\n" +
           "\t * \t\tIf {@code true}, then the rows returned will be in random order.\n" +
           "\t *\n" +
-          "\t * @return All of the {@link $className} rows in the given Database.\n" +
+          "\t * @return All of the {@link $className} rows in the given Database or an empty collection, if there are no rows.\n" +
           "\t */\n" +
           "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize) {\n" +
           "\t\t\n" +
           "\t\t//------------------------ Pre-Checks ----------------------------------\n" +
           "\t\tArgumentChecks.notNull(_jdbcTemplate, \"JDBC Template\");\n" +
           "\t\tif(_limit < 1) {\n" +
-          "\t\t\tthrow new IllegalArgumentException(\"Given limot must be positive!\");\n" +
+          "\t\t\tthrow new IllegalArgumentException(\"Given limit must be positive!\");\n" +
           "\t\t}\n" +
           "\t\t\n" +
           "\t\t//------------------------ CONSTANTS -----------------------------------\n" +
@@ -500,7 +500,7 @@ def generateStaticMethods(out, className) {
           "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
           "\t * \t\tvalues will be used.\n" +
           "\t *\n" +
-          "\t * @return The {@link $className} rows found.\n" +
+          "\t * @return The {@link $className} rows found or an empty collection, if no rows were found.\n" +
           "\t */\n" +
           "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize, $className _queryData, Column... _columns) {\n" +
           "\t\t\n" +
@@ -534,7 +534,7 @@ def generateStaticMethods(out, className) {
           "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
           "\t * \t\tvalues will be used.\n" +
           "\t *\n" +
-          "\t * @return The {@link $className} rows found.\n" +
+          "\t * @return The {@link $className} rows found or an empty collection, if no rows were found.\n" +
           "\t */\n" +
           "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, int _limit, boolean _randomize, Collection<$className> _queryData,\n" +
           "\t                                                 Column... _columns) {\n" +
@@ -630,7 +630,7 @@ def generateStaticMethods(out, className) {
           "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
           "\t * \t\tvalues will be used.\n" +
           "\t *\n" +
-          "\t * @return The {@link $className} rows found.\n" +
+          "\t * @return The {@link $className} rows found or an empty collection, if no rows were found.\n" +
           "\t */\n" +
           "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, $className _queryData, Column... _columns) {\n" +
           "\t\t\n" +
@@ -657,7 +657,7 @@ def generateStaticMethods(out, className) {
           "\t * \t\tIf provided, these will be the only columns that will be used as selection criteria; otherwise, all of the {@code _queryData} Object's non-null\n" +
           "\t * \t\tvalues will be used.\n" +
           "\t *\n" +
-          "\t * @return The {@link $className} rows found.\n" +
+          "\t * @return The {@link $className} rows found or an empty collection, if no rows were found.\n" +
           "\t */\n" +
           "\tpublic static List<$className> queryForRows(JdbcTemplate _jdbcTemplate, Collection<$className> _queryData, Column... _columns) {\n" +
           "\t\treturn queryForRows(_jdbcTemplate, -1, false, _queryData, _columns);\n" +
@@ -673,7 +673,7 @@ def generateQueryMethods(out, className) {
           "     * @param _columns If provided, these will be the only columns that will be used as selection criteria;\n" +
           "     *                 otherwise, all of this Object's non-null values will be used.\n" +
           "     *\n" +
-          "     * @return The {@link $className} rows found.\n" +
+          "     * @return The {@link $className} rows found or an empty collection, if no rows were found.\n" +
           "     */\n" +
           "    public List<$className> queryForRows(JdbcTemplate _jdbcTemplate, Column... _columns) {\n" +
           "        return queryForRows(_jdbcTemplate, this, _columns);\n" +

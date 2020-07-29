@@ -111,6 +111,8 @@ public interface DataMappingValidator<T> {
 	 */
 	public DataMappingValidator setComparator(DataMappingComparator<T> _Comparator);
 	
+	// TODO Add: public DataMappingValidator setComparator(DataMappingComparator<T, U> _Comparator);
+	
 	/**
 	 * Will give this {@link DataMappingValidator} a custom name.
 	 *
