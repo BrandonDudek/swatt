@@ -138,6 +138,10 @@ public class SqlPojoCollectionMappingValidator<T> extends AbstractDataMapping<T>
 		return consolidateOnDestination(Arrays.asList(_mappings));
 	}
 	
+	// TODO: Add consolidateOnSource(...).
+	
+	// TODO: Add consolidateOnName(...).
+	
 	//========================= CONSTANTS ======================================
 	public T typeObject;
 	

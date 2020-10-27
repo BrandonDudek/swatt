@@ -180,7 +180,7 @@ public class LogMethodsAspect {
         }
         ///// Construct Log String /////
         if(methodReturnType != null && methodReturnType != Void.TYPE && logResults) {
-            logString.append(" => ").append(toLogString(toRet));
+            logString.append("\n\t=> ").append(toLogString(toRet));
         }
     
         ///// Perform Logging /////

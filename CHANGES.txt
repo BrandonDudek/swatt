@@ -1,6 +1,14 @@
 # Committed but Unreleased Changes #
 
-# SqlPojoCollectionMappingValidator, WebDriverWrapper, POM, Scripts
+# LogMethodsAspect, ResourceHelper, SqlPojoCollectionMappingValidator, WebDriverWrapper, POM, & Scripts
+
+**LogMethodsAspect**
+- Updated Return Value Log to be on new Line.
+
+**ResourceHelper**
+- Fixed getResources methods to not return folders
+- Fixed getResources methods to handle path special characters correctly
+- Closed ZipInputStream, that was left open
 
 **SqlPojoCollectionMappingValidator**
 - Added (T, SqlPojo, SqlPojo.RowMapperColumnEnum, CollectionMappingValidator.MappingFlag...) constructor
@@ -9,7 +17,7 @@
 - Updated Chrome Driver to v83.0.4103.39
 
 **POM**
-- TestNG version 7.1.0
+- TestNG version 7.3.0
 - JSoup version 1.13.1
 - Log4J2 version 2.13.3
 - SAXON version 10.1

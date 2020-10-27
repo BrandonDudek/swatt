@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.util.Scanner;
@@ -451,7 +452,7 @@ public class StringHelper {
 		//------------------------ Code ----------------------------------------
 		try {
 			//noinspection ConstantConditions
-			scanner = new Scanner(_file, "UTF-8");
+			scanner = new Scanner(_file, StandardCharsets.UTF_8.toString());
 			scanner.useDelimiter("\\Z");
 			string = scanner.hasNext() ? scanner.next() : "";
 			scanner.close();
@@ -482,22 +483,22 @@ public class StringHelper {
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static String toString(InputStream _stream) {
-
+		
 		LOGGER.info("toString(InputStream) [START]");
-
+		
 		//------------------------ CONSTANTS -----------------------------------
-
+		
 		//------------------------ Variables -----------------------------------
-		Scanner scanner = new Scanner(_stream, "UTF-8");  // NullPointerException is thrown here if _file is NULL.
+		Scanner scanner = new Scanner(_stream, StandardCharsets.UTF_8.toString());  // NullPointerException is thrown here if _file is NULL.
 		String string;
-
+		
 		//------------------------ Code ----------------------------------------
 		scanner.useDelimiter("\\Z");
 		string = scanner.hasNext() ? scanner.next() : "";
 		scanner.close();
-
+		
 		LOGGER.debug("toString(InputStream) [END]");
-
+		
 		return string;
 	}
 

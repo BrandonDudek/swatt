@@ -13,8 +13,11 @@ import xyz.swatt.log.LogMethods;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -148,6 +151,7 @@ public class ResourceHelper {
 	// TODO: public static String getResourceAsFile(String _path) // Returns a copy of the file, in the temp directory.
 	
 	//-------------------- Files --------------------
+	
 	/**
 	 * Gets a concurrent collection of Resource files, as {@link InputStream}s, from a given Resource folder Path.
 	 * <p>
@@ -266,6 +270,7 @@ public class ResourceHelper {
 	 *
 	 * @throws IllegalArgumentException
 	 * 		If the given Path is blank.
+	 *
 	 * @author Brandon Dudek (<a href="github.com/BrandonDudek">BrandonDudek</a>)
 	 */
 	public static Set<Path> getResourcesAsPaths(String _path) {
@@ -283,54 +288,61 @@ public class ResourceHelper {
 		if(RESOURCES_ARE_IN_JAR) {
 			
 			String pathBase = StringUtils.substringBetween(RESOURCES_URL.getPath(), "!", "!").substring(1);
+			String fullPath = pathBase + _path;
 			
 			CodeSource codeSrc = ResourceHelper.class.getProtectionDomain().getCodeSource();
 			if(codeSrc == null) {
 				throw new RuntimeException("Could not find Execuing Jar!");
 			}
 			
-			ZipInputStream jar;
-			try {
-				//jar = new ZipInputStream(codeSrc.getLocation().openStream());
-				jar = new ZipInputStream(RESOURCES_URL.openStream());
+			try(ZipInputStream jar = new ZipInputStream(RESOURCES_URL.openStream())) {
+				
+				while(true) {
+					
+					ZipEntry entry;
+					try {
+						entry = jar.getNextEntry();
+					}
+					catch(IOException e) {
+						throw new RuntimeException("Could not parse Executing Jar!");
+					}
+					if(entry == null) {
+						break;
+					}
+					
+					String name = entry.getName();
+					if(name.startsWith(fullPath)) {
+						
+						String fileName = name.substring(fullPath.length());
+						if(fileName.isEmpty()) { // Folder found.
+							paths = new ConcurrentHashMap<>().newKeySet();
+						}
+						else if(!fileName.contains(PATH_SEPARATOR)) {
+							
+							String path = name.substring(pathBase.length());
+							paths.add(Paths.get(path));
+						} // Else, entry is a sub-folder or file in a sub-folder.
+					}
+				}
 			}
 			catch(IOException e) {
 				throw new RuntimeException("Could not open Executing Jar!");
 			}
-			
-			while(true) {
-				
-				ZipEntry entry;
-				try {
-					entry = jar.getNextEntry();
-				}
-				catch(IOException e) {
-					throw new RuntimeException("Could not parse Executing Jar!");
-				}
-				if(entry == null) {
-					break;
-				}
-				
-				String name = entry.getName();
-				if(name.startsWith(pathBase + _path)) {
-					
-					String fileName = name.substring((pathBase + _path).length());
-					if(fileName.isEmpty()) { // Folder found.
-						paths = new ConcurrentHashMap<>().newKeySet();
-					}
-					else if(!fileName.contains(PATH_SEPARATOR)) {
-						
-						String path = name.substring(pathBase.length());
-						paths.add(Paths.get(path));
-					} // Else, entry is a sub-folder or file in a sub-folder.
-				}
-			}
 		}
-		else {
-			File folder = new File(ResourceHelper.class.getResource(_path).getPath());
+		else { // Rewource not in JAR.
+			URL url = ResourceHelper.class.getResource(_path);
+			String fullPath;
+			try {
+				fullPath = URLDecoder.decode(url.getPath(), StandardCharsets.UTF_8.toString());
+			}
+			catch(UnsupportedEncodingException e) {
+				throw new RuntimeException("Invalid Path: `" + _path + "` !", e);
+			}
+			
+			File folder = new File(fullPath);
 			if(folder.exists()) {
 				
-				File[] files = folder.listFiles();
+				File[] files = folder.listFiles(pathname -> pathname.isFile());
 				paths = new ConcurrentHashMap<>().newKeySet(files.length);
 				
 				for(File file : files) {
@@ -350,7 +362,7 @@ public class ResourceHelper {
 	private static String fixPath(String _path, boolean _isFolder) {
 		
 		//------------------------ Pre-Checks ----------------------------------
-		ArgumentChecks.stringNotWhitespaceOnly(_path, "Path");
+		ArgumentChecks.stringNotBlank(_path, "Path");
 		
 		//------------------------ CONSTANTS -----------------------------------
 		

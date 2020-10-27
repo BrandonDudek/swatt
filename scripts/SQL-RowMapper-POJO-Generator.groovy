@@ -248,7 +248,7 @@ def generateClass(out, schemaName, tableName, className, fields) {
           "\tpublic String toString() {"
   out.println "\t\treturn \"${className}{\" +"
   fields.eachWithIndex() { it, index ->
-    out.print "\t\t\t(${it.name} == null ? \"\" : \"${it.name}='\" + ${it.name} + \"'"
+    out.print "\t\t\t(${it.name} == null ? \"\" : \"${it.colname}='\" + ${it.name} + \"'"
     if (index < fields.size() - 1) {
       out.print ", "
     }
