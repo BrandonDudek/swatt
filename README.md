@@ -1,5 +1,5 @@
-# Software Automated Testing Tools (SWATT)
-SWAT (pronounced \\swät\\) is a library of Tools to help Software Testers quickly and efficiently Automate their Test Suites.
+# SoftWare Automated Testing Tools (SWATT)
+SWATT _(pronounced \\swät\\)_ is a library of Tools to help Software Testers quickly and efficiently Automate their Test Suites.
 
 ## Homepage
 * [swatt.xyz](https://swatt.xyz)
