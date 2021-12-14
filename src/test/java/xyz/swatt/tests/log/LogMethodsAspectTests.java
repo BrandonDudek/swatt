@@ -110,7 +110,11 @@ public class LogMethodsAspectTests {
         Assert.assertTrue(expectedLog.exists(), "Cannot find Expected Log file!");
         Assert.assertTrue(actualLogs.exists(), "Cannot find Actual Log file!");
 
-        Assert.assertTrue(FileUtils.contentEquals(expectedLog, actualLogs), "Actual Log Files does not equal Expected!");
+        if(!FileUtils.contentEquals(expectedLog, actualLogs)) {
+            String error = "Actual Log Files does not equal Expected!\n\tExpected: " + expectedLog.getAbsolutePath()
+                    + "\n\tActual: " + actualLogs.getAbsolutePath();
+            throw new AssertionError(error);
+        }
 
         LOGGER.debug("validateLogs() [END]");
     }

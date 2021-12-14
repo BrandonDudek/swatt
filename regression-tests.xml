@@ -1,4 +1,4 @@
-<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
   
 <suite name="ECT-QED Tools Test Suite" verbose="1" >
 
@@ -6,7 +6,7 @@
 
 		<packages>
 			<package name="xyz.swatt.tests.*">
-				<exclude name="xyz.swatt.tests.selenium.compatibility"/>
+				<exclude name="xyz.swatt.tests.selenium.*"/>
 				<!--<exclude name="xyz.swatt.tests.soap" /> &lt;!&ndash; For Debugging &ndash;&gt;-->
 			</package>
 		</packages>
