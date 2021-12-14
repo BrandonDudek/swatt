@@ -50,7 +50,7 @@
         <jsoup.version>1.14.2</jsoup.version> <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
 
         <!--===== Log4j2 =====-->
-        <log4j2.version>2.13.3</log4j2.version> <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+        <log4j2.version>2.15.0</log4j2.version> <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
 
         <!--===== Saxon (XPath) =====-->
         <saxon.version>10.1</saxon.version> <!-- https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE -->
