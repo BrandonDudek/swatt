@@ -62,7 +62,7 @@
         <spring.version>5.1.7.RELEASE</spring.version> <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
 
         <!--===== TestNG =====-->
-        <testng.version>7.3.0</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
+        <testng.version>7.5.1</testng.version> <!-- https://mvnrepository.com/artifact/org.testng/testng -->
 
         <!-- ===== Xerces (XML) ===== -->
         <xerces.version>2.12.2</xerces.version><!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
