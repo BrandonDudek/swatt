@@ -44,7 +44,7 @@
         <jackson.version>2.12.6.1</jackson.version> <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 
         <!--===== Jayway =====-->
-        <jayway.version>2.4.0</jayway.version> <!-- https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path -->
+        <jayway.version>2.9.0</jayway.version> <!-- https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path -->
 
         <!--===== JSoup =====-->
         <jsoup.version>1.14.2</jsoup.version> <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
